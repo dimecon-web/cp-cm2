@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cp-app",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "3456", "--directory", "/Users/dimitriosoikonomidis/cp-app"],
+      "port": 3456
+    }
+  ]
+}
