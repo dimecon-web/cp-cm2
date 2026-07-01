@@ -550,6 +550,19 @@ html, body {
   -webkit-appearance: none; appearance: none;
 }
 .cm2-input:focus { border-color: #A855F7; box-shadow: 0 0 0 3px rgba(168,85,247,0.2); }
+.numpad-btn {
+  background: #fff; border: 3px solid #0EA5E9; border-radius: 18px;
+  font-size: 30px; font-weight: 900; color: #0EA5E9;
+  padding: 16px 0; text-align: center; cursor: pointer;
+  box-shadow: 0 4px 0 #0284C7; transition: transform 0.08s, box-shadow 0.08s;
+  user-select: none; -webkit-user-select: none;
+}
+.numpad-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #0284C7; }
+.numpad-btn.del { background: #FEE2E2; border-color: #EF4444; color: #EF4444; box-shadow: 0 4px 0 #B91C1C; }
+.numpad-btn.del:active { box-shadow: 0 1px 0 #B91C1C; }
+.numpad-btn.validate { background: #0EA5E9; color: #fff; border-color: #0284C7; box-shadow: 0 4px 0 #0369A1; font-size: 22px; }
+.numpad-btn.validate:active { box-shadow: 0 1px 0 #0369A1; }
+.numpad-btn:disabled, .numpad-btn.disabled { opacity: 0.4; pointer-events: none; }
 
 /* CM2 lecture reading text */
 .cm2-reading-text {
@@ -854,10 +867,9 @@ html, body {
   </div>
   <div class="question-card" id="cm2-maths-card">
     <div class="question-prompt" id="cm2-maths-prompt" style="font-size:clamp(36px,8vw,72px);font-weight:900;color:#0EA5E9;letter-spacing:2px"></div>
-    <div class="cm2-input-wrap">
-      <input class="cm2-input" type="number" id="cm2-maths-input" placeholder="?" inputmode="numeric" pattern="[0-9]*">
-      <button class="btn btn-cm2-primary" id="cm2-maths-validate" style="min-width:100px">Valider ✅</button>
-    </div>
+    <div id="cm2-maths-display" style="font-size:48px;font-weight:900;color:#0EA5E9;min-height:60px;letter-spacing:4px;text-align:center;margin:8px 0">?</div>
+  </div>
+  <div id="cm2-numpad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:320px;margin:0 auto 12px">
   </div>
 </div>
 
@@ -2115,6 +2127,7 @@ function cm2GoHome() {
 }
 
 function cm2StartModule(mod) {
+  clearInterval(cm2ChronoInterval);
   cm2State.currentModule = mod;
   cm2State.sessionScore = 0;
   cm2State.questionIndex = 0;
@@ -2315,16 +2328,48 @@ function cm2GenerateMathsQuestions() {
   return shuffle(qs);
 }
 
+let cm2NumpadValue = '';
+
+function cm2BuildNumpad() {
+  const pad = document.getElementById('cm2-numpad');
+  pad.innerHTML = '';
+  const keys = ['7','8','9','4','5','6','1','2','3','⌫','0','✅'];
+  keys.forEach(k => {
+    const btn = document.createElement('button');
+    btn.className = 'numpad-btn' + (k==='⌫' ? ' del' : k==='✅' ? ' validate' : '');
+    btn.textContent = k;
+    btn.id = k === '✅' ? 'cm2-maths-validate' : k === '⌫' ? 'cm2-numpad-del' : '';
+    btn.addEventListener('click', () => {
+      if(k === '⌫') {
+        cm2NumpadValue = cm2NumpadValue.slice(0, -1);
+      } else if(k === '✅') {
+        cm2ValidateMaths();
+        return;
+      } else {
+        if(cm2NumpadValue.length >= 6) return;
+        cm2NumpadValue += k;
+      }
+      const disp = document.getElementById('cm2-maths-display');
+      disp.textContent = cm2NumpadValue || '?';
+    });
+    pad.appendChild(btn);
+  });
+}
+
+function cm2SetNumpadDisabled(disabled) {
+  document.querySelectorAll('#cm2-numpad .numpad-btn').forEach(b => {
+    if(disabled) b.classList.add('disabled');
+    else b.classList.remove('disabled');
+  });
+}
+
 function cm2StartMaths() {
   cm2MathsQuestions = cm2GenerateMathsQuestions();
   cm2MathsIdx = 0;
   cm2State.sessionScore = 0;
   cm2ChronoMax = 12;
   document.getElementById('cm2-maths-score-live').textContent = '⭐ 0';
-  const input = document.getElementById('cm2-maths-input');
-  const btn = document.getElementById('cm2-maths-validate');
-  input.onkeydown = e => { if(e.key==='Enter') btn.click(); };
-  btn.onclick = cm2ValidateMaths;
+  cm2BuildNumpad();
   cm2RenderMathsQuestion();
 }
 
@@ -2332,11 +2377,9 @@ function cm2RenderMathsQuestion() {
   cm2UpdateProgress('cm2-maths', cm2MathsIdx, 10);
   const q = cm2MathsQuestions[cm2MathsIdx];
   document.getElementById('cm2-maths-prompt').textContent = q.expr + ' = ?';
-  const input = document.getElementById('cm2-maths-input');
-  input.value = '';
-  input.disabled = false;
-  document.getElementById('cm2-maths-validate').disabled = false;
-  setTimeout(() => { try { input.focus(); } catch(e){} }, 100);
+  cm2NumpadValue = '';
+  document.getElementById('cm2-maths-display').textContent = '?';
+  cm2SetNumpadDisabled(false);
   cm2StartChrono();
 }
 
@@ -2367,8 +2410,8 @@ function cm2UpdateChronoUI() {
 
 function cm2TimeExpired() {
   const q = cm2MathsQuestions[cm2MathsIdx];
-  document.getElementById('cm2-maths-input').disabled = true;
-  document.getElementById('cm2-maths-validate').disabled = true;
+  cm2SetNumpadDisabled(true);
+  cm2ChronoMax = Math.min(20, cm2ChronoMax + 2);
   playWrong();
   setTimeout(() => {
     showFeedback(false, String(q.answer), () => {
@@ -2381,17 +2424,17 @@ function cm2TimeExpired() {
 
 function cm2ValidateMaths() {
   clearInterval(cm2ChronoInterval);
-  const input = document.getElementById('cm2-maths-input');
-  const val = parseInt(input.value, 10);
+  const val = parseInt(cm2NumpadValue, 10);
   const q = cm2MathsQuestions[cm2MathsIdx];
-  if(isNaN(val)) { input.focus(); cm2StartChrono(); return; }
+  if(isNaN(val)) { cm2StartChrono(); return; }
   const correct = val === q.answer;
-  input.disabled = true;
-  document.getElementById('cm2-maths-validate').disabled = true;
+  cm2SetNumpadDisabled(true);
   if(correct) {
     cm2State.sessionScore++;
-    cm2ChronoMax = Math.max(4, cm2ChronoMax - 0.4);
+    cm2ChronoMax = Math.max(3, cm2ChronoMax - 1.5);
     document.getElementById('cm2-maths-score-live').textContent = '⭐ ' + cm2State.sessionScore;
+  } else {
+    cm2ChronoMax = Math.min(20, cm2ChronoMax + 2);
   }
   setTimeout(() => {
     showFeedback(correct, correct ? null : String(q.answer), () => {
