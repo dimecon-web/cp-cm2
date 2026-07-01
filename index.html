@@ -1041,26 +1041,52 @@ function stripEmoji(text) {
   return text.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').replace(/\s+/g, ' ').trim();
 }
 
+function pickBestVoice(lang) {
+  const voices = window.speechSynthesis.getVoices();
+  const fr = voices.filter(v => v.lang.startsWith(lang.split('-')[0]));
+  if (!fr.length) return null;
+  // 1. Enhanced/premium (iOS "Thomas (Enhanced)", etc.)
+  const enhanced = fr.find(v => /enhanced|premium/i.test(v.name) && v.localService);
+  if (enhanced) return enhanced;
+  // 2. Modern neural voices (macOS Ventura / iOS 17+) — much more natural than Thomas/Amélie
+  const modern = ['Flo', 'Eddy', 'Sandy', 'Shelley', 'Reed', 'Rocko'];
+  const modernFr = fr.find(v => v.localService && modern.some(n => v.name.startsWith(n)) && v.lang === lang);
+  if (modernFr) return modernFr;
+  const modernAny = fr.find(v => v.localService && modern.some(n => v.name.startsWith(n)));
+  if (modernAny) return modernAny;
+  // 3. Any local voice
+  const local = fr.find(v => v.localService && v.lang === lang);
+  if (local) return local;
+  return fr.find(v => v.localService) || fr[0];
+}
+
 function speak(text, lang = 'fr-FR') {
   if (!window.speechSynthesis) return;
   text = stripEmoji(text);
   if (!text) return;
   window.speechSynthesis.cancel();
-  const utt = new SpeechSynthesisUtterance(text);
-  utt.lang = lang;
-  utt.rate = 0.88;
-  utt.pitch = 1.1;
 
-  // Prefer a French voice if available
+  const doSpeak = () => {
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = lang;
+    utt.rate = 0.9;
+    utt.pitch = 1.0;
+    const voice = pickBestVoice(lang);
+    if (voice) utt.voice = voice;
+
+    const btns = document.querySelectorAll('.btn-speak, .btn-speak-inline');
+    btns.forEach(b => b.classList.add('speaking'));
+    utt.onend = utt.onerror = () => btns.forEach(b => b.classList.remove('speaking'));
+    window.speechSynthesis.speak(utt);
+  };
+
+  // Voices may not be loaded yet on first call
   const voices = window.speechSynthesis.getVoices();
-  const frVoice = voices.find(v => v.lang.startsWith('fr'));
-  if (frVoice) utt.voice = frVoice;
-
-  const btns = document.querySelectorAll('.btn-speak');
-  btns.forEach(b => b.classList.add('speaking'));
-  utt.onend = utt.onerror = () => btns.forEach(b => b.classList.remove('speaking'));
-
-  window.speechSynthesis.speak(utt);
+  if (voices.length) {
+    doSpeak();
+  } else {
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.onvoiceschanged = null; doSpeak(); };
+  }
 }
 
 function repeatInstruction() {
