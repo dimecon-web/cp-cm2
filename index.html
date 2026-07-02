@@ -888,6 +888,12 @@ html, body {
     <div class="question-prompt" id="cm2-sciences-prompt"></div>
     <div class="choices-grid cols-2" id="cm2-sciences-choices"></div>
   </div>
+  <div id="cm2-sciences-explain" style="display:none;width:100%;max-width:680px;background:#F0FDF4;border:2px solid #10B981;border-radius:20px;padding:16px 20px;margin-top:8px;font-size:16px;line-height:1.6;color:#065F46">
+    <span style="font-size:20px;margin-right:8px">💡</span><span id="cm2-sciences-explain-text"></span>
+    <div style="text-align:center;margin-top:14px">
+      <button class="btn btn-cm2-primary" id="cm2-sciences-next-btn" style="background:#10B981;min-width:140px;font-size:18px">Suivant →</button>
+    </div>
+  </div>
 </div>
 
 <!-- ===== CM2 ORTHO ===== -->
@@ -2449,33 +2455,33 @@ function cm2ValidateMaths() {
 //  CM2 MODULE SCIENCES
 // ===================================================================
 const CM2_SCIENCES_DATA = [
-  { q:'Combien y a-t-il de planètes dans le système solaire ?', correct:'8', wrong:['7','9','10'] },
-  { q:'Quel organe pompe le sang dans notre corps ?', correct:'Le cœur', wrong:['Le poumon','Le foie','Le rein'] },
-  { q:'Quelle est la planète la plus proche du Soleil ?', correct:'Mercure', wrong:['Vénus','Mars','Terre'] },
-  { q:'Comment s\'appelle le bébé de la vache ?', correct:'Le veau', wrong:['Le poulain','L\'agneau','Le chevreau'] },
-  { q:'Quelle planète est connue pour ses anneaux ?', correct:'Saturne', wrong:['Jupiter','Mars','Neptune'] },
-  { q:'Combien de dents a un adulte en bonne santé ?', correct:'32', wrong:['28','24','36'] },
-  { q:'Quel est le gaz que nous respirons pour vivre ?', correct:'L\'oxygène', wrong:['L\'azote','Le CO2','L\'hydrogène'] },
-  { q:'Comment s\'appelle le plus grand océan ?', correct:'L\'océan Pacifique', wrong:['L\'océan Atlantique','L\'océan Indien','L\'océan Arctique'] },
-  { q:'Quelle est la couleur du ciel dégagé le jour ?', correct:'Bleu', wrong:['Blanc','Gris','Jaune'] },
-  { q:'Que produisent les abeilles ?', correct:'Du miel', wrong:['Du sucre','De la cire seulement','Du lait'] },
-  { q:'Quelle est la température de congélation de l\'eau ?', correct:'0°C', wrong:['4°C','-10°C','10°C'] },
-  { q:'Combien de pattes a une araignée ?', correct:'8', wrong:['6','10','4'] },
-  { q:'Comment s\'appelle la transformation d\'une chenille en papillon ?', correct:'La métamorphose', wrong:['La mue','L\'évolution','La croissance'] },
-  { q:'Quel est l\'organe qui filtre le sang dans notre corps ?', correct:'Le rein', wrong:['Le foie','L\'estomac','La rate'] },
-  { q:'Quelle est la plus grande planète du système solaire ?', correct:'Jupiter', wrong:['Saturne','Uranus','Neptune'] },
-  { q:'De quoi les plantes ont-elles besoin pour pousser ?', correct:'Eau, lumière et CO2', wrong:['Seulement de l\'eau','Du sel et du sable','De l\'air chaud uniquement'] },
-  { q:'Comment s\'appelle l\'étoile au centre de notre système solaire ?', correct:'Le Soleil', wrong:['Sirius','Véga','Bételgeuse'] },
-  { q:'Combien d\'os a environ un adulte ?', correct:'206', wrong:['100','306','150'] },
-  { q:'Quel animal est le plus rapide sur Terre ?', correct:'Le guépard', wrong:['Le lion','L\'aigle','Le dauphin'] },
-  { q:'Qu\'est-ce que la photosynthèse ?', correct:'Les plantes fabriquent leur nourriture avec la lumière', wrong:['Les animaux mangent les plantes','L\'eau qui monte dans les arbres','Le cycle de l\'eau'] },
-  { q:'Comment s\'appelle le bébé du cheval ?', correct:'Le poulain', wrong:['Le veau','Le chevreau','L\'agneau'] },
-  { q:'Quelle planète est la plus proche de la Terre ?', correct:'Vénus', wrong:['Mars','Mercure','Jupiter'] },
-  { q:'Combien de saisons y a-t-il en France ?', correct:'4', wrong:['2','3','6'] },
-  { q:'Quel est le rôle des poumons ?', correct:'Échanger l\'oxygène et le CO2', wrong:['Pomper le sang','Digérer les aliments','Filtrer le sang'] },
-  { q:'Quelle couche protège la Terre des rayons UV ?', correct:'La couche d\'ozone', wrong:['La troposphère','La lithosphère','La stratosphère inférieure'] },
-  { q:'Comment s\'appelle le bébé du mouton ?', correct:'L\'agneau', wrong:['Le veau','Le chevreau','Le poulain'] },
-  { q:'Quel est le métal le plus utilisé dans la construction ?', correct:'L\'acier (fer)', wrong:['L\'or','Le cuivre','L\'aluminium'] },
+  { q:'Combien y a-t-il de planètes dans le système solaire ?', correct:'8', wrong:['7','9','10'], explain:'Les 8 planètes sont : Mercure, Vénus, Terre, Mars, Jupiter, Saturne, Uranus et Neptune. Pluton a été reclassée en "planète naine" en 2006.' },
+  { q:'Quel organe pompe le sang dans notre corps ?', correct:'Le cœur', wrong:['Le poumon','Le foie','Le rein'], explain:'Le cœur est un muscle creux qui bat environ 70 fois par minute. Il envoie le sang dans tout le corps via les artères et le reçoit en retour par les veines.' },
+  { q:'Quelle est la planète la plus proche du Soleil ?', correct:'Mercure', wrong:['Vénus','Mars','Terre'], explain:'Mercure est si proche du Soleil qu\'une année y dure seulement 88 jours terrestres. Malgré cela, elle n\'est pas la plus chaude — c\'est Vénus, car elle a une atmosphère qui retient la chaleur.' },
+  { q:'Comment s\'appelle le bébé de la vache ?', correct:'Le veau', wrong:['Le poulain','L\'agneau','Le chevreau'], explain:'Le veau est le petit de la vache et du taureau. Le poulain est le bébé du cheval, l\'agneau celui de la brebis, et le chevreau celui de la chèvre.' },
+  { q:'Quelle planète est connue pour ses anneaux ?', correct:'Saturne', wrong:['Jupiter','Mars','Neptune'], explain:'Les anneaux de Saturne sont composés de glace et de roches. Ils s\'étendent jusqu\'à 282 000 km du centre de la planète, mais ne font que quelques centaines de mètres d\'épaisseur !' },
+  { q:'Combien de dents a un adulte en bonne santé ?', correct:'32', wrong:['28','24','36'], explain:'Les 32 dents comprennent 8 incisives, 4 canines, 8 prémolaires et 12 molaires (dont 4 "dents de sagesse"). Certaines personnes n\'ont pas de dents de sagesse et gardent 28 dents.' },
+  { q:'Quel est le gaz que nous respirons pour vivre ?', correct:'L\'oxygène', wrong:['L\'azote','Le CO2','L\'hydrogène'], explain:'L\'air contient 78% d\'azote et seulement 21% d\'oxygène. Nos cellules utilisent l\'oxygène pour produire de l\'énergie, et rejettent du CO2 en échange.' },
+  { q:'Comment s\'appelle le plus grand océan ?', correct:'L\'océan Pacifique', wrong:['L\'océan Atlantique','L\'océan Indien','L\'océan Arctique'], explain:'L\'océan Pacifique couvre environ 165 millions de km², soit plus que toutes les terres émergées réunies ! Il s\'étend du pôle Nord au pôle Sud, entre l\'Asie et les Amériques.' },
+  { q:'Quelle est la couleur du ciel dégagé le jour ?', correct:'Bleu', wrong:['Blanc','Gris','Jaune'], explain:'Le ciel est bleu à cause de la diffusion de la lumière solaire par l\'atmosphère. Les molécules d\'air diffusent davantage la lumière bleue (courte longueur d\'onde) que les autres couleurs.' },
+  { q:'Que produisent les abeilles ?', correct:'Du miel', wrong:['Du sucre','De la cire seulement','Du lait'], explain:'Les abeilles fabriquent le miel à partir du nectar des fleurs. Elles produisent aussi de la cire pour construire leurs ruches, et sont essentielles à la pollinisation des plantes.' },
+  { q:'Quelle est la température de congélation de l\'eau ?', correct:'0°C', wrong:['4°C','-10°C','10°C'], explain:'L\'eau se transforme en glace à 0°C et bout à 100°C (au niveau de la mer). L\'eau de mer gèle un peu plus bas (vers -2°C) car le sel abaisse le point de congélation.' },
+  { q:'Combien de pattes a une araignée ?', correct:'8', wrong:['6','10','4'], explain:'Les araignées sont des arachnides avec 8 pattes. Les insectes, eux, ont 6 pattes. C\'est une façon simple de les distinguer ! Les araignées ont aussi généralement 8 yeux.' },
+  { q:'Comment s\'appelle la transformation d\'une chenille en papillon ?', correct:'La métamorphose', wrong:['La mue','L\'évolution','La croissance'], explain:'La métamorphose complète passe par 4 stades : œuf → chenille (larve) → chrysalide (nymphe) → papillon (adulte). Dans la chrysalide, le corps de la chenille se reconstruit entièrement !' },
+  { q:'Quel est l\'organe qui filtre le sang dans notre corps ?', correct:'Le rein', wrong:['Le foie','L\'estomac','La rate'], explain:'Les deux reins filtrent environ 180 litres de sang par jour pour produire 1 à 2 litres d\'urine. Le foie, lui, décompose les substances toxiques et produit la bile pour digérer les graisses.' },
+  { q:'Quelle est la plus grande planète du système solaire ?', correct:'Jupiter', wrong:['Saturne','Uranus','Neptune'], explain:'Jupiter est si grande qu\'on pourrait y faire tenir 1300 Terres ! C\'est une géante gazeuse, sans surface solide. Sa célèbre "Grande Tache Rouge" est une tempête qui dure depuis 400 ans.' },
+  { q:'De quoi les plantes ont-elles besoin pour pousser ?', correct:'Eau, lumière et CO2', wrong:['Seulement de l\'eau','Du sel et du sable','De l\'air chaud uniquement'], explain:'Par photosynthèse, les plantes utilisent la lumière du soleil pour transformer l\'eau (absorbée par les racines) et le CO2 (capté par les feuilles) en sucre et en oxygène.' },
+  { q:'Comment s\'appelle l\'étoile au centre de notre système solaire ?', correct:'Le Soleil', wrong:['Sirius','Véga','Bételgeuse'], explain:'Le Soleil est une étoile de taille moyenne. Il représente 99,8% de la masse totale du système solaire. La lumière du Soleil met environ 8 minutes pour arriver jusqu\'à la Terre.' },
+  { q:'Combien d\'os a environ un adulte ?', correct:'206', wrong:['100','306','150'], explain:'Un bébé naît avec environ 270 os, mais beaucoup fusionnent durant la croissance. À l\'âge adulte, il en reste 206. Le plus petit os est l\'étrier, dans l\'oreille (3 mm) !' },
+  { q:'Quel animal est le plus rapide sur Terre ?', correct:'Le guépard', wrong:['Le lion','L\'aigle','Le dauphin'], explain:'Le guépard peut atteindre 110 km/h en quelques secondes, mais seulement sur de courtes distances (environ 500 m). C\'est le sprinter du règne animal, mais il se fatigue vite.' },
+  { q:'Qu\'est-ce que la photosynthèse ?', correct:'Les plantes fabriquent leur nourriture avec la lumière', wrong:['Les animaux mangent les plantes','L\'eau qui monte dans les arbres','Le cycle de l\'eau'], explain:'La formule de la photosynthèse : CO2 + eau + lumière → glucose + oxygène. Les plantes sont dites "autotrophes" car elles fabriquent elles-mêmes leur nourriture, contrairement aux animaux.' },
+  { q:'Comment s\'appelle le bébé du cheval ?', correct:'Le poulain', wrong:['Le veau','Le chevreau','L\'agneau'], explain:'Le poulain peut se mettre debout et marcher quelques heures seulement après sa naissance ! À 1 an, il devient un "yearling", et à 4 ans environ, un cheval adulte.' },
+  { q:'Quelle planète est la plus proche de la Terre ?', correct:'Vénus', wrong:['Mars','Mercure','Jupiter'], explain:'En moyenne, Vénus est la planète la plus proche de la Terre. Elle est souvent visible à l\'œil nu le matin ou le soir, et on l\'appelle parfois "l\'étoile du berger".' },
+  { q:'Combien de saisons y a-t-il en France ?', correct:'4', wrong:['2','3','6'], explain:'Les 4 saisons sont le printemps, l\'été, l\'automne et l\'hiver. Elles sont causées par l\'inclinaison de la Terre sur son axe (23,5°) lors de sa révolution autour du Soleil.' },
+  { q:'Quel est le rôle des poumons ?', correct:'Échanger l\'oxygène et le CO2', wrong:['Pomper le sang','Digérer les aliments','Filtrer le sang'], explain:'Lors de chaque inspiration, l\'oxygène passe dans le sang via les alvéoles pulmonaires. Lors de l\'expiration, le CO2 produit par les cellules est rejeté. On respire environ 20 000 fois par jour !' },
+  { q:'Quelle couche protège la Terre des rayons UV ?', correct:'La couche d\'ozone', wrong:['La troposphère','La lithosphère','La stratosphère inférieure'], explain:'La couche d\'ozone se trouve dans la stratosphère, à 15-35 km d\'altitude. Elle absorbe 97 à 99% des rayons ultraviolets du Soleil qui seraient dangereux pour les êtres vivants.' },
+  { q:'Comment s\'appelle le bébé du mouton ?', correct:'L\'agneau', wrong:['Le veau','Le chevreau','Le poulain'], explain:'L\'agneau est le petit de la brebis (femelle) et du bélier (mâle). Le chevreau est le petit de la chèvre, et le chevreau de la chèvre. On dit "bêler" pour le cri du mouton.' },
+  { q:'Quel est le métal le plus utilisé dans la construction ?', correct:'L\'acier (fer)', wrong:['L\'or','Le cuivre','L\'aluminium'], explain:'L\'acier est un alliage de fer et de carbone. Il est résistant, soudable et recyclable à 100%. On l\'utilise pour les poutres, les ponts, les gratte-ciels et même les voitures.' },
 ];
 
 let cm2SciencesQuestions = [];
@@ -2491,6 +2497,7 @@ function cm2StartSciences() {
 
 function cm2RenderSciencesQuestion() {
   cm2UpdateProgress('cm2-sciences', cm2SciencesIdx, 10);
+  document.getElementById('cm2-sciences-explain').style.display = 'none';
   const q = cm2SciencesQuestions[cm2SciencesIdx];
   document.getElementById('cm2-sciences-prompt').textContent = q.q;
   const grid = document.getElementById('cm2-sciences-choices');
@@ -2512,15 +2519,22 @@ function cm2HandleSciencesAnswer(btn, val, correct) {
   });
   const isCorrect = val === correct;
   if(!isCorrect) btn.classList.add('wrong');
-  if(isCorrect) cm2State.sessionScore++;
+  if(isCorrect) { cm2State.sessionScore++; playCorrect(); } else { playWrong(); }
   document.getElementById('cm2-sciences-score-live').textContent = '⭐ ' + cm2State.sessionScore;
-  setTimeout(() => {
-    showFeedback(isCorrect, isCorrect ? null : correct, () => {
-      cm2SciencesIdx++;
-      if(cm2SciencesIdx < 10) cm2RenderSciencesQuestion();
-      else cm2ShowResult('sciences', cm2State.sessionScore, 10);
-    });
-  }, 400);
+
+  const q = cm2SciencesQuestions[cm2SciencesIdx];
+  const explainBox = document.getElementById('cm2-sciences-explain');
+  document.getElementById('cm2-sciences-explain-text').textContent = q.explain || '';
+  explainBox.style.display = 'block';
+  explainBox.style.borderColor = isCorrect ? '#10B981' : '#F59E0B';
+  explainBox.style.background = isCorrect ? '#F0FDF4' : '#FFFBEB';
+
+  document.getElementById('cm2-sciences-next-btn').onclick = () => {
+    explainBox.style.display = 'none';
+    cm2SciencesIdx++;
+    if(cm2SciencesIdx < 10) cm2RenderSciencesQuestion();
+    else cm2ShowResult('sciences', cm2State.sessionScore, 10);
+  };
 }
 
 // ===================================================================
