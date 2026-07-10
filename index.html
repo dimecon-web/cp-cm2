@@ -407,12 +407,13 @@ html, body {
   background: #FFF3CD; color: #856404;
   border: 3px solid #FFCA28;
   box-shadow: 0 5px 0 #e6a800;
-  font-size: 28px;
   min-width: 64px; min-height: 64px;
   padding: 10px;
   border-radius: var(--radius);
   flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
 }
+.btn-speak svg, .btn-speak-inline svg { width: 28px; height: 28px; fill: currentColor; display: block; }
 .btn-speak:active { box-shadow: 0 2px 0 #e6a800; transform: translateY(3px) scale(0.95); }
 .btn-speak.speaking { background: #FFCA28; animation: pulse-speak 0.6s infinite alternate; }
 @keyframes pulse-speak { from { transform: scale(1); } to { transform: scale(1.08); } }
@@ -910,7 +911,7 @@ html, body {
   </div>
   <div class="question-card" id="cm2-ortho-card" style="gap:14px">
     <div class="question-prompt" id="cm2-ortho-prompt" style="font-size:clamp(17px,3vw,24px)"></div>
-    <button class="btn btn-speak" id="cm2-ortho-speak-btn" title="Écouter le mot">🔊</button>
+    <button class="btn btn-speak" id="cm2-ortho-speak-btn" title="Écouter le mot"></button>
     <div class="cm2-input-wrap">
       <input class="cm2-input" type="text" id="cm2-ortho-input" placeholder="Écris le mot..." autocomplete="off" autocorrect="off" spellcheck="false">
       <button class="btn btn-cm2-primary" id="cm2-ortho-validate" style="min-width:100px">Valider ✅</button>
@@ -1121,6 +1122,9 @@ function toggleMusic() {
 // ===================================================================
 let currentInstruction = '';
 
+// Icône haut-parleur SVG (remplace l'emoji 🔊)
+const SPEAKER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
+
 // Convertit un emoji en URL SVG Twemoji (haute résolution, style net)
 function emojiImgUrl(emoji) {
   const cp = [...emoji]
@@ -1136,50 +1140,79 @@ function stripEmoji(text) {
 
 function pickBestVoice(lang) {
   const voices = window.speechSynthesis.getVoices();
-  const fr = voices.filter(v => v.lang.startsWith(lang.split('-')[0]));
+  const langCode = lang.split('-')[0]; // 'fr'
+  // Strict filter : voix dont la langue commence par 'fr' (jamais d'anglais)
+  const fr = voices.filter(v => v.lang.toLowerCase().startsWith(langCode));
   if (!fr.length) return null;
-  // 1. Enhanced/premium (iOS "Thomas (Enhanced)", etc.)
+  // 1. Enhanced/premium (iOS : "Thomas (Enhanced)", "Amélie (Enhanced)")
   const enhanced = fr.find(v => /enhanced|premium/i.test(v.name) && v.localService);
   if (enhanced) return enhanced;
-  // 2. Modern neural voices (macOS Ventura / iOS 17+) — much more natural than Thomas/Amélie
+  // 2. Voix neurales modernes (macOS Ventura / iOS 17+)
   const modern = ['Flo', 'Eddy', 'Sandy', 'Shelley', 'Reed', 'Rocko'];
   const modernFr = fr.find(v => v.localService && modern.some(n => v.name.startsWith(n)) && v.lang === lang);
   if (modernFr) return modernFr;
   const modernAny = fr.find(v => v.localService && modern.some(n => v.name.startsWith(n)));
   if (modernAny) return modernAny;
-  // 3. Any local voice
-  const local = fr.find(v => v.localService && v.lang === lang);
+  // 3. Thomas / Amélie (voix locales classiques iOS)
+  const classic = fr.find(v => v.localService && /thomas|amélie|amé lie/i.test(v.name));
+  if (classic) return classic;
+  // 4. N'importe quelle voix locale française
+  const local = fr.find(v => v.localService);
   if (local) return local;
-  return fr.find(v => v.localService) || fr[0];
+  return fr[0];
 }
 
-function speak(text, lang = 'fr-FR') {
+function _doSpeak(text, lang, rate, pitch) {
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = lang;
+  utt.rate = rate;
+  utt.pitch = pitch;
+  const voice = pickBestVoice(lang);
+  if (voice) utt.voice = voice;
+  const btns = document.querySelectorAll('.btn-speak, .btn-speak-inline');
+  btns.forEach(b => b.classList.add('speaking'));
+  utt.onend = utt.onerror = () => btns.forEach(b => b.classList.remove('speaking'));
+  window.speechSynthesis.speak(utt);
+}
+
+function speak(text, lang = 'fr-FR', rate = 0.88, pitch = 1.0) {
   if (!window.speechSynthesis) return;
   text = stripEmoji(text);
   if (!text) return;
   window.speechSynthesis.cancel();
-
-  const doSpeak = () => {
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = lang;
-    utt.rate = 0.9;
-    utt.pitch = 1.0;
-    const voice = pickBestVoice(lang);
-    if (voice) utt.voice = voice;
-
-    const btns = document.querySelectorAll('.btn-speak, .btn-speak-inline');
-    btns.forEach(b => b.classList.add('speaking'));
-    utt.onend = utt.onerror = () => btns.forEach(b => b.classList.remove('speaking'));
-    window.speechSynthesis.speak(utt);
-  };
-
-  // Voices may not be loaded yet on first call
   const voices = window.speechSynthesis.getVoices();
   if (voices.length) {
-    doSpeak();
+    _doSpeak(text, lang, rate, pitch);
   } else {
-    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.onvoiceschanged = null; doSpeak(); };
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.onvoiceschanged = null; _doSpeak(text, lang, rate, pitch); };
   }
+}
+
+// Dictée orthographe : lit la phrase lentement, puis le mot isolé après une pause
+function speakDictee(sentence, word) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const lang = 'fr-FR';
+  const voices = window.speechSynthesis.getVoices();
+  const go = () => {
+    // Phrase complète (mot remplacé par silence "...")
+    const phraseText = sentence.replace('[BLANK]', '...');
+    const utt1 = new SpeechSynthesisUtterance(stripEmoji(phraseText));
+    utt1.lang = lang; utt1.rate = 0.78; utt1.pitch = 1.0;
+    const voice = pickBestVoice(lang);
+    if (voice) utt1.voice = voice;
+    const btns = document.querySelectorAll('.btn-speak, .btn-speak-inline');
+    btns.forEach(b => b.classList.add('speaking'));
+    // Mot isolé après la phrase
+    const utt2 = new SpeechSynthesisUtterance(word);
+    utt2.lang = lang; utt2.rate = 0.7; utt2.pitch = 1.0;
+    if (voice) utt2.voice = voice;
+    utt2.onend = utt2.onerror = () => btns.forEach(b => b.classList.remove('speaking'));
+    utt1.onend = () => window.speechSynthesis.speak(utt2);
+    window.speechSynthesis.speak(utt1);
+  };
+  if (voices.length) go();
+  else { window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.onvoiceschanged = null; go(); }; }
 }
 
 function repeatInstruction() {
@@ -1192,7 +1225,7 @@ function setPrompt(elementId, text) {
   const btn = document.createElement('button');
   btn.className = 'btn-speak-inline';
   btn.title = 'Écouter la question';
-  btn.textContent = '🔊';
+  btn.innerHTML = SPEAKER_SVG;
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
     speak(text);
@@ -2711,7 +2744,9 @@ function cm2StartOrtho() {
   const btn = document.getElementById('cm2-ortho-validate');
   input.onkeydown = e => { if(e.key==='Enter') btn.click(); };
   btn.onclick = cm2ValidateOrtho;
-  document.getElementById('cm2-ortho-speak-btn').onclick = () => speak(cm2OrthoCurrentWord, 'fr-FR');
+  const speakBtn = document.getElementById('cm2-ortho-speak-btn');
+  speakBtn.innerHTML = SPEAKER_SVG;
+  speakBtn.onclick = () => speakDictee(cm2OrthoQuestions[cm2OrthoIdx].sentence, cm2OrthoCurrentWord);
   cm2RenderOrthoQuestion();
 }
 
