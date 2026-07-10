@@ -2414,7 +2414,7 @@ function cm2HandleLectureAnswer(btn, val, correct) {
 let cm2MathsQuestions = [];
 let cm2MathsIdx = 0;
 let cm2ChronoTimer = null;
-let cm2ChronoMax = 12;
+let cm2ChronoMax = 30;
 let cm2ChronoLeft = 12;
 let cm2ChronoInterval = null;
 
@@ -2521,7 +2521,7 @@ function cm2StartMaths() {
   cm2MathsQuestions = cm2GenerateMathsQuestions();
   cm2MathsIdx = 0;
   cm2State.sessionScore = 0;
-  cm2ChronoMax = 12;
+  cm2ChronoMax = 30;
   document.getElementById('cm2-maths-score-live').textContent = '⭐ 0';
   cm2BuildNumpad();
   cm2RenderMathsQuestion();
@@ -2585,10 +2585,10 @@ function cm2ValidateMaths() {
   cm2SetNumpadDisabled(true);
   if(correct) {
     cm2State.sessionScore++;
-    cm2ChronoMax = Math.max(3, cm2ChronoMax - 1.5);
+    cm2ChronoMax = Math.max(10, cm2ChronoMax - 2);
     document.getElementById('cm2-maths-score-live').textContent = '⭐ ' + cm2State.sessionScore;
   } else {
-    cm2ChronoMax = Math.min(20, cm2ChronoMax + 2);
+    cm2ChronoMax = Math.min(45, cm2ChronoMax + 3);
   }
   setTimeout(() => {
     showFeedback(correct, correct ? null : String(q.answer), () => {
