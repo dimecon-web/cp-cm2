@@ -1883,8 +1883,8 @@ let snakeBody, snakeDx, snakeDy, snakeNextDx, snakeNextDy;
 let snakeFood, snakeScore, snakeBest, snakeTimer, snakeRunning, snakeSpeed;
 let snakeDifficulty = 3; // 1 (lent) → 10 (rapide)
 
-// Délai en ms selon la difficulté (1=300ms, 10=60ms)
-function diffToSpeed(d) { return Math.round(300 - (d - 1) * (240 / 9)); }
+// Délai en ms selon la difficulté (1=800ms, 10=60ms) — courbe exponentielle pour progression naturelle
+function diffToSpeed(d) { return Math.round(800 * Math.pow(60 / 800, (d - 1) / 9)); }
 
 function buildSpeedBtns() {
   const wrap = document.getElementById('speed-btns');
@@ -2311,13 +2311,14 @@ let cm2ChronoInterval = null;
 
 function cm2GenerateMathsQuestions() {
   const qs = [];
-  // 3 additions jusqu'à 1000
-  for(let i=0;i<3;i++) {
+
+  // 2 additions jusqu'à 1000
+  for(let i=0;i<2;i++) {
     const a=randInt(50,500), b=randInt(10,400);
     qs.push({ expr:`${a} + ${b}`, answer: a+b });
   }
-  // 3 soustractions
-  for(let i=0;i<3;i++) {
+  // 1 soustraction
+  for(let i=0;i<1;i++) {
     const b=randInt(10,200), a=randInt(b+1, b+400);
     qs.push({ expr:`${a} − ${b}`, answer: a-b });
   }
@@ -2326,12 +2327,50 @@ function cm2GenerateMathsQuestions() {
     const a=randInt(2,10), b=randInt(2,10);
     qs.push({ expr:`${a} × ${b}`, answer: a*b });
   }
-  // 2 divisions simples
-  for(let i=0;i<2;i++) {
-    const b=randInt(2,9), a=b*randInt(2,10);
-    qs.push({ expr:`${a} ÷ ${b}`, answer: a/b });
+  // 1 division simple
+  const db=randInt(2,9), da=db*randInt(2,10);
+  qs.push({ expr:`${da} ÷ ${db}`, answer: da/db });
+
+  // 2 fractions simples (réponse entière) — priorité bulletin
+  const fracTypes = shuffle([
+    () => { const n=randInt(2,8)*2; return { expr:`½ de ${n}`, answer: n/2 }; },
+    () => { const n=randInt(1,6)*4; return { expr:`¼ de ${n}`, answer: n/4 }; },
+    () => { const n=randInt(1,5)*4; return { expr:`¾ de ${n}`, answer: Math.round(3*n/4) }; },
+    () => { const n=randInt(2,7)*3; return { expr:`⅓ de ${n}`, answer: n/3 }; },
+    () => { const n=randInt(1,4)*3; return { expr:`⅔ de ${n}`, answer: Math.round(2*n/3) }; },
+  ]);
+  qs.push(fracTypes[0](), fracTypes[1]());
+
+  // 2 décimaux ×10/100/1000 — priorité bulletin
+  const decOps = shuffle([
+    () => { const d=randInt(1,9); return { expr:`${d},${randInt(1,9)} × 10`, answer: d*10+randInt(1,9) }; },
+    () => { const d=randInt(1,5); const c=randInt(1,9); return { expr:`${d},${c} × 100`, answer: d*100+c*10 }; },
+    () => { const d=randInt(1,3); return { expr:`${d},${randInt(1,9)}${randInt(0,9)} × 100`, answer: null }; }, // skip complex
+    () => { const x=randInt(1,9); return { expr:`${x} ÷ 10`, answer: null }; }, // skip — needs decimal answer
+    () => { const a=randInt(1,8); const b=10-a; return { expr:`${a},${randInt(1,9)} + ${b-1},${10-randInt(1,9)}`, answer: a+b-1+1 }; },
+  ]);
+  // Générer 2 questions décimales valides (réponse entière)
+  const decValid = [
+    () => { const a=randInt(1,9); const b=randInt(1,9); return { expr:`${a},${b} × 10`, answer: a*10+b }; },
+    () => { const a=randInt(1,5); const b=randInt(1,9); return { expr:`${a},${b}0 × 10`, answer: a*10+b }; },
+    () => { const a=randInt(1,4); const b=randInt(1,9); return { expr:`${a},0${b} × 100`, answer: a*100+b }; },
+    () => { const t=randInt(1,9); const u=10-t; return { expr:`${t},${randInt(1,8)} + ${u-1},${randInt(2,9)}`, answer: null }; },
+    () => { const a=randInt(1,5); const b=10-a; return { expr:`${a},5 + ${b-1},5`, answer: a+b }; },
+    () => { const a=randInt(2,8); const b=10-a; return { expr:`${a},3 + ${b},7`, answer: a+b+1 }; },
+  ];
+  let added=0;
+  for(const fn of shuffle(decValid)) {
+    if(added>=2) break;
+    const q = fn();
+    if(q.answer !== null && Number.isInteger(q.answer) && q.answer > 0) { qs.push(q); added++; }
   }
-  return shuffle(qs);
+  // Compléter si besoin
+  while(qs.length < 10) {
+    const a=randInt(2,10), b=randInt(2,10);
+    qs.push({ expr:`${a} × ${b}`, answer: a*b });
+  }
+
+  return shuffle(qs.slice(0,10));
 }
 
 let cm2NumpadValue = '';
@@ -2559,6 +2598,26 @@ const CM2_ORTHO_DATA = [
   { sentence:'Mes [BLANK] sont rangées dans l\'armoire.', word:'affaires', rule:'"Affaires" est féminin pluriel. L\'adjectif possessif "mes" s\'accorde en nombre.' },
   { sentence:'[BLANK] tu veux venir avec nous ?', word:'Est-ce que', rule:'"Est-ce que" permet de poser une question. À ne pas confondre avec "et" (conjonction).' },
   { sentence:'Le cheval [BLANK] dans le pré.', word:'broute', rule:'Le verbe "brouter" au présent avec il/elle : "broute" (1er groupe, -e à la 3e pers. sing.).' },
+  // Accords adjectif/nom — priorité bulletin
+  { sentence:'Les filles sont [BLANK] de leur travail.', word:'fières', rule:'"Fier" s\'accorde : féminin pluriel → "fières". Les adjectifs s\'accordent en genre et en nombre avec le nom.' },
+  { sentence:'La journée était [BLANK].', word:'ensoleillée', rule:'"Ensoleillé" est un adjectif. Au féminin, on ajoute -e : "ensoleillée". Ici il s\'accorde avec "journée" (féminin).' },
+  { sentence:'Les maisons sont [BLANK].', word:'grandes', rule:'"Grand" au féminin pluriel → "grandes". Règle : féminin = +e, pluriel = +s (ou les deux : +es).' },
+  { sentence:'Mon frère et ma sœur sont [BLANK].', word:'gentils', rule:'"Gentil" au pluriel → "gentils". Le pluriel masculin de "gentil" est "gentils" (pas de changement de prononciation).' },
+  // Homophones — priorité bulletin
+  { sentence:'Il [BLANK] très chaud aujourd\'hui.', word:'fait', rule:'"Fait" vient du verbe "faire" (il fait). À ne pas confondre avec "fais" (je/tu fais) ou "fêt" qui n\'existe pas.' },
+  { sentence:'Les élèves [BLANK] leur devoir.', word:'ont', rule:'"Ont" est le verbe "avoir" à la 3e personne du pluriel. "On" est un pronom. Astuce : remplace par "avaient" → "ont".' },
+  { sentence:'Je ne sais pas [BLANK] elle habite.', word:'où', rule:'"Où" avec accent = lieu ou moment. "Ou" sans accent = choix (ou bien). Astuce : remplace par "là où" → accent.' },
+  { sentence:'[BLANK] chien s\'appelle Rex.', word:'Son', rule:'"Son" est un adjectif possessif (son chien = le chien de quelqu\'un). "Sont" est le verbe être (ils sont). Astuce : remplace par "était" → "son".' },
+  { sentence:'Ma mère [BLANK] cuisine très bien.', word:'a', rule:'"A" est le verbe "avoir" (elle a). "À" est une préposition (aller à l\'école). Astuce : si tu peux remplacer par "avait" → "a" sans accent.' },
+  // Conjugaison imparfait/futur — priorité bulletin
+  { sentence:'Demain, nous [BLANK] au cinéma.', word:'irons', rule:'"Aller" au futur simple : j\'irai, tu iras, il ira, nous irons, vous irez, ils iront.' },
+  { sentence:'Hier, il [BLANK] très fort.', word:'pleuvait', rule:'"Pleuvoir" à l\'imparfait : "il pleuvait". L\'imparfait se forme avec le radical + -ais, -ais, -ait, -ions, -iez, -aient.' },
+  { sentence:'L\'année prochaine, vous [BLANK] en CM2.', word:'serez', rule:'"Être" au futur simple : je serai, tu seras, il sera, nous serons, vous serez, ils seront.' },
+  { sentence:'Quand j\'étais petit, je [BLANK] du vélo.', word:'faisais', rule:'"Faire" à l\'imparfait : je faisais, tu faisais, il faisait. Attention : on garde le radical "fais-" même avec "nous faisions".' },
+  // Participes passés — priorité bulletin
+  { sentence:'Elle a [BLANK] son livre.', word:'lu', rule:'"Lu" est le participe passé de "lire". Avec l\'auxiliaire "avoir", le participe passé ne s\'accorde pas avec le sujet.' },
+  { sentence:'Nous avons [BLANK] un gâteau.', word:'mangé', rule:'"Mangé" est le participe passé de "manger". Avec "avoir", il ne s\'accorde pas avec le sujet : "nous avons mangé" (pas mangés).' },
+  { sentence:'Les fleurs que j\'ai [BLANK] sont belles.', word:'cueillies', rule:'"Cueillies" : avec "avoir", le participe passé s\'accorde avec le COD si celui-ci est placé AVANT le verbe. Ici "que" (= les fleurs, féminin pluriel) précède le verbe.' },
 ];
 
 let cm2OrthoQuestions = [];
