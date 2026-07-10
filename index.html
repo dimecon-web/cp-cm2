@@ -543,10 +543,11 @@ html, body {
 
 /* CM2 text input answers */
 .cm2-input-wrap {
-  display: flex; gap: 10px; width: 100%; align-items: stretch;
+  display: flex; flex-direction: column; gap: 10px; width: 100%; align-items: stretch;
 }
 .cm2-input {
-  flex: 1; border: 3px solid #6C63FF; border-radius: 16px;
+  width: 100%; box-sizing: border-box;
+  border: 3px solid #6C63FF; border-radius: 16px;
   padding: 14px 18px; font-size: 24px; font-weight: 700; color: var(--text);
   background: #fff; outline: none;
   -webkit-appearance: none; appearance: none;
