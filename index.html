@@ -6,26 +6,30 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Prête pour le CP ! 🌟</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ===== RESET & BASE ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --pink:    #FF6B9D;
-  --purple:  #9B59B6;
-  --blue:    #3498DB;
-  --green:   #2ECC71;
-  --yellow:  #F1C40F;
-  --orange:  #E67E22;
-  --red:     #E74C3C;
-  --bg:      #FFF9F0;
+  --pink:    #F472B6;
+  --purple:  #A855F7;
+  --blue:    #3B82F6;
+  --green:   #22C55E;
+  --yellow:  #F59E0B;
+  --orange:  #F97316;
+  --red:     #EF4444;
+  --bg:      #F8F7FF;
   --card:    #FFFFFF;
-  --text:    #2C3E50;
-  --shadow:  0 4px 16px rgba(0,0,0,0.12);
+  --text:    #1E293B;
+  --shadow:  0 2px 12px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.06);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.05);
   --radius:  20px;
 }
 html, body {
   width: 100%; height: 100%;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Nunito', 'Helvetica Neue', Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
   overflow: hidden;
@@ -1130,10 +1134,10 @@ const SPEAKER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
 // Convertit un emoji en URL SVG Twemoji (haute résolution, style net)
 function emojiImgUrl(emoji) {
   const cp = [...emoji]
-    .map(c => c.codePointAt(0).toString(16))
-    .filter(c => c !== 'fe0f')  // strip variation selector
+    .map(c => c.codePointAt(0).toString(16).toUpperCase())
+    .filter(c => c !== 'FE0F')
     .join('-');
-  return `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${cp}.svg`;
+  return `https://cdn.jsdelivr.net/npm/openmoji@15.1.0/color/svg/${cp}.svg`;
 }
 
 function stripEmoji(text) {
@@ -1395,8 +1399,8 @@ const PHONO_DATA = [
   { letter:'A', correct:{emoji:'🍍', label:'Ananas'}, wrong:[{emoji:'🐘',label:'Éléphant'},{emoji:'🌙',label:'Lune'}] },
   { letter:'B', correct:{emoji:'🍌', label:'Banane'}, wrong:[{emoji:'🐟',label:'Poisson'},{emoji:'🌹',label:'Rose'}] },
   { letter:'C', correct:{emoji:'🐈', label:'Chat'}, wrong:[{emoji:'🍓',label:'Fraise'},{emoji:'🐬',label:'Dauphin'}] },
-  { letter:'D', correct:{emoji:'🦷', label:'Dent'}, wrong:[{emoji:'🐑',label:'Mouton'},{emoji:'🍊',label:'Orange'}] },
-  { letter:'E', correct:{emoji:'⭐', label:'Étoile'}, wrong:[{emoji:'🐸',label:'Grenouille'},{emoji:'🍒',label:'Cerise'}] },
+  { letter:'D', correct:{emoji:'🐉', label:'Dragon'}, wrong:[{emoji:'🐑',label:'Mouton'},{emoji:'🍊',label:'Orange'}] },
+  { letter:'E', correct:{emoji:'🐌', label:'Escargot'}, wrong:[{emoji:'🐸',label:'Grenouille'},{emoji:'🍒',label:'Cerise'}] },
   { letter:'F', correct:{emoji:'🌸', label:'Fleur'}, wrong:[{emoji:'🐢',label:'Tortue'},{emoji:'🍇',label:'Raisin'}] },
   { letter:'G', correct:{emoji:'🎂', label:'Gâteau'}, wrong:[{emoji:'🐬',label:'Dauphin'},{emoji:'🍋',label:'Citron'}] },
   { letter:'H', correct:{emoji:'🦉', label:'Hibou'}, wrong:[{emoji:'🦁',label:'Lion'},{emoji:'🍑',label:'Pêche'}] },
@@ -1404,7 +1408,7 @@ const PHONO_DATA = [
   { letter:'L', correct:{emoji:'🦁', label:'Lion'}, wrong:[{emoji:'🍎',label:'Pomme'},{emoji:'🐠',label:'Poisson'}] },
   { letter:'M', correct:{emoji:'🏠', label:'Maison'}, wrong:[{emoji:'🍓',label:'Fraise'},{emoji:'🐸',label:'Grenouille'}] },
   { letter:'N', correct:{emoji:'☁️', label:'Nuage'}, wrong:[{emoji:'🍌',label:'Banane'},{emoji:'🐯',label:'Tigre'}] },
-  { letter:'O', correct:{emoji:'🐦', label:'Oiseau'}, wrong:[{emoji:'🎈',label:'Ballon'},{emoji:'🍋',label:'Citron'}] },
+  { letter:'O', correct:{emoji:'🐻', label:'Ours'}, wrong:[{emoji:'🎈',label:'Ballon'},{emoji:'🍋',label:'Citron'}] },
   { letter:'P', correct:{emoji:'🦋', label:'Papillon'}, wrong:[{emoji:'🐳',label:'Baleine'},{emoji:'🍊',label:'Orange'}] },
   { letter:'R', correct:{emoji:'🌹', label:'Rose'}, wrong:[{emoji:'🍎',label:'Pomme'},{emoji:'🐑',label:'Mouton'}] },
   { letter:'S', correct:{emoji:'🐍', label:'Serpent'}, wrong:[{emoji:'🎈',label:'Ballon'},{emoji:'🍒',label:'Cerise'}] },
@@ -1440,7 +1444,7 @@ function renderPhonoQuestion() {
   allChoices.forEach(choice => {
     const btn = document.createElement('div');
     btn.className = 'choice-btn';
-    btn.innerHTML = `<img class="choice-img" src="${emojiImgUrl(choice.emoji)}" alt="${choice.label}" loading="lazy">`;
+    btn.innerHTML = `<img class="choice-img" src="${emojiImgUrl(choice.emoji)}" alt="${choice.label}" loading="lazy"><span class="choice-label">${choice.label}</span>`;
     if (choice === q.correct) btn.dataset.correct = 'true';
     btn.addEventListener('click', () => handlePhonoAnswer(btn, choice === q.correct));
     grid.appendChild(btn);
@@ -1691,48 +1695,48 @@ function handleMathsAnswer(btn, correct, correctVal) {
 // ===================================================================
 const VOCAB_QUESTIONS = [
   // Fill-in-the-blank (type: 'fill') — [BLANK] marks the missing word
-  { type:'fill', sentence:'Le 🐱 mange du [BLANK] 🐟.', blank:'poisson', words:['poisson','ballon','livre','maison'], label:'Quel mot manque ?' },
-  { type:'fill', sentence:'La 🌸 est belle dans le [BLANK] 🏡.', blank:'jardin', words:['jardin','voiture','école','gâteau'], label:'Quel mot manque ?' },
-  { type:'fill', sentence:'Le 🐶 joue avec une [BLANK] 🎾.', blank:'balle', words:['balle','lune','table','nuage'], label:'Quel mot manque ?' },
-  { type:'fill', sentence:'La 🦋 vole dans les [BLANK] 🌸.', blank:'fleurs', words:['fleurs','chaussures','livres','voitures'], label:'Quel mot manque ?' },
-  { type:'fill', sentence:'Je mange une [BLANK] 🍎 rouge.', blank:'pomme', words:['pomme','carotte','banane','cerise'], label:'Quel mot manque ?' },
+  { type:'fill', sentence:'Le chat mange du [BLANK].', blank:'poisson', words:['poisson','ballon','livre','savon'], label:'Quel mot manque ?' },
+  { type:'fill', sentence:'La fleur est belle dans le [BLANK].', blank:'jardin', words:['jardin','nuage','bureau','désert'], label:'Quel mot manque ?' },
+  { type:'fill', sentence:'Le chien joue avec une [BLANK].', blank:'balle', words:['balle','lune','table','nuage'], label:'Quel mot manque ?' },
+  { type:'fill', sentence:'Le papillon vole dans les [BLANK].', blank:'fleurs', words:['fleurs','chaussures','livres','voitures'], label:'Quel mot manque ?' },
+  { type:'fill', sentence:'Je mange une pomme [BLANK].', blank:'rouge', words:['rouge','bleue','ronde','grande'], label:'Quel mot manque ?' },
+  { type:'fill', sentence:'Le soleil brille dans le [BLANK].', blank:'ciel', words:['ciel','sol','mur','toit'], label:'Quel mot manque ?' },
+  { type:'fill', sentence:'Je bois du [BLANK] le matin.', blank:'lait', words:['lait','jus','sel','miel'], label:'Quel mot manque ?' },
+  { type:'fill', sentence:'L\'oiseau chante dans l\'[BLANK].', blank:'arbre', words:['arbre','rivière','école','nuage'], label:'Quel mot manque ?' },
   // Category sorting (type: 'sort')
   { type:'sort', label:'Trie les mots dans la bonne catégorie !',
     categories: ['🐾 Animaux', '🍎 Fruits'],
     items: [
-      {word:'🐱 Chat', cat:'🐾 Animaux'},
-      {word:'🍌 Banane', cat:'🍎 Fruits'},
-      {word:'🐶 Chien', cat:'🐾 Animaux'},
-      {word:'🍇 Raisin', cat:'🍎 Fruits'},
-      {word:'🐠 Poisson', cat:'🐾 Animaux'},
-      {word:'🍓 Fraise', cat:'🍎 Fruits'},
-    ]
-  },
-  { type:'sort', label:'Trie les mots dans la bonne catégorie !',
-    categories: ['🎨 Couleurs', '🔢 Chiffres'],
-    items: [
-      {word:'🔴 Rouge', cat:'🎨 Couleurs'},
-      {word:'1️⃣ Un', cat:'🔢 Chiffres'},
-      {word:'🔵 Bleu', cat:'🎨 Couleurs'},
-      {word:'2️⃣ Deux', cat:'🔢 Chiffres'},
-      {word:'🟢 Vert', cat:'🎨 Couleurs'},
-      {word:'3️⃣ Trois', cat:'🔢 Chiffres'},
+      {word:'Chat', cat:'🐾 Animaux'},
+      {word:'Banane', cat:'🍎 Fruits'},
+      {word:'Chien', cat:'🐾 Animaux'},
+      {word:'Raisin', cat:'🍎 Fruits'},
+      {word:'Lapin', cat:'🐾 Animaux'},
+      {word:'Fraise', cat:'🍎 Fruits'},
     ]
   },
   { type:'sort', label:'Trie les mots dans la bonne catégorie !',
     categories: ['🏠 Maison', '🏫 École'],
     items: [
-      {word:'🛏️ Lit', cat:'🏠 Maison'},
-      {word:'✏️ Crayon', cat:'🏫 École'},
-      {word:'🛁 Baignoire', cat:'🏠 Maison'},
-      {word:'📚 Livres', cat:'🏫 École'},
-      {word:'🪑 Chaise', cat:'🏠 Maison'},
-      {word:'🎒 Cartable', cat:'🏫 École'},
+      {word:'Lit', cat:'🏠 Maison'},
+      {word:'Crayon', cat:'🏫 École'},
+      {word:'Baignoire', cat:'🏠 Maison'},
+      {word:'Livre', cat:'🏫 École'},
+      {word:'Cuisine', cat:'🏠 Maison'},
+      {word:'Cartable', cat:'🏫 École'},
     ]
   },
-  // More fill-in
-  { type:'fill', sentence:'Le soleil ☀️ brille dans le [BLANK].', blank:'ciel', words:['ciel','sol','mur','toit'], label:'Quel mot manque ?' },
-  { type:'fill', sentence:'Je bois du [BLANK] 🥛 le matin.', blank:'lait', words:['lait','jus','eau','thé'], label:'Quel mot manque ?' },
+  { type:'sort', label:'Trie les mots dans la bonne catégorie !',
+    categories: ['🌿 Légumes', '🍬 Sucreries'],
+    items: [
+      {word:'Carotte', cat:'🌿 Légumes'},
+      {word:'Bonbon', cat:'🍬 Sucreries'},
+      {word:'Tomate', cat:'🌿 Légumes'},
+      {word:'Gâteau', cat:'🍬 Sucreries'},
+      {word:'Épinard', cat:'🌿 Légumes'},
+      {word:'Chocolat', cat:'🍬 Sucreries'},
+    ]
+  },
 ];
 
 let vocabQuestions = [];
@@ -1872,26 +1876,37 @@ function sanitizeId(s) { return s.replace(/[^a-zA-Z0-9]/g,'_'); }
 // ===================================================================
 const ENGLISH_DATA = [
   // Colors
-  { prompt:'🔴\nQuelle est cette couleur en anglais ?', correct:'Red', wrong:['Blue','Green','Yellow'], type:'word' },
-  { prompt:'🔵\nQuelle est cette couleur en anglais ?', correct:'Blue', wrong:['Red','Pink','Orange'], type:'word' },
-  { prompt:'🟢\nQuelle est cette couleur en anglais ?', correct:'Green', wrong:['Purple','Blue','Yellow'], type:'word' },
-  { prompt:'🟡\nQuelle est cette couleur en anglais ?', correct:'Yellow', wrong:['Red','Pink','Brown'], type:'word' },
+  { prompt:'Quelle est cette couleur en anglais ?\n🔴', correct:'Red', wrong:['Blue','Green','Yellow'], type:'word' },
+  { prompt:'Quelle est cette couleur en anglais ?\n🔵', correct:'Blue', wrong:['Red','Pink','Orange'], type:'word' },
+  { prompt:'Quelle est cette couleur en anglais ?\n🟢', correct:'Green', wrong:['Purple','Blue','Yellow'], type:'word' },
+  { prompt:'Quelle est cette couleur en anglais ?\n🟡', correct:'Yellow', wrong:['Red','Pink','Brown'], type:'word' },
+  { prompt:'Quelle est cette couleur en anglais ?\n🟠', correct:'Orange', wrong:['Red','Yellow','Pink'], type:'word' },
   // Numbers
-  { prompt:'Combien ? 🍎🍎🍎', correct:'Three', wrong:['Two','Four','Five'], type:'word' },
-  { prompt:'Combien ? 🌟🌟🌟🌟🌟', correct:'Five', wrong:['Three','Four','Six'], type:'word' },
-  { prompt:'Combien ? 🐱🐱', correct:'Two', wrong:['One','Three','Four'], type:'word' },
-  { prompt:'Combien ? 🏀🏀🏀🏀🏀🏀🏀', correct:'Seven', wrong:['Six','Eight','Five'], type:'word' },
+  { prompt:'Combien y en a-t-il ?\n⭐⭐⭐', correct:'Three', wrong:['Two','Four','Five'], type:'word' },
+  { prompt:'Combien y en a-t-il ?\n⭐⭐⭐⭐⭐', correct:'Five', wrong:['Three','Four','Six'], type:'word' },
+  { prompt:'Combien y en a-t-il ?\n⭐⭐', correct:'Two', wrong:['One','Three','Four'], type:'word' },
+  { prompt:'Combien y en a-t-il ?\n⭐⭐⭐⭐', correct:'Four', wrong:['Three','Five','Six'], type:'word' },
+  { prompt:'Combien y en a-t-il ?\n⭐⭐⭐⭐⭐⭐', correct:'Six', wrong:['Five','Seven','Four'], type:'word' },
   // Animals
-  { prompt:'🐱\nQuel est cet animal en anglais ?', correct:'Cat', wrong:['Dog','Bird','Fish'], type:'word' },
-  { prompt:'🐶\nQuel est cet animal en anglais ?', correct:'Dog', wrong:['Cat','Rabbit','Horse'], type:'word' },
-  { prompt:'🐠\nQuel est cet animal en anglais ?', correct:'Fish', wrong:['Bird','Cat','Frog'], type:'word' },
-  { prompt:'🐦\nQuel est cet animal en anglais ?', correct:'Bird', wrong:['Fish','Dog','Cat'], type:'word' },
-  { prompt:'🐸\nQuel est cet animal en anglais ?', correct:'Frog', wrong:['Snake','Cat','Fish'], type:'word' },
+  { prompt:'Quel est cet animal en anglais ?\n🐱', correct:'Cat', wrong:['Dog','Bird','Fish'], type:'word' },
+  { prompt:'Quel est cet animal en anglais ?\n🐶', correct:'Dog', wrong:['Cat','Rabbit','Horse'], type:'word' },
+  { prompt:'Quel est cet animal en anglais ?\n🐠', correct:'Fish', wrong:['Bird','Cat','Frog'], type:'word' },
+  { prompt:'Quel est cet animal en anglais ?\n🐦', correct:'Bird', wrong:['Fish','Dog','Cat'], type:'word' },
+  { prompt:'Quel est cet animal en anglais ?\n🐸', correct:'Frog', wrong:['Snake','Cat','Fish'], type:'word' },
+  { prompt:'Quel est cet animal en anglais ?\n🐰', correct:'Rabbit', wrong:['Cat','Dog','Bird'], type:'word' },
+  // Body parts
+  { prompt:'Comment dit-on "la tête" en anglais ?', correct:'Head', wrong:['Hand','Foot','Nose'], type:'phrase' },
+  { prompt:'Comment dit-on "le nez" en anglais ?', correct:'Nose', wrong:['Ear','Eye','Mouth'], type:'phrase' },
+  { prompt:'Comment dit-on "les yeux" en anglais ?', correct:'Eyes', wrong:['Ears','Nose','Mouth'], type:'phrase' },
+  { prompt:'Comment dit-on "la main" en anglais ?', correct:'Hand', wrong:['Foot','Arm','Leg'], type:'phrase' },
   // Greetings
   { prompt:'Comment dit-on "Bonjour" en anglais ?', correct:'Hello', wrong:['Goodbye','Thank you','Sorry'], type:'phrase' },
   { prompt:'Comment dit-on "Au revoir" en anglais ?', correct:'Goodbye', wrong:['Hello','Please','Thank you'], type:'phrase' },
   { prompt:'Comment dit-on "Merci" en anglais ?', correct:'Thank you', wrong:['Sorry','Please','Hello'], type:'phrase' },
   { prompt:'Comment dit-on "S\'il te plaît" en anglais ?', correct:'Please', wrong:['Sorry','Thank you','Yes'], type:'phrase' },
+  // Classroom
+  { prompt:'Comment dit-on "le crayon" en anglais ?', correct:'Pencil', wrong:['Pen','Book','Ruler'], type:'phrase' },
+  { prompt:'Comment dit-on "le livre" en anglais ?', correct:'Book', wrong:['Pencil','Table','Chair'], type:'phrase' },
 ];
 
 let englishQuestions = [];
@@ -2453,7 +2468,7 @@ function cm2GenerateMathsQuestions() {
     () => { const a=randInt(1,4); const b=randInt(1,9); return { expr:`${a},0${b} × 100`, answer: a*100+b }; },
     () => { const t=randInt(1,9); const u=10-t; return { expr:`${t},${randInt(1,8)} + ${u-1},${randInt(2,9)}`, answer: null }; },
     () => { const a=randInt(1,5); const b=10-a; return { expr:`${a},5 + ${b-1},5`, answer: a+b }; },
-    () => { const a=randInt(2,8); const b=10-a; return { expr:`${a},3 + ${b},7`, answer: a+b+1 }; },
+    () => { const a=randInt(2,8); const b=10-a; return { expr:`${a},3 + ${b-1},7`, answer: a+b }; },
   ];
   let added=0;
   for(const fn of shuffle(decValid)) {
@@ -2695,7 +2710,7 @@ const CM2_ORTHO_DATA = [
   { sentence:'La maîtresse [BLANK] la leçon au tableau.', word:'écrit', rule:'Le verbe "écrire" au présent avec il/elle s\'écrit "écrit" (3e groupe, sans -s).' },
   { sentence:'Le boulanger [BLANK] du pain chaque matin.', word:'cuit', rule:'Le verbe "cuire" au présent : il/elle cuit (3e groupe, sans -s).' },
   { sentence:'Mes [BLANK] sont rangées dans l\'armoire.', word:'affaires', rule:'"Affaires" est féminin pluriel. L\'adjectif possessif "mes" s\'accorde en nombre.' },
-  { sentence:'[BLANK] tu veux venir avec nous ?', word:'Est-ce que', rule:'"Est-ce que" permet de poser une question. À ne pas confondre avec "et" (conjonction).' },
+  { sentence:'Tu viens [BLANK] soir à la fête ?', word:'ce', rule:'"Ce" est un déterminant démonstratif (ce soir, ce matin). "Se" est un pronom réfléchi (il se lave). Ici : "ce soir".' },
   { sentence:'Le cheval [BLANK] dans le pré.', word:'broute', rule:'Le verbe "brouter" au présent avec il/elle : "broute" (1er groupe, -e à la 3e pers. sing.).' },
   // Accords adjectif/nom — priorité bulletin
   { sentence:'Les filles sont [BLANK] de leur travail.', word:'fières', rule:'"Fier" s\'accorde : féminin pluriel → "fières". Les adjectifs s\'accordent en genre et en nombre avec le nom.' },
