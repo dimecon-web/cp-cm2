@@ -2643,6 +2643,8 @@ function cm2HandleSciencesAnswer(btn, val, correct) {
   explainBox.style.display = 'block';
   explainBox.style.borderColor = isCorrect ? '#10B981' : '#F59E0B';
   explainBox.style.background = isCorrect ? '#F0FDF4' : '#FFFBEB';
+  // Scroll pour que l'explication soit visible sur iPad
+  setTimeout(() => explainBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
 
   document.getElementById('cm2-sciences-next-btn').onclick = () => {
     explainBox.style.display = 'none';
