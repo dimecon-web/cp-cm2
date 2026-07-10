@@ -953,40 +953,105 @@ function getAudioCtx() {
   return audioCtx;
 }
 
-/* ---- Sound effects ---- */
-function playCorrect() {
-  const ctx = getAudioCtx();
-  // Ascending cheerful chime: C5 E5 G5 C6
-  [[523, 0], [659, 0.12], [784, 0.24], [1047, 0.36]].forEach(([freq, delay]) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    const t = ctx.currentTime + delay;
-    gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(0.35, t + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-    osc.start(t); osc.stop(t + 0.36);
-  });
+/* ---- Reverb synthétique ---- */
+function makeReverb(ctx, duration = 1.2, decay = 2.5) {
+  const rate = ctx.sampleRate;
+  const length = rate * duration;
+  const impulse = ctx.createBuffer(2, length, rate);
+  for (let c = 0; c < 2; c++) {
+    const ch = impulse.getChannelData(c);
+    for (let i = 0; i < length; i++)
+      ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+  }
+  const conv = ctx.createConvolver();
+  conv.buffer = impulse;
+  return conv;
 }
 
+/* ---- Note avec timbre de marimba / xylophone ---- */
+function playNote(ctx, freq, startTime, dur, vol, reverb) {
+  // Corps principal (fondamentale)
+  const osc1 = ctx.createOscillator();
+  const g1 = ctx.createGain();
+  osc1.type = 'sine';
+  osc1.frequency.value = freq;
+  osc1.connect(g1);
+
+  // 1er harmonique (+octave, léger) pour chaleur
+  const osc2 = ctx.createOscillator();
+  const g2 = ctx.createGain();
+  osc2.type = 'sine';
+  osc2.frequency.value = freq * 2;
+  osc2.connect(g2);
+
+  // Enveloppe percussive naturelle (attaque rapide, déclin exponentiel)
+  g1.gain.setValueAtTime(0, startTime);
+  g1.gain.linearRampToValueAtTime(vol, startTime + 0.008);
+  g1.gain.exponentialRampToValueAtTime(vol * 0.4, startTime + 0.06);
+  g1.gain.exponentialRampToValueAtTime(0.0001, startTime + dur);
+
+  g2.gain.setValueAtTime(0, startTime);
+  g2.gain.linearRampToValueAtTime(vol * 0.3, startTime + 0.008);
+  g2.gain.exponentialRampToValueAtTime(0.0001, startTime + dur * 0.5);
+
+  g1.connect(reverb); g2.connect(reverb);
+  osc1.start(startTime); osc1.stop(startTime + dur + 0.05);
+  osc2.start(startTime); osc2.stop(startTime + dur * 0.5 + 0.05);
+}
+
+/* ---- Son correct : fanfare joyeuse de xylophone ---- */
+function playCorrect() {
+  const ctx = getAudioCtx();
+  const rev = makeReverb(ctx, 1.0, 3);
+  const masterGain = ctx.createGain();
+  masterGain.gain.value = 0.55;
+  rev.connect(masterGain);
+  masterGain.connect(ctx.destination);
+
+  // Accord Do majeur montant C5-E5-G5 puis accord C6 final
+  const now = ctx.currentTime;
+  playNote(ctx, 523.25, now + 0.00, 0.55, 0.9, rev); // C5
+  playNote(ctx, 659.25, now + 0.10, 0.50, 0.9, rev); // E5
+  playNote(ctx, 783.99, now + 0.20, 0.50, 0.9, rev); // G5
+  // Accord final (C6 + E6 ensemble = son "victoire")
+  playNote(ctx, 1046.5, now + 0.33, 0.80, 1.0, rev); // C6
+  playNote(ctx, 1318.5, now + 0.33, 0.80, 0.7, rev); // E6
+}
+
+/* ---- Son mauvaise réponse : "boing" cartoon doux ---- */
 function playWrong() {
   const ctx = getAudioCtx();
-  // Descending "oops": two low blops
-  [[320, 0], [240, 0.2]].forEach(([freq, delay]) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
-    osc.frequency.linearRampToValueAtTime(freq * 0.7, ctx.currentTime + delay + 0.18);
-    const t = ctx.currentTime + delay;
-    gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(0.22, t + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
-    osc.start(t); osc.stop(t + 0.23);
-  });
+  const rev = makeReverb(ctx, 0.6, 4);
+  const masterGain = ctx.createGain();
+  masterGain.gain.value = 0.5;
+  rev.connect(masterGain);
+  masterGain.connect(ctx.destination);
+
+  const now = ctx.currentTime;
+
+  // Son "boing" : descente rapide de fréquence + pitch wobble
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(380, now);
+  osc.frequency.exponentialRampToValueAtTime(120, now + 0.45);
+  g.gain.setValueAtTime(0.0, now);
+  g.gain.linearRampToValueAtTime(0.8, now + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+  osc.connect(g); g.connect(rev);
+  osc.start(now); osc.stop(now + 0.55);
+
+  // Petit "plop" sourd qui accompagne
+  const osc2 = ctx.createOscillator();
+  const g2 = ctx.createGain();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(160, now + 0.18);
+  osc2.frequency.exponentialRampToValueAtTime(60, now + 0.42);
+  g2.gain.setValueAtTime(0.0, now + 0.18);
+  g2.gain.linearRampToValueAtTime(0.5, now + 0.20);
+  g2.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+  osc2.connect(g2); g2.connect(rev);
+  osc2.start(now + 0.18); osc2.stop(now + 0.5);
 }
 
 /* ---- Background music ---- */
