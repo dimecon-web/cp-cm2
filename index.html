@@ -175,6 +175,7 @@ html, body {
   -webkit-user-select: none; user-select: none;
 }
 .choice-btn .choice-emoji { font-size: 44px; line-height: 1; }
+.choice-btn .choice-img { width: 110px; height: 110px; object-fit: contain; display: block; margin: 0 auto; }
 .choice-btn .choice-label { font-size: 16px; font-weight: 700; color: var(--text); }
 .choice-btn:active:not(.disabled) { transform: scale(0.93); }
 .choice-btn.correct { border-color: var(--green); background: #EAFAF1; }
@@ -1055,6 +1056,15 @@ function toggleMusic() {
 // ===================================================================
 let currentInstruction = '';
 
+// Convertit un emoji en URL SVG Twemoji (haute résolution, style net)
+function emojiImgUrl(emoji) {
+  const cp = [...emoji]
+    .map(c => c.codePointAt(0).toString(16))
+    .filter(c => c !== 'fe0f')  // strip variation selector
+    .join('-');
+  return `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${cp}.svg`;
+}
+
 function stripEmoji(text) {
   return text.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').replace(/\s+/g, ' ').trim();
 }
@@ -1157,6 +1167,7 @@ function saveStars() {
 //  NAVIGATION
 // ===================================================================
 function showScreen(id) {
+  document.getElementById('feedback').classList.add('hidden');
   document.querySelectorAll('.screen').forEach(s => {
     if (s.id === id) {
       s.classList.remove('hidden', 'slide-left');
@@ -1302,9 +1313,9 @@ function startModule(mod) {
 //  PHONOLOGIE MODULE
 // ===================================================================
 const PHONO_DATA = [
-  { letter:'A', correct:{emoji:'🍎', label:'Ananas'}, wrong:[{emoji:'🐘',label:'Éléphant'},{emoji:'🌙',label:'Lune'}] },
+  { letter:'A', correct:{emoji:'🍍', label:'Ananas'}, wrong:[{emoji:'🐘',label:'Éléphant'},{emoji:'🌙',label:'Lune'}] },
   { letter:'B', correct:{emoji:'🍌', label:'Banane'}, wrong:[{emoji:'🐟',label:'Poisson'},{emoji:'🌹',label:'Rose'}] },
-  { letter:'C', correct:{emoji:'🐈', label:'Chat'}, wrong:[{emoji:'🍓',label:'Fraise'},{emoji:'🐊',label:'Dauphin'}] },
+  { letter:'C', correct:{emoji:'🐈', label:'Chat'}, wrong:[{emoji:'🍓',label:'Fraise'},{emoji:'🐊',label:'Crocodile'}] },
   { letter:'D', correct:{emoji:'🦷', label:'Dent'}, wrong:[{emoji:'🐑',label:'Mouton'},{emoji:'🍊',label:'Orange'}] },
   { letter:'E', correct:{emoji:'⭐', label:'Étoile'}, wrong:[{emoji:'🐸',label:'Grenouille'},{emoji:'🍒',label:'Cerise'}] },
   { letter:'F', correct:{emoji:'🌸', label:'Fleur'}, wrong:[{emoji:'🐢',label:'Tortue'},{emoji:'🍇',label:'Raisin'}] },
@@ -1350,7 +1361,7 @@ function renderPhonoQuestion() {
   allChoices.forEach(choice => {
     const btn = document.createElement('div');
     btn.className = 'choice-btn';
-    btn.innerHTML = `<div class="choice-emoji">${choice.emoji}</div>`;
+    btn.innerHTML = `<img class="choice-img" src="${emojiImgUrl(choice.emoji)}" alt="${choice.label}" loading="lazy">`;
     if (choice === q.correct) btn.dataset.correct = 'true';
     btn.addEventListener('click', () => handlePhonoAnswer(btn, choice === q.correct));
     grid.appendChild(btn);
