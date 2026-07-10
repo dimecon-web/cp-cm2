@@ -917,6 +917,7 @@ html, body {
       <button class="btn btn-cm2-primary" id="cm2-ortho-validate" style="min-width:100px">Valider ✅</button>
     </div>
     <div class="ortho-rule-box hidden" id="cm2-ortho-rule"></div>
+    <button class="btn btn-cm2-primary hidden" id="cm2-ortho-next-btn" style="background:#F59E0B;min-width:140px;font-size:18px;margin-top:6px">Suivant →</button>
   </div>
 </div>
 
@@ -1190,29 +1191,8 @@ function speak(text, lang = 'fr-FR', rate = 0.88, pitch = 1.0) {
 
 // Dictée orthographe : lit la phrase lentement, puis le mot isolé après une pause
 function speakDictee(sentence, word) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const lang = 'fr-FR';
-  const voices = window.speechSynthesis.getVoices();
-  const go = () => {
-    // Phrase complète (mot remplacé par silence "...")
-    const phraseText = sentence.replace('[BLANK]', '...');
-    const utt1 = new SpeechSynthesisUtterance(stripEmoji(phraseText));
-    utt1.lang = lang; utt1.rate = 0.78; utt1.pitch = 1.0;
-    const voice = pickBestVoice(lang);
-    if (voice) utt1.voice = voice;
-    const btns = document.querySelectorAll('.btn-speak, .btn-speak-inline');
-    btns.forEach(b => b.classList.add('speaking'));
-    // Mot isolé après la phrase
-    const utt2 = new SpeechSynthesisUtterance(word);
-    utt2.lang = lang; utt2.rate = 0.7; utt2.pitch = 1.0;
-    if (voice) utt2.voice = voice;
-    utt2.onend = utt2.onerror = () => btns.forEach(b => b.classList.remove('speaking'));
-    utt1.onend = () => window.speechSynthesis.speak(utt2);
-    window.speechSynthesis.speak(utt1);
-  };
-  if (voices.length) go();
-  else { window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.onvoiceschanged = null; go(); }; }
+  // Lit uniquement le mot manquant (pas la phrase entière)
+  speak(word, 'fr-FR', 0.7, 1.0);
 }
 
 function repeatInstruction() {
@@ -2762,6 +2742,7 @@ function cm2RenderOrthoQuestion() {
   document.getElementById('cm2-ortho-validate').disabled = false;
   document.getElementById('cm2-ortho-rule').classList.add('hidden');
   document.getElementById('cm2-ortho-rule').textContent = '';
+  document.getElementById('cm2-ortho-next-btn').classList.add('hidden');
   setTimeout(() => { try { input.focus(); } catch(e){} }, 100);
 }
 
@@ -2772,30 +2753,37 @@ function cm2ValidateOrtho() {
   const correct = val === q.word.toLowerCase();
   input.disabled = true;
   document.getElementById('cm2-ortho-validate').disabled = true;
+  const nextBtn = document.getElementById('cm2-ortho-next-btn');
+  const ruleBox = document.getElementById('cm2-ortho-rule');
+
+  const goNext = () => {
+    cm2OrthoIdx++;
+    if(cm2OrthoIdx < 10) cm2RenderOrthoQuestion();
+    else cm2ShowResult('ortho', cm2State.sessionScore, 10);
+  };
+
   if(correct) {
     cm2State.sessionScore++;
     document.getElementById('cm2-ortho-score-live').textContent = '⭐ ' + cm2State.sessionScore;
-    document.getElementById('cm2-ortho-rule').classList.add('hidden');
-    setTimeout(() => {
-      showFeedback(true, null, () => {
-        cm2OrthoIdx++;
-        if(cm2OrthoIdx < 10) cm2RenderOrthoQuestion();
-        else cm2ShowResult('ortho', cm2State.sessionScore, 10);
-      });
-    }, 300);
+    playCorrect();
+    ruleBox.innerHTML = `<strong style="color:#10B981">✓ Bravo ! « ${q.word} » ✓</strong><br>${q.rule}`;
+    ruleBox.style.borderColor = '#10B981';
+    ruleBox.style.background = '#F0FDF4';
+    ruleBox.classList.remove('hidden');
   } else {
     playWrong();
-    const ruleBox = document.getElementById('cm2-ortho-rule');
     ruleBox.innerHTML = `<strong style="color:#EF4444">✗ La bonne réponse : « ${q.word} »</strong><br>${q.rule}`;
+    ruleBox.style.borderColor = '#EF4444';
+    ruleBox.style.background = '#FEF2F2';
     ruleBox.classList.remove('hidden');
-    setTimeout(() => {
-      showFeedback(false, `« ${q.word} »`, () => {
-        cm2OrthoIdx++;
-        if(cm2OrthoIdx < 10) cm2RenderOrthoQuestion();
-        else cm2ShowResult('ortho', cm2State.sessionScore, 10);
-      });
-    }, 800);
   }
+
+  nextBtn.classList.remove('hidden');
+  nextBtn.onclick = () => {
+    nextBtn.classList.add('hidden');
+    goNext();
+  };
+  setTimeout(() => ruleBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
 }
 
 // ===================================================================
