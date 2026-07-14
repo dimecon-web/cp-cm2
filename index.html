@@ -1473,32 +1473,22 @@ function handlePhonoAnswer(btn, correct) {
 // ===================================================================
 //  MATHS MODULE
 // ===================================================================
-const EMOJIS_POOL = ['🍎','🍊','🍋','🍇','🍓','🌟','🐶','🐱','🦋','🌸','🎈','🏀','⚽','🦄','🐢'];
-
 function generateMathsQuestions() {
   const qs = [];
 
-  // 2 counting
-  for(let i=0;i<2;i++) {
-    const n = randInt(3, 15);
-    const emoji = EMOJIS_POOL[randInt(0, EMOJIS_POOL.length-1)];
-    qs.push({ type:'count', n, emoji, answer: n });
-  }
-
-  // 3 additions numériques
-  for(let i=0;i<3;i++) {
-    const a = randInt(1,9), b = randInt(1,9);
+  // 4 additions
+  for(let i=0;i<4;i++) {
+    const a = randInt(2,15), b = randInt(2,15);
     qs.push({ type:'addnum', a, b, answer: a+b });
   }
 
-  // 3 soustractions visuelles
-  for(let i=0;i<3;i++) {
-    const a = randInt(4,12), b = randInt(1,a-1);
-    const emoji = EMOJIS_POOL[randInt(0, EMOJIS_POOL.length-1)];
-    qs.push({ type:'sub', a, b, emoji, answer: a-b });
+  // 4 soustractions numériques
+  for(let i=0;i<4;i++) {
+    const b = randInt(1,10), a = randInt(b+1, b+12);
+    qs.push({ type:'subnum', a, b, answer: a-b });
   }
 
-  // 2 logique : 1 suite + 1 nombre manquant
+  // 1 suite + 1 nombre manquant
   qs.push(generateSequenceQ());
   qs.push(generateMissingQ());
 
@@ -1553,68 +1543,29 @@ function renderMathsQuestion() {
   content.innerHTML = '';
   answers.innerHTML = '';
 
-  if(q.type === 'count') {
-    currentInstruction = 'Compte les objets, puis choisis le bon chiffre !';
-    setPrompt('maths-prompt', 'Compte les objets 👇');
-
-    content.innerHTML = `<div class="objects-display" id="objs-display">${Array(q.n).fill(0).map((_,i)=>`<span class="obj-item" data-i="${i}">${q.emoji}</span>`).join('')}</div>
-    <div class="count-display mt8" id="count-val">0</div>
-    <div style="font-size:16px;color:#aaa;margin-top:4px">Touche les objets pour compter !</div>`;
-
-    let countVal = 0;
-    const display = () => { document.getElementById('count-val').textContent = countVal; };
-
-    setTimeout(() => {
-      document.querySelectorAll('#objs-display .obj-item').forEach(el => {
-        el.addEventListener('click', function() {
-          if(!this.classList.contains('counted')) {
-            this.classList.add('counted');
-            countVal++;
-            display();
-          }
-        });
-      });
-    }, 50);
-
-  } else if(q.type === 'addnum') {
+  if(q.type === 'addnum') {
     currentInstruction = `Combien font ${q.a} plus ${q.b} ?`;
-    setPrompt('maths-prompt', 'Calcule l\'addition 🧮');
+    setPrompt('maths-prompt', 'Addition 🧮');
     content.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;width:100%">
         <div class="number-big">${q.a}</div>
-        <div class="math-op" style="font-size:52px">+</div>
+        <div class="math-op" style="font-size:52px;color:var(--green)">+</div>
         <div class="number-big">${q.b}</div>
         <div class="math-op" style="font-size:52px">=</div>
         <div class="number-big" style="color:var(--pink)">?</div>
       </div>`;
 
-  } else if(q.type === 'add') {
-    currentInstruction = 'Additionne les deux groupes. Combien font-ils ensemble ?';
-    setPrompt('maths-prompt', 'Combien font-ils ensemble ? 🤔');
-
+  } else if(q.type === 'subnum') {
+    currentInstruction = `Combien font ${q.a} moins ${q.b} ?`;
+    setPrompt('maths-prompt', 'Soustraction 🧮');
     content.innerHTML = `
-      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;width:100%">
-        <div class="objects-display" style="flex:1;min-width:120px">${q.emoji.repeat(q.a)}</div>
-        <div class="math-op">➕</div>
-        <div class="objects-display" style="flex:1;min-width:120px">${q.emoji.repeat(q.b)}</div>
-        <div class="math-op">=</div>
-        <div class="number-big">?</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;width:100%">
+        <div class="number-big">${q.a}</div>
+        <div class="math-op" style="font-size:52px;color:var(--red)">−</div>
+        <div class="number-big">${q.b}</div>
+        <div class="math-op" style="font-size:52px">=</div>
+        <div class="number-big" style="color:var(--pink)">?</div>
       </div>`;
-  } else if(q.type === 'sub') {
-    currentInstruction = `On enlève ${q.b}. Combien en reste-t-il ?`;
-    setPrompt('maths-prompt', `${q.a} − ${q.b} = ? 🤔`);
-
-    const kept = q.a - q.b;
-    const emojiSize = q.a <= 10 ? '36px' : '26px';
-    const keptDots = Array(kept).fill(`<span style="font-size:${emojiSize};line-height:1.4">${q.emoji}</span>`).join('');
-    const removedDots = Array(q.b).fill(`<span style="font-size:${emojiSize};line-height:1.4;opacity:0.25;text-decoration:line-through">${q.emoji}</span>`).join('');
-    content.innerHTML = `
-      <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:8px;background:#F8F9FA;border-radius:16px;width:100%">
-        ${keptDots}
-        <span style="display:inline-flex;align-items:center;font-size:${emojiSize};color:#EF4444;font-weight:900;margin:0 4px">✂️</span>
-        ${removedDots}
-      </div>
-      <div style="font-size:15px;color:#888;text-align:center">On enlève ${q.b}, combien reste-t-il ?</div>`;
 
   } else if(q.type === 'sequence') {
     currentInstruction = 'Regarde bien les chiffres et trouve le suivant !';
