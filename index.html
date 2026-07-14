@@ -589,6 +589,49 @@ html, body {
 /* CM2 result buttons go back to welcome */
 .btn-cm2-primary { background: #6C63FF; color: #fff; box-shadow: 0 5px 0 #4338CA; }
 .btn-cm2-primary:active { box-shadow: 0 2px 0 #4338CA; transform: translateY(3px) scale(0.97); }
+/* ===== CHARACTER / REWARD SCREEN ===== */
+#character-screen { background: linear-gradient(160deg, #FFF0FA 0%, #F0F4FF 60%, #F0FFF4 100%); gap: 10px; }
+.char-layout { display: flex; gap: 16px; width: 100%; max-width: 700px; flex: 1; min-height: 0; }
+.char-preview-col { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+.char-name-tag { font-size: 20px; font-weight: 900; color: var(--purple); }
+.char-svg-wrap { width: 160px; height: 240px; }
+.char-coins-big { font-size: 22px; font-weight: 900; background: #FFF3C4; color: #7B3F00;
+  padding: 6px 16px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; }
+.shop-col { flex: 1; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.shop-tabs { display: flex; gap: 6px; flex-shrink: 0; }
+.shop-tab { flex: 1; padding: 10px 4px; background: #ede8f5; border: none; border-radius: 14px;
+  font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; color: var(--purple); }
+.shop-tab.active { background: var(--purple); color: white; }
+.shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; overflow-y: auto; flex: 1; }
+.shop-item { background: white; border-radius: 16px; padding: 10px 8px; display: flex; flex-direction: column;
+  align-items: center; gap: 5px; box-shadow: var(--shadow-sm); border: 2.5px solid transparent; }
+.shop-item.equipped { border-color: var(--green); background: #F0FDF4; }
+.item-swatch { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; }
+.item-name { font-size: 11px; font-weight: 800; text-align: center; color: var(--text); }
+.item-btn { font-size: 11px; font-weight: 800; padding: 6px 10px; border: none; border-radius: 10px;
+  cursor: pointer; min-width: 68px; font-family: inherit; }
+.item-btn.buy { background: var(--yellow); color: #7B3F00; }
+.item-btn.equip { background: var(--purple); color: white; }
+.item-btn.equipped { background: var(--green); color: white; pointer-events: none; }
+.item-btn.locked { background: #e0e0e0; color: #aaa; cursor: not-allowed; }
+.coin-home-badge { font-size: 17px; font-weight: 800; background: #FFF3C4; color: #7B3F00;
+  padding: 5px 14px; border-radius: 16px; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+.btn-character { background: linear-gradient(135deg, var(--pink), var(--purple)); color: white;
+  font-size: 17px; font-weight: 800; padding: 12px 24px; border-radius: 20px; border: none;
+  cursor: pointer; box-shadow: 0 4px 0 #7b38b2; font-family: inherit; width: 100%; max-width: 300px; }
+.btn-character:active { transform: translateY(2px); box-shadow: 0 2px 0 #7b38b2; }
+.coin-flash { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
+  font-size: 36px; font-weight: 900; color: #F59E0B; z-index: 200; pointer-events: none;
+  animation: coinPop 0.9s ease forwards; }
+@keyframes coinPop { 0%{transform:translate(-50%,-50%) scale(0);opacity:1}
+  40%{transform:translate(-50%,-120%) scale(1.3);opacity:1}
+  100%{transform:translate(-50%,-200%) scale(1);opacity:0} }
+@media (max-width: 500px) {
+  .char-layout { flex-direction: column; }
+  .char-preview-col { flex-direction: row; align-items: center; gap: 12px; }
+  .char-svg-wrap { width: 110px; height: 165px; }
+  .shop-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
 </style>
 </head>
 <body>
@@ -644,6 +687,8 @@ html, body {
       <div class="mod-stars" id="snake-best">🏆 0</div>
     </div>
   </div>
+  <div class="coin-home-badge" id="cp-coins-display">🪙 0</div>
+  <button class="btn-character" onclick="openCharacterScreen('cp','home')">👗 Mon personnage — Olivia</button>
   <button class="btn btn-back mt16" onclick="showScreen('welcome')" style="margin-top:20px;font-size:18px">🏠 Changer de profil</button>
 </div>
 
@@ -840,7 +885,32 @@ html, body {
       <div class="mod-stars" id="cm2-snake-best">🏆 0</div>
     </div>
   </div>
+  <div class="coin-home-badge" id="cm2-coins-display">🪙 0</div>
+  <button class="btn-character" onclick="openCharacterScreen('cm2','cm2-home')">👗 Mon personnage — Alexia</button>
   <button class="btn btn-back mt16" onclick="showScreen('welcome')" style="margin-top:20px;font-size:18px">🏠 Changer de profil</button>
+</div>
+
+<!-- ===== CHARACTER SCREEN ===== -->
+<div id="character-screen" class="screen hidden">
+  <div class="activity-header w100">
+    <button class="btn btn-back" id="char-back-btn">🏠</button>
+    <div class="activity-title" style="color:var(--purple)" id="char-screen-title">👗 Mon Personnage</div>
+    <div class="char-coins-big" id="char-coins-display">🪙 0</div>
+  </div>
+  <div class="char-layout">
+    <div class="char-preview-col">
+      <div class="char-name-tag" id="char-name-tag">Olivia</div>
+      <div class="char-svg-wrap" id="char-svg-wrap"></div>
+    </div>
+    <div class="shop-col">
+      <div class="shop-tabs">
+        <button class="shop-tab active" onclick="showShopCategory('hair',this)">💇 Cheveux</button>
+        <button class="shop-tab" onclick="showShopCategory('outfit',this)">👗 Tenue</button>
+        <button class="shop-tab" onclick="showShopCategory('accessory',this)">✨ Accès.</button>
+      </div>
+      <div class="shop-grid" id="shop-grid"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ===== CM2 LECTURE ===== -->
@@ -2854,6 +2924,264 @@ document.addEventListener('touchend', e => {
   if(now - lastTap < 300) e.preventDefault();
   lastTap = now;
 }, { passive: false });
+
+// ===================================================================
+//  REWARD & CHARACTER SYSTEM
+// ===================================================================
+
+const ITEMS_CATALOG = {
+  hair: [
+    { id:'hair_default',  name:'Cheveux bruns',   cost:0,  color:'#6D3B1C' },
+    { id:'hair_blonde',   name:'Cheveux blonds',  cost:10, color:'#FFD54F' },
+    { id:'hair_red',      name:'Cheveux roux',    cost:15, color:'#D84315' },
+    { id:'hair_ponytail', name:'Queue de cheval', cost:25, color:'#6D3B1C' },
+    { id:'hair_buns',     name:'Chignons',        cost:35, color:'#A855F7' },
+    { id:'hair_curly',    name:'Boucles roses',   cost:50, color:'#EC4899' },
+  ],
+  outfit: [
+    { id:'outfit_default',  name:'Robe bleue',       cost:0,  color:'#6C63FF' },
+    { id:'outfit_pink',     name:'Robe rose',         cost:15, color:'#F472B6' },
+    { id:'outfit_green',    name:'Robe verte',        cost:20, color:'#22C55E' },
+    { id:'outfit_orange',   name:'Robe orange',       cost:25, color:'#F97316' },
+    { id:'outfit_star',     name:'Robe étoilée',      cost:45, color:'#A855F7' },
+    { id:'outfit_princess', name:'Robe de princesse', cost:75, color:'#F59E0B' },
+  ],
+  accessory: [
+    { id:'acc_none',   name:'Aucun',             cost:0,  color:'#ccc' },
+    { id:'acc_bow',    name:'Nœud rose',          cost:10, color:'#F472B6' },
+    { id:'acc_glasses',name:'Lunettes',           cost:20, color:'#6C63FF' },
+    { id:'acc_crown',  name:'Couronne',           cost:30, color:'#F59E0B' },
+    { id:'acc_hat',    name:'Chapeau',            cost:40, color:'#3B82F6' },
+    { id:'acc_wand',   name:'Baguette magique',   cost:55, color:'#A855F7' },
+  ]
+};
+
+let charProfile = 'cp';
+let charReturnScreen = 'home';
+let charShopCategory = 'hair';
+let currentProfile = 'cp'; // tracks active profile for coin awards
+
+function getRewardData(profile) {
+  const def = { coins:0, owned:['hair_default','outfit_default','acc_none'],
+    equipped:{ hair:'hair_default', outfit:'outfit_default', accessory:'acc_none' } };
+  try { return Object.assign(def, JSON.parse(localStorage.getItem('reward_'+profile)||'null') || {}); }
+  catch(e) { return def; }
+}
+function saveRewardData(profile, data) {
+  localStorage.setItem('reward_'+profile, JSON.stringify(data));
+}
+
+function awardCoins(profile, amount) {
+  if(!amount) return;
+  const data = getRewardData(profile);
+  data.coins += amount;
+  saveRewardData(profile, data);
+  updateCoinBadges();
+  // floating coin animation
+  const el = document.createElement('div');
+  el.className = 'coin-flash';
+  el.textContent = '+' + amount + ' 🪙';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 950);
+}
+
+function updateCoinBadges() {
+  const cp = getRewardData('cp').coins;
+  const cm2 = getRewardData('cm2').coins;
+  const cpEl = document.getElementById('cp-coins-display');
+  const cm2El = document.getElementById('cm2-coins-display');
+  const charEl = document.getElementById('char-coins-display');
+  if(cpEl) cpEl.textContent = '🪙 ' + cp;
+  if(cm2El) cm2El.textContent = '🪙 ' + cm2;
+  if(charEl) charEl.textContent = '🪙 ' + getRewardData(charProfile).coins;
+}
+
+// Build character SVG from equipped items
+function buildCharacterSVG(equipped) {
+  const skin = '#FDBCB4';
+  const h = equipped.hair || 'hair_default';
+  const o = equipped.outfit || 'outfit_default';
+  const acc = equipped.accessory || 'acc_none';
+  const oc = (ITEMS_CATALOG.outfit.find(i=>i.id===o)||ITEMS_CATALOG.outfit[0]).color;
+  const hc = (ITEMS_CATALOG.hair.find(i=>i.id===h)||ITEMS_CATALOG.hair[0]).color;
+  const isPrincess = o === 'outfit_princess';
+  const dressPath = isPrincess
+    ? 'M46,132 Q100,116 154,132 L170,228 Q100,246 30,228 Z'
+    : 'M63,132 Q100,120 137,132 L148,224 Q100,234 52,224 Z';
+  const dressExtra = o==='outfit_star'
+    ? `<text x="82" y="178" font-size="19" opacity="0.85">✨</text><text x="108" y="204" font-size="15" opacity="0.7">⭐</text>`
+    : o==='outfit_princess'
+    ? `<path d="M58,178 Q100,170 142,178" stroke="white" stroke-width="2" fill="none" opacity="0.45"/>
+       <path d="M48,202 Q100,194 152,202" stroke="white" stroke-width="1.5" fill="none" opacity="0.35"/>`
+    : '';
+  // Hair back (behind head)
+  const hairBack = h==='hair_curly'
+    ? `<circle cx="55" cy="86" r="20" fill="${hc}"/><circle cx="145" cy="86" r="20" fill="${hc}"/>`
+    : h==='hair_buns' ? ''
+    : h==='hair_ponytail'
+    ? `<path d="M57,72 Q49,120 60,140 Q68,122 70,90 Z" fill="${hc}"/>
+       <path d="M143,67 Q172,58 170,98 Q156,112 142,92 Q159,75 143,71 Z" fill="${hc}"/>`
+    : `<path d="M57,72 Q49,120 60,140 Q68,122 70,90 Z" fill="${hc}"/>
+       <path d="M143,72 Q151,120 140,140 Q132,122 130,90 Z" fill="${hc}"/>`;
+  // Hair front (over face)
+  const hairFront = h==='hair_buns'
+    ? `<ellipse cx="100" cy="60" rx="40" ry="17" fill="${hc}"/>
+       <circle cx="73" cy="46" r="23" fill="${hc}"/><circle cx="127" cy="46" r="23" fill="${hc}"/>`
+    : h==='hair_curly'
+    ? `<circle cx="70" cy="57" r="21" fill="${hc}"/><circle cx="100" cy="44" r="24" fill="${hc}"/>
+       <circle cx="130" cy="57" r="21" fill="${hc}"/>`
+    : `<ellipse cx="100" cy="55" rx="44" ry="24" fill="${hc}"/>`;
+  // Accessory
+  const accSVG = acc==='acc_bow'
+    ? `<path d="M82,45 Q61,28 67,41 Q73,52 82,47 Z" fill="#F472B6"/>
+       <path d="M118,45 Q139,28 133,41 Q127,52 118,47 Z" fill="#F472B6"/>
+       <circle cx="100" cy="45" r="9" fill="#F472B6"/>`
+    : acc==='acc_crown'
+    ? `<polygon points="70,53 77,30 91,47 100,26 109,47 123,30 130,53" fill="#F59E0B" stroke="#D97706" stroke-width="1.5"/>
+       <circle cx="100" cy="29" r="5" fill="#EF4444"/>
+       <circle cx="79" cy="37" r="3.5" fill="#3B82F6"/>
+       <circle cx="121" cy="37" r="3.5" fill="#22C55E"/>`
+    : acc==='acc_glasses'
+    ? `<circle cx="84" cy="85" r="12" fill="none" stroke="${oc}" stroke-width="3"/>
+       <circle cx="116" cy="85" r="12" fill="none" stroke="${oc}" stroke-width="3"/>
+       <line x1="96" y1="85" x2="104" y2="85" stroke="${oc}" stroke-width="3"/>
+       <line x1="72" y1="83" x2="66" y2="81" stroke="${oc}" stroke-width="2.5"/>
+       <line x1="128" y1="83" x2="134" y2="81" stroke="${oc}" stroke-width="2.5"/>`
+    : acc==='acc_hat'
+    ? `<ellipse cx="100" cy="55" rx="57" ry="12" fill="${oc}"/>
+       <rect x="63" y="14" width="74" height="44" rx="10" fill="${oc}"/>
+       <rect x="61" y="50" width="78" height="8" rx="4" fill="white" opacity="0.3"/>`
+    : acc==='acc_wand'
+    ? `<line x1="156" y1="230" x2="128" y2="156" stroke="#A855F7" stroke-width="5" stroke-linecap="round"/>
+       <circle cx="127" cy="150" r="15" fill="#F59E0B" opacity="0.8"/>
+       <text x="118" y="158" font-size="19">⭐</text>`
+    : '';
+  const shoeC = isPrincess ? '#F59E0B' : '#5D4037';
+  return `<svg viewBox="0 0 200 292" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+    <ellipse cx="86" cy="274" rx="21" ry="10" fill="${shoeC}"/>
+    <ellipse cx="114" cy="274" rx="21" ry="10" fill="${shoeC}"/>
+    <rect x="76" y="216" width="22" height="60" rx="11" fill="${skin}"/>
+    <rect x="102" y="216" width="22" height="60" rx="11" fill="${skin}"/>
+    ${hairBack}
+    <path d="${dressPath}" fill="${oc}"/>${dressExtra}
+    <path d="${isPrincess?'M72,134 Q100,124 128,134':'M74,134 Q100,122 126,134'}" stroke="white" stroke-width="2.5" fill="none" opacity="0.45"/>
+    <rect x="34" y="136" width="23" height="64" rx="11.5" fill="${skin}"/>
+    <rect x="143" y="136" width="23" height="64" rx="11.5" fill="${skin}"/>
+    <rect x="88" y="128" width="24" height="18" rx="7" fill="${skin}"/>
+    <ellipse cx="100" cy="90" rx="44" ry="46" fill="${skin}"/>
+    <circle cx="86" cy="83" r="7" fill="#1a1a2e"/><circle cx="114" cy="83" r="7" fill="#1a1a2e"/>
+    <circle cx="88" cy="80" r="2.5" fill="white"/><circle cx="116" cy="80" r="2.5" fill="white"/>
+    <circle cx="100" cy="96" r="3.5" fill="#EF9A9A" opacity="0.7"/>
+    <path d="M87,108 Q100,121 113,108" stroke="#E57373" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="73" cy="97" rx="13" ry="8" fill="#FFB3BA" opacity="0.45"/>
+    <ellipse cx="127" cy="97" rx="13" ry="8" fill="#FFB3BA" opacity="0.45"/>
+    ${hairFront}${accSVG}
+  </svg>`;
+}
+
+function openCharacterScreen(profile, returnScreen) {
+  charProfile = profile;
+  charReturnScreen = returnScreen;
+  currentProfile = profile;
+  document.getElementById('char-back-btn').onclick = () => showScreen(returnScreen);
+  document.getElementById('char-name-tag').textContent = profile === 'cp' ? 'Olivia' : 'Alexia';
+  document.getElementById('char-screen-title').textContent = profile === 'cp' ? '👗 Olivia' : '👗 Alexia';
+  charShopCategory = 'hair';
+  refreshCharacterPreview();
+  updateCoinBadges();
+  document.querySelectorAll('.shop-tab').forEach((t,i) => t.classList.toggle('active', i===0));
+  showShopCategory('hair', document.querySelectorAll('.shop-tab')[0]);
+  showScreen('character-screen');
+}
+
+function refreshCharacterPreview() {
+  const data = getRewardData(charProfile);
+  document.getElementById('char-svg-wrap').innerHTML = buildCharacterSVG(data.equipped);
+}
+
+function showShopCategory(cat, tabEl) {
+  charShopCategory = cat;
+  if(tabEl) {
+    document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+  }
+  renderShopGrid();
+}
+
+function renderShopGrid() {
+  const data = getRewardData(charProfile);
+  const items = ITEMS_CATALOG[charShopCategory];
+  const grid = document.getElementById('shop-grid');
+  grid.innerHTML = '';
+  items.forEach(item => {
+    const owned = data.owned.includes(item.id);
+    const equipped = data.equipped[charShopCategory] === item.id;
+    const canAfford = data.coins >= item.cost;
+    const div = document.createElement('div');
+    div.className = 'shop-item' + (equipped ? ' equipped' : '');
+    const swatchStyle = charShopCategory === 'hair'
+      ? `background:${item.color};border:3px solid #eee`
+      : charShopCategory === 'outfit'
+      ? `background:${item.color};border-radius:8px;clip-path:polygon(20% 0%,80% 0%,100% 100%,0% 100%)`
+      : `background:${item.color};border:3px solid #eee`;
+    let btnHtml;
+    if(equipped) btnHtml = `<button class="item-btn equipped">✓ Porté</button>`;
+    else if(owned) btnHtml = `<button class="item-btn equip" onclick="equipItem('${charShopCategory}','${item.id}')">Porter</button>`;
+    else if(item.cost === 0) btnHtml = `<button class="item-btn equip" onclick="buyItem('${charShopCategory}','${item.id}',0)">Prendre</button>`;
+    else if(canAfford) btnHtml = `<button class="item-btn buy" onclick="buyItem('${charShopCategory}','${item.id}',${item.cost})">🪙 ${item.cost}</button>`;
+    else btnHtml = `<button class="item-btn locked">🔒 ${item.cost}</button>`;
+    div.innerHTML = `<div class="item-swatch" style="${swatchStyle}"></div>
+      <div class="item-name">${item.name}</div>${btnHtml}`;
+    grid.appendChild(div);
+  });
+}
+
+function buyItem(cat, id, cost) {
+  const data = getRewardData(charProfile);
+  if(data.coins < cost) return;
+  data.coins -= cost;
+  if(!data.owned.includes(id)) data.owned.push(id);
+  data.equipped[cat] = id;
+  saveRewardData(charProfile, data);
+  updateCoinBadges();
+  refreshCharacterPreview();
+  renderShopGrid();
+}
+
+function equipItem(cat, id) {
+  const data = getRewardData(charProfile);
+  data.equipped[cat] = id;
+  saveRewardData(charProfile, data);
+  refreshCharacterPreview();
+  renderShopGrid();
+}
+
+// Award coins on correct answers — called from showFeedback and cm2 validate functions
+const _origShowFeedback = showFeedback;
+showFeedback = function(correct, correctLabel, cb) {
+  if(correct) awardCoins(currentProfile, 1);
+  _origShowFeedback(correct, correctLabel, cb);
+};
+
+// Bonus coins on good session result
+const _origShowResult = showResult;
+showResult = function(module, score, total) {
+  if(score >= Math.round(total * 0.8)) awardCoins('cp', 3);
+  _origShowResult(module, score, total);
+};
+const _origCm2ShowResult = cm2ShowResult;
+cm2ShowResult = function(mod, score, total) {
+  if(score >= Math.round(total * 0.8)) awardCoins('cm2', 3);
+  _origCm2ShowResult(mod, score, total);
+};
+
+// Track which profile is active
+const _origStartModule = startModule;
+startModule = function(mod) { currentProfile = 'cp'; _origStartModule(mod); };
+const _origCm2StartModule = cm2StartModule;
+cm2StartModule = function(mod) { currentProfile = 'cm2'; _origCm2StartModule(mod); };
+
+updateCoinBadges();
 </script>
 </body>
 </html>
