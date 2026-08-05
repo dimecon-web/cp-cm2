@@ -458,6 +458,12 @@ html, body {
   line-height: 1.2;
 }
 .welcome-subtitle { font-size: 20px; color: #888; text-align: center; }
+.profile-select {
+  width: 100%; max-width: 420px; margin-top: 10px;
+  padding: 18px 20px; font-size: 22px; font-weight: 800; font-family: inherit;
+  border-radius: 20px; border: 4px solid #6C63FF; background: var(--card); color: var(--text);
+  box-shadow: var(--shadow); cursor: pointer; text-align: center; text-align-last: center;
+}
 .profile-cards {
   display: flex; flex-direction: column; gap: 20px;
   width: 100%; max-width: 480px;
@@ -648,12 +654,33 @@ html, body {
   </div>
 </div>
 
+<!-- TEMPS ÉCOULÉ (calcul mental CM2) -->
+<div id="cm2-timeup" class="feedback-overlay hidden">
+  <div class="feedback-box">
+    <div class="feedback-emoji">⏰</div>
+    <div class="feedback-msg">Le temps est écoulé !</div>
+    <div class="feedback-sub">Que veux-tu faire ?</div>
+    <button class="btn btn-primary w100" onclick="cm2TakeMyTime()">🐢 Je prends mon temps</button>
+    <button class="btn btn-success w100" style="margin-top:12px" onclick="cm2GiveMeAnswer()">💡 Donne-moi la réponse</button>
+  </div>
+</div>
+
+<!-- EXPLICATION DE LA RÉPONSE (calcul mental CM2) -->
+<div id="cm2-explain" class="feedback-overlay hidden">
+  <div class="feedback-box">
+    <div class="feedback-emoji">💡</div>
+    <div class="feedback-msg" id="cm2-explain-answer" style="color:#0EA5E9"></div>
+    <div class="feedback-sub" id="cm2-explain-text" style="text-align:left;line-height:1.55"></div>
+    <button class="btn btn-primary w100" onclick="cm2ExplainNext()">J'ai compris ! ➡️</button>
+  </div>
+</div>
+
 <div id="app">
 
 <!-- ===== HOME SCREEN ===== -->
 <div id="home" class="screen">
   <div class="home-header">
-    <div class="home-title">🌸 Espace CP</div>
+    <div class="home-title">🌸 Espace CP — Olivia</div>
     <div class="home-subtitle">Choisis une activité 👇</div>
   </div>
   <div class="treasure-box">
@@ -828,25 +855,21 @@ html, body {
 <!-- ===== WELCOME SCREEN ===== -->
 <div id="welcome" class="screen hidden">
   <div class="welcome-title">⭐ L'École<br>des Étoiles</div>
-  <div class="welcome-subtitle">Bonjour ! Choisis ton profil pour commencer 👇</div>
-  <div class="profile-cards">
-    <div class="profile-card profile-card-cp" onclick="showScreen('home');updateHomeUI()">
-      <div class="p-icon">🌸</div>
-      <div class="p-name">Grande Section / CP</div>
-      <div class="p-age">6 ans</div>
-    </div>
-    <div class="profile-card profile-card-cm2" onclick="showScreen('cm2-home');cm2UpdateHomeUI()">
-      <div class="p-icon">🌟</div>
-      <div class="p-name">CM2</div>
-      <div class="p-age">9-10 ans</div>
-    </div>
-  </div>
+  <div class="welcome-subtitle">Bonjour ! Qui es-tu ? 👇</div>
+  <select id="profile-select" class="profile-select">
+    <option value="" disabled selected>Choisis ton prénom…</option>
+    <option value="alexia">🌟 Alexia — CM2</option>
+    <option value="olivia">🌸 Olivia — CP</option>
+    <option value="daphne">🦄 Daphné — CM1</option>
+    <option value="charly">🚀 Charly — Seconde</option>
+  </select>
+  <button class="btn btn-primary" style="font-size:22px;padding:16px 40px;margin-top:24px" onclick="enterProfile()">C'est parti ! ➡️</button>
 </div>
 
 <!-- ===== CM2 HOME ===== -->
 <div id="cm2-home" class="screen hidden">
   <div class="cm2-home-header">
-    <div class="cm2-home-title">🌟 Espace CM2</div>
+    <div class="cm2-home-title">🌟 Espace CM2 — Alexia</div>
     <div class="cm2-home-subtitle">Choisis une activité 👇</div>
   </div>
   <div class="cm2-treasure-box">
@@ -888,6 +911,101 @@ html, body {
   <div class="coin-home-badge" id="cm2-coins-display">🪙 0</div>
   <button class="btn-character" onclick="openCharacterScreen('cm2','cm2-home')">👗 Mon personnage — Alexia</button>
   <button class="btn btn-back mt16" onclick="showScreen('welcome')" style="margin-top:20px;font-size:18px">🏠 Changer de profil</button>
+</div>
+
+<!-- ===== CM1 HOME (Daphné) ===== -->
+<div id="cm1-home" class="screen hidden" style="background:linear-gradient(160deg,#FDF2F8 0%,#FAF5FF 50%,#EDE9FE 100%);justify-content:flex-start;gap:0">
+  <div class="cm2-home-header">
+    <div class="cm2-home-title">🦄 Espace CM1 — Daphné</div>
+    <div class="cm2-home-subtitle">Choisis une activité 👇</div>
+  </div>
+  <div class="cm2-treasure-box">
+    <span style="font-size:32px">🏆</span>
+    <span>Mon trésor : <span id="cm1-total-stars">0</span> ⭐</span>
+  </div>
+  <div class="cm2-modules-grid">
+    <div class="module-card" style="border-color:#0EA5E9" onclick="cm1StartModule('maths')">
+      <div class="mod-icon">🔢</div>
+      <div class="mod-name" style="color:#0EA5E9">Calcul Mental</div>
+      <div class="mod-stars" id="cm1-stars-maths">⭐ 0</div>
+    </div>
+    <div class="module-card" style="border-color:#F59E0B" onclick="cm1StartModule('francais')">
+      <div class="mod-icon">✏️</div>
+      <div class="mod-name" style="color:#F59E0B">Français</div>
+      <div class="mod-stars" id="cm1-stars-francais">⭐ 0</div>
+    </div>
+    <div class="module-card" style="border-color:#3B82F6" onclick="cm1StartModule('english')">
+      <div class="mod-icon">🌍</div>
+      <div class="mod-name" style="color:#3B82F6">Anglais</div>
+      <div class="mod-stars" id="cm1-stars-english">⭐ 0</div>
+    </div>
+    <div class="module-card mod-snake" onclick="snakeReturnScreen='cm1-home';startSnake()">
+      <div class="mod-icon">🐍</div>
+      <div class="mod-name">Snake</div>
+      <div class="mod-stars" id="cm1-snake-best">🏆 0</div>
+    </div>
+  </div>
+  <div class="coin-home-badge" id="cm1-coins-display">🪙 0</div>
+  <button class="btn-character" onclick="openCharacterScreen('daphne','cm1-home')">👗 Mon personnage — Daphné</button>
+  <button class="btn btn-back mt16" onclick="showScreen('welcome')" style="margin-top:20px;font-size:18px">🏠 Changer de profil</button>
+</div>
+
+<!-- ===== SECONDE HOME (Charly) ===== -->
+<div id="sec-home" class="screen hidden" style="background:linear-gradient(160deg,#ECFEFF 0%,#EFF6FF 60%,#E0E7FF 100%);justify-content:flex-start;gap:0">
+  <div class="cm2-home-header">
+    <div class="cm2-home-title">🚀 Espace Seconde — Charly</div>
+    <div class="cm2-home-subtitle">Choisis une activité 👇</div>
+  </div>
+  <div class="cm2-treasure-box">
+    <span style="font-size:32px">🏆</span>
+    <span>Mon trésor : <span id="sec-total-stars">0</span> ⭐</span>
+  </div>
+  <div class="cm2-modules-grid">
+    <div class="module-card" style="border-color:#0EA5E9" onclick="secStartModule('maths')">
+      <div class="mod-icon">🔢</div>
+      <div class="mod-name" style="color:#0EA5E9">Maths</div>
+      <div class="mod-stars" id="sec-stars-maths">⭐ 0</div>
+    </div>
+    <div class="module-card" style="border-color:#EF4444" onclick="secStartModule('francais')">
+      <div class="mod-icon">📚</div>
+      <div class="mod-name" style="color:#EF4444">Français</div>
+      <div class="mod-stars" id="sec-stars-francais">⭐ 0</div>
+    </div>
+    <div class="module-card" style="border-color:#8B5CF6" onclick="secStartModule('english')">
+      <div class="mod-icon">🌍</div>
+      <div class="mod-name" style="color:#8B5CF6">Anglais</div>
+      <div class="mod-stars" id="sec-stars-english">⭐ 0</div>
+    </div>
+    <div class="module-card mod-snake" onclick="snakeReturnScreen='sec-home';startSnake()">
+      <div class="mod-icon">🐍</div>
+      <div class="mod-name">Snake</div>
+      <div class="mod-stars" id="sec-snake-best">🏆 0</div>
+    </div>
+  </div>
+  <button class="btn btn-back mt16" onclick="showScreen('welcome')" style="margin-top:20px;font-size:18px">🏠 Changer de profil</button>
+</div>
+
+<!-- ===== QUIZ GÉNÉRIQUE (CM1 Français/Anglais + Seconde) ===== -->
+<div id="gq" class="screen hidden">
+  <div class="activity-header w100">
+    <button class="btn btn-back" onclick="showScreen('welcome')">🏠</button>
+    <div class="activity-title" id="gq-title"></div>
+    <div style="font-size:20px;font-weight:800" id="gq-score-live">⭐ 0</div>
+  </div>
+  <div class="progress-bar-wrap w100">
+    <div class="progress-bar"><div class="cm2-progress-fill" id="gq-prog" style="width:0%"></div></div>
+    <div class="progress-text" id="gq-prog-text">0 / 10</div>
+  </div>
+  <div class="question-card">
+    <div class="question-prompt" id="gq-prompt"></div>
+    <div class="choices-grid cols-2" id="gq-choices"></div>
+  </div>
+  <div id="gq-explain" style="display:none;width:100%;max-width:680px;background:#F0FDF4;border:2px solid #10B981;border-radius:20px;padding:16px 20px;margin-top:8px;font-size:16px;line-height:1.6;color:#065F46">
+    <span style="font-size:20px;margin-right:8px">💡</span><span id="gq-explain-text"></span>
+    <div style="text-align:center;margin-top:14px">
+      <button class="btn btn-cm2-primary" id="gq-next-btn" style="background:#10B981;min-width:140px;font-size:18px">Suivant →</button>
+    </div>
+  </div>
 </div>
 
 <!-- ===== CHARACTER SCREEN ===== -->
@@ -938,7 +1056,7 @@ html, body {
     <div class="progress-bar"><div class="cm2-progress-fill" id="cm2-maths-prog" style="width:0%"></div></div>
     <div class="progress-text" id="cm2-maths-prog-text">0 / 10</div>
   </div>
-  <div class="chrono-wrap w100">
+  <div class="chrono-wrap w100" id="cm2-chrono-wrap">
     <div class="chrono-bar"><div class="chrono-fill" id="cm2-chrono-fill" style="width:100%;background:#22C55E"></div></div>
     <div class="chrono-label" id="cm2-chrono-label">⏱ 12s</div>
   </div>
@@ -1322,6 +1440,10 @@ function saveStars() {
 function showScreen(id) {
   if(id !== 'cm2-maths') { clearInterval(cm2ChronoInterval); cm2ChronoInterval = null; }
   document.getElementById('feedback').classList.add('hidden');
+  const timeup = document.getElementById('cm2-timeup');
+  if(timeup) timeup.classList.add('hidden');
+  const explain = document.getElementById('cm2-explain');
+  if(explain) explain.classList.add('hidden');
   document.querySelectorAll('.screen').forEach(s => {
     if (s.id === id) {
       s.classList.remove('hidden', 'slide-left');
@@ -2228,6 +2350,8 @@ let snakeReturnScreen = 'home';
 
 function snakeGoHome() {
   if(snakeReturnScreen === 'cm2-home') { cm2UpdateHomeUI(); showScreen('cm2-home'); }
+  else if(snakeReturnScreen === 'cm1-home') { cm1UpdateHomeUI(); showScreen('cm1-home'); }
+  else if(snakeReturnScreen === 'sec-home') { secUpdateHomeUI(); showScreen('sec-home'); }
   else { updateHomeUI(); showScreen('home'); }
   snakeReturnScreen = 'home';
 }
@@ -2262,6 +2386,7 @@ function cm2GoHome() {
 
 function cm2StartModule(mod) {
   clearInterval(cm2ChronoInterval);
+  mentalLevel = 'cm2';
   cm2State.currentModule = mod;
   cm2State.sessionScore = 0;
   cm2State.questionIndex = 0;
@@ -2475,6 +2600,286 @@ const CM2_TEXTS = [
       { q: 'Qu\'est-ce qui a probablement causé la disparition des dinosaures ?', correct: 'La chute d\'un astéroïde', wrong: ['Une grande inondation','Les chasseurs préhistoriques','Une maladie des plantes'] },
       { q: 'Quels animaux d\'aujourd\'hui descendent des dinosaures ?', correct: 'Les oiseaux', wrong: ['Les chats','Les requins','Les serpents'] },
     ]
+  },
+  {
+    title: '🐺 Les loups',
+    paragraphs: [
+      'Les loups vivent en famille, dans un groupe appelé une meute. Chaque meute est dirigée par un couple de parents, et compte souvent entre cinq et dix loups. Ensemble, ils défendent un grand territoire qu\'ils marquent avec leur odeur.',
+      'Le hurlement du loup n\'est pas un cri de méchanceté : c\'est son moyen de communication ! En hurlant, un loup peut prévenir sa meute d\'un danger, rassembler le groupe ou signaler sa présence à d\'autres meutes, parfois à plus de dix kilomètres.',
+      'Le loup avait complètement disparu de France, mais il est revenu naturellement par les Alpes en 1992, depuis l\'Italie. C\'est aussi l\'ancêtre de tous les chiens : du minuscule chihuahua au grand berger allemand, tous descendent du loup !',
+    ],
+    questions: [
+      { q: 'Comment s\'appelle le groupe familial des loups ?', correct: 'Une meute', wrong: ['Un troupeau','Une horde','Une colonie'] },
+      { q: 'À quoi sert le hurlement du loup ?', correct: 'À communiquer avec les autres loups', wrong: ['À faire peur aux humains','À chanter la nuit','À attirer la pluie'] },
+      { q: 'Par où le loup est-il revenu en France ?', correct: 'Par les Alpes', wrong: ['Par la Bretagne','Par les plages','En avion'] },
+      { q: 'Quel animal descend du loup ?', correct: 'Le chien', wrong: ['Le chat','Le renard uniquement','L\'ours'] },
+    ]
+  },
+  {
+    title: '🛡️ Les Gaulois',
+    paragraphs: [
+      'Il y a plus de 2 000 ans, la France s\'appelait la Gaule. Elle était habitée par de nombreux peuples que l\'on appelle les Gaulois. Contrairement à leur image de guerriers bagarreurs, c\'étaient surtout d\'excellents agriculteurs et des artisans très habiles : ils ont même inventé le tonneau !',
+      'Les Gaulois croyaient en plusieurs dieux. Leurs prêtres, les druides, étaient des personnages très respectés : ils étaient à la fois savants, juges et professeurs. Ils transmettaient leur savoir uniquement de mémoire, sans jamais l\'écrire.',
+      'En 52 avant Jésus-Christ, le chef gaulois Vercingétorix a rassemblé les peuples de la Gaule pour résister à l\'armée romaine de Jules César. Après une grande victoire à Gergovie, il a finalement été vaincu au siège d\'Alésia, et la Gaule est devenue romaine.',
+    ],
+    questions: [
+      { q: 'Comment s\'appelait la France à l\'époque des Gaulois ?', correct: 'La Gaule', wrong: ['La Galice','La Germanie','La Lutèce'] },
+      { q: 'Qui étaient les druides ?', correct: 'Les prêtres et savants gaulois', wrong: ['Des soldats romains','Des rois gaulois','Des marchands'] },
+      { q: 'Qu\'ont inventé les Gaulois ?', correct: 'Le tonneau', wrong: ['La roue','L\'écriture','La monnaie'] },
+      { q: 'Qui a rassemblé les Gaulois contre Jules César ?', correct: 'Vercingétorix', wrong: ['Astérix','Clovis','Charlemagne'] },
+    ]
+  },
+  {
+    title: '🛰️ La Station spatiale internationale',
+    paragraphs: [
+      'La Station spatiale internationale, ou ISS, est un immense laboratoire qui tourne autour de la Terre à environ 400 kilomètres d\'altitude. Elle file à 28 000 km/h et fait le tour de notre planète en seulement 90 minutes : les astronautes y voient 16 levers de soleil par jour !',
+      'À bord, tout flotte : c\'est l\'impesanteur. Les astronautes dorment attachés dans des sacs de couchage fixés aux murs, et leur nourriture est spécialement préparée pour ne pas s\'envoler. Ils font aussi deux heures de sport par jour pour garder leurs muscles en forme.',
+      'Les astronautes réalisent des expériences scientifiques impossibles à faire sur Terre. Le Français Thomas Pesquet y a séjourné deux fois : il a passé près de 400 jours dans l\'espace en tout, et a même commandé la station en 2021 !',
+    ],
+    questions: [
+      { q: 'À quelle altitude se trouve l\'ISS environ ?', correct: '400 kilomètres', wrong: ['4 kilomètres','40 000 kilomètres','400 mètres'] },
+      { q: 'En combien de temps l\'ISS fait-elle le tour de la Terre ?', correct: '90 minutes', wrong: ['24 heures','7 jours','1 an'] },
+      { q: 'Comment dorment les astronautes ?', correct: 'Attachés dans des sacs de couchage', wrong: ['Dans de grands lits','Debout','Ils ne dorment pas'] },
+      { q: 'Quel astronaute français a commandé l\'ISS ?', correct: 'Thomas Pesquet', wrong: ['Neil Armstrong','Tintin','Youri Gagarine'] },
+    ]
+  },
+  {
+    title: '🌳 La forêt amazonienne',
+    paragraphs: [
+      'La forêt amazonienne est la plus grande forêt tropicale du monde. Elle s\'étend sur neuf pays d\'Amérique du Sud, principalement au Brésil, et elle est traversée par l\'Amazone, l\'un des fleuves les plus puissants de la planète.',
+      'Cette forêt abrite une biodiversité extraordinaire : jaguars, singes hurleurs, perroquets multicolores, dauphins roses de rivière, et des millions d\'espèces d\'insectes et de plantes, dont beaucoup ne sont même pas encore connues des scientifiques !',
+      'L\'Amazonie joue un rôle essentiel pour le climat de la Terre : ses milliards d\'arbres absorbent du dioxyde de carbone et fabriquent de l\'oxygène. Malheureusement, elle est menacée par la déforestation : chaque année, des milliers d\'hectares d\'arbres sont coupés ou brûlés.',
+    ],
+    questions: [
+      { q: 'Sur quel continent se trouve la forêt amazonienne ?', correct: 'En Amérique du Sud', wrong: ['En Afrique','En Asie','En Europe'] },
+      { q: 'Quel fleuve traverse cette forêt ?', correct: 'L\'Amazone', wrong: ['Le Nil','Le Mississippi','La Loire'] },
+      { q: 'Quel animal vit dans la forêt amazonienne ?', correct: 'Le jaguar', wrong: ['Le manchot','Le chameau','L\'ours polaire'] },
+      { q: 'Qu\'est-ce qui menace la forêt amazonienne ?', correct: 'La déforestation', wrong: ['Le froid','Les touristes','Les inondations'] },
+    ]
+  },
+  {
+    title: '🐘 Les éléphants',
+    paragraphs: [
+      'L\'éléphant est le plus grand animal terrestre : un mâle d\'Afrique peut peser jusqu\'à 6 tonnes, autant que quatre voitures ! Il en existe deux grandes espèces : l\'éléphant d\'Afrique, aux grandes oreilles, et l\'éléphant d\'Asie, plus petit.',
+      'Sa trompe est un outil extraordinaire composé de dizaines de milliers de muscles. Elle lui sert à la fois de nez, de main, de douche et de paille : il peut arracher une branche, ramasser une cacahuète, aspirer de l\'eau ou saluer un ami !',
+      'Les éléphants vivent en troupeaux dirigés par la femelle la plus âgée, la matriarche. Ce sont des animaux très intelligents, connus pour leur excellente mémoire : ils se souviennent pendant des années des chemins, des points d\'eau et de leurs compagnons.',
+    ],
+    questions: [
+      { q: 'Quel est le plus grand animal terrestre ?', correct: 'L\'éléphant', wrong: ['La girafe','L\'hippopotame','Le rhinocéros'] },
+      { q: 'Comment reconnaît-on l\'éléphant d\'Afrique ?', correct: 'À ses grandes oreilles', wrong: ['À sa couleur rose','À ses rayures','À sa petite taille'] },
+      { q: 'Qui dirige le troupeau d\'éléphants ?', correct: 'La femelle la plus âgée', wrong: ['Le mâle le plus fort','Le plus jeune','Personne'] },
+      { q: 'Pour quelle qualité les éléphants sont-ils connus ?', correct: 'Leur excellente mémoire', wrong: ['Leur rapidité','Leur discrétion','Leur chant'] },
+    ]
+  },
+  {
+    title: '🖼️ Léonard de Vinci',
+    paragraphs: [
+      'Léonard de Vinci est né en Italie en 1452, à l\'époque de la Renaissance. C\'était un génie aux mille talents : peintre, sculpteur, ingénieur, architecte et savant. Il observait tout ce qui l\'entourait et remplissait des carnets de dessins et de notes.',
+      'Dans ses carnets, il a imaginé des inventions incroyables pour son époque : des machines volantes, un parachute, un pont mobile et même un robot chevalier ! Beaucoup de ses idées ont été réalisées des siècles plus tard.',
+      'Son tableau le plus célèbre est La Joconde, le portrait d\'une femme au sourire mystérieux. Invité en France par le roi François Ier, Léonard a passé les dernières années de sa vie au Clos Lucé, près d\'Amboise. Aujourd\'hui, La Joconde est exposée au musée du Louvre, à Paris.',
+    ],
+    questions: [
+      { q: 'Dans quel pays est né Léonard de Vinci ?', correct: 'En Italie', wrong: ['En France','En Espagne','En Grèce'] },
+      { q: 'Quel est son tableau le plus célèbre ?', correct: 'La Joconde', wrong: ['Les Tournesols','La Liberté guidant le peuple','Le Cri'] },
+      { q: 'Quel roi de France a invité Léonard de Vinci ?', correct: 'François Ier', wrong: ['Louis XIV','Napoléon','Henri IV'] },
+      { q: 'Où peut-on voir La Joconde aujourd\'hui ?', correct: 'Au musée du Louvre', wrong: ['Au château de Versailles','À Rome','À la tour Eiffel'] },
+    ]
+  },
+  {
+    title: '🏅 Les Jeux olympiques',
+    paragraphs: [
+      'Les Jeux olympiques sont nés il y a près de 3 000 ans en Grèce antique, dans la ville d\'Olympie. Tous les quatre ans, les meilleurs athlètes grecs s\'y affrontaient à la course, à la lutte ou au lancer de disque, en l\'honneur du dieu Zeus.',
+      'Les Jeux modernes ont été recréés en 1896 grâce au Français Pierre de Coubertin. Leur symbole, les cinq anneaux entrelacés, représente les cinq continents unis par le sport. Avant chaque édition, la flamme olympique est allumée à Olympie puis portée par des milliers de relayeurs.',
+      'Aujourd\'hui, il existe les Jeux d\'été (natation, athlétisme, gymnastique…) et les Jeux d\'hiver (ski, patinage…). En 2024, Paris a accueilli les Jeux d\'été pour la troisième fois de son histoire, avec une cérémonie d\'ouverture spectaculaire sur la Seine !',
+    ],
+    questions: [
+      { q: 'Dans quel pays sont nés les Jeux olympiques ?', correct: 'En Grèce', wrong: ['En Italie','En France','En Égypte'] },
+      { q: 'Qui a recréé les Jeux olympiques modernes ?', correct: 'Pierre de Coubertin', wrong: ['Jules César','Gustave Eiffel','Napoléon'] },
+      { q: 'Que représentent les cinq anneaux olympiques ?', correct: 'Les cinq continents', wrong: ['Les cinq sports','Cinq pays','Les cinq océans'] },
+      { q: 'Quelle ville a accueilli les Jeux d\'été en 2024 ?', correct: 'Paris', wrong: ['Londres','Tokyo','Athènes'] },
+    ]
+  },
+  {
+    title: '🐻‍❄️ L\'ours polaire',
+    paragraphs: [
+      'L\'ours polaire est le plus grand carnivore terrestre : debout, il peut dépasser trois mètres ! Il vit autour du pôle Nord, sur la banquise, cette immense couche de mer gelée qui recouvre l\'océan Arctique.',
+      'Son corps est parfaitement adapté au froid : sous sa fourrure, sa peau est noire pour mieux capter la chaleur du soleil, et une épaisse couche de graisse l\'isole du gel. Excellent nageur, il peut parcourir des dizaines de kilomètres dans l\'eau glacée.',
+      'L\'ours polaire chasse principalement les phoques, qu\'il guette patiemment près des trous de respiration dans la glace. Mais le réchauffement climatique fait fondre la banquise de plus en plus tôt chaque année, ce qui rend sa chasse difficile : l\'ours polaire est aujourd\'hui une espèce menacée.',
+    ],
+    questions: [
+      { q: 'Où vit l\'ours polaire ?', correct: 'Autour du pôle Nord', wrong: ['Au pôle Sud','Dans les montagnes','Dans la forêt'] },
+      { q: 'Qu\'est-ce que la banquise ?', correct: 'De la mer gelée', wrong: ['Un glacier de montagne','Une île de neige','Un iceberg géant'] },
+      { q: 'De quelle couleur est la peau de l\'ours polaire ?', correct: 'Noire', wrong: ['Blanche','Rose','Grise'] },
+      { q: 'Pourquoi l\'ours polaire est-il menacé ?', correct: 'La banquise fond à cause du réchauffement', wrong: ['Il n\'a plus de fourrure','Les phoques ont disparu','Il fait trop froid'] },
+    ]
+  },
+  {
+    title: '🥖 L\'histoire du pain',
+    paragraphs: [
+      'Le pain est l\'un des aliments les plus anciens du monde : on en fabriquait déjà il y a plus de 10 000 ans ! Il ne faut que quatre ingrédients pour le préparer : de la farine, de l\'eau, du sel et de la levure.',
+      'Le boulanger commence par pétrir la pâte, puis il la laisse reposer plusieurs heures : c\'est la fermentation. Pendant ce temps, la levure produit de minuscules bulles de gaz qui font gonfler la pâte. C\'est grâce à elles que la mie du pain est pleine de petits trous !',
+      'La baguette est le symbole de la France : il s\'en vend environ six milliards chaque année dans le pays ! En 2022, le savoir-faire de la baguette française a même été inscrit au patrimoine culturel immatériel de l\'humanité par l\'UNESCO.',
+    ],
+    questions: [
+      { q: 'Quels sont les ingrédients du pain ?', correct: 'Farine, eau, sel et levure', wrong: ['Farine, lait, sucre et beurre','Eau, sucre et œufs','Farine et chocolat'] },
+      { q: 'Que fait la levure dans la pâte ?', correct: 'Elle produit des bulles qui la font gonfler', wrong: ['Elle la colore','Elle la durcit','Elle la sale'] },
+      { q: 'Comment s\'appelle l\'étape où le boulanger travaille la pâte ?', correct: 'Le pétrissage', wrong: ['Le laminage','Le glaçage','Le moulage'] },
+      { q: 'Quel pain est le symbole de la France ?', correct: 'La baguette', wrong: ['Le pain de mie','Le croissant','La brioche'] },
+    ]
+  },
+  {
+    title: '🐙 Les pieuvres',
+    paragraphs: [
+      'La pieuvre, aussi appelée poulpe, est un animal marin étonnant. Elle possède huit bras couverts de ventouses, trois cœurs, et son sang est bleu ! Son corps mou lui permet de se faufiler dans des trous à peine plus grands que son œil.',
+      'C\'est la reine du camouflage : en une fraction de seconde, elle peut changer la couleur et même la texture de sa peau pour se confondre avec les rochers, le sable ou les algues. Et si un prédateur l\'attaque, elle projette un nuage d\'encre noire pour s\'enfuir !',
+      'Les scientifiques considèrent la pieuvre comme l\'un des animaux les plus intelligents de la mer. En aquarium, certaines apprennent à ouvrir des bocaux pour attraper un crabe, reconnaissent les personnes qui s\'occupent d\'elles, et adorent jouer avec des objets.',
+    ],
+    questions: [
+      { q: 'Combien de cœurs possède la pieuvre ?', correct: '3', wrong: ['1','2','8'] },
+      { q: 'De quelle couleur est le sang de la pieuvre ?', correct: 'Bleu', wrong: ['Rouge','Vert','Transparent'] },
+      { q: 'Que fait la pieuvre pour échapper à un prédateur ?', correct: 'Elle projette un nuage d\'encre', wrong: ['Elle crie très fort','Elle mord','Elle fait la morte'] },
+      { q: 'Qu\'est-ce qui montre l\'intelligence des pieuvres ?', correct: 'Elles savent ouvrir des bocaux', wrong: ['Elles savent voler','Elles parlent','Elles construisent des nids'] },
+    ]
+  },
+  {
+    title: '🚄 L\'histoire des trains',
+    paragraphs: [
+      'Les premiers trains sont nés en Angleterre au début du XIXe siècle. Ils étaient tirés par des locomotives à vapeur : on brûlait du charbon pour chauffer de l\'eau, et la vapeur faisait tourner les roues. Ces machines crachaient d\'épais nuages de fumée !',
+      'Le train a transformé la vie des gens : des voyages qui duraient des jours en diligence ne prenaient plus que quelques heures. Peu à peu, les locomotives à vapeur ont été remplacées par des trains électriques, plus rapides et moins polluants.',
+      'La France est célèbre pour son TGV, le train à grande vitesse, mis en service en 1981. Il roule à 320 km/h en service normal, et une rame spéciale a même battu le record du monde en 2007 en atteignant 574,8 km/h : presque aussi vite qu\'un avion au décollage !',
+    ],
+    questions: [
+      { q: 'Comment fonctionnaient les premières locomotives ?', correct: 'À la vapeur', wrong: ['À l\'électricité','À l\'essence','À pédales'] },
+      { q: 'Que brûlait-on pour faire avancer ces locomotives ?', correct: 'Du charbon', wrong: ['Du bois uniquement','Du pétrole','Du gaz'] },
+      { q: 'Que veut dire TGV ?', correct: 'Train à grande vitesse', wrong: ['Très gros véhicule','Train à grandes voitures','Transport général voyageurs'] },
+      { q: 'Quel record le TGV a-t-il battu en 2007 ?', correct: '574,8 km/h', wrong: ['150 km/h','320 km/h','1 000 km/h'] },
+    ]
+  },
+  {
+    title: '🏴‍☠️ Les pirates',
+    paragraphs: [
+      'Les pirates étaient des bandits des mers qui attaquaient les navires pour voler leurs cargaisons : or, épices, tissus précieux… La grande époque de la piraterie, appelée l\'âge d\'or des pirates, se situe aux XVIIe et XVIIIe siècles, surtout dans la mer des Caraïbes.',
+      'Pour effrayer leurs victimes, les pirates hissaient un drapeau noir orné d\'une tête de mort : le Jolly Roger. Le plus célèbre des pirates, Barbe Noire, accrochait même des mèches fumantes à sa barbe pour terroriser ses ennemis ! Il y avait aussi des femmes pirates, comme Anne Bonny.',
+      'La vie à bord était très dure : nourriture moisie, eau croupie, maladies et tempêtes. Contrairement à la légende, les cartes aux trésors étaient très rares : les pirates dépensaient leur butin dès qu\'ils touchaient un port plutôt que de l\'enterrer !',
+    ],
+    questions: [
+      { q: 'Comment s\'appelle le drapeau des pirates ?', correct: 'Le Jolly Roger', wrong: ['Le Black Pearl','Le Corsaire','La Tête Noire'] },
+      { q: 'Dans quelle mer les pirates étaient-ils très actifs ?', correct: 'La mer des Caraïbes', wrong: ['La mer Baltique','La Méditerranée','La mer Noire'] },
+      { q: 'Quel pirate accrochait des mèches fumantes à sa barbe ?', correct: 'Barbe Noire', wrong: ['Barbe Rousse','Jack Sparrow','Long John Silver'] },
+      { q: 'Que faisaient vraiment les pirates de leur butin ?', correct: 'Ils le dépensaient au port', wrong: ['Ils l\'enterraient toujours','Ils le jetaient à la mer','Ils le rendaient'] },
+    ]
+  },
+  {
+    title: '🦋 Le papillon monarque',
+    paragraphs: [
+      'Le monarque est un magnifique papillon orange et noir d\'Amérique. Il est célèbre pour accomplir l\'une des migrations les plus incroyables du monde animal : chaque automne, des millions de monarques quittent le Canada pour rejoindre le Mexique, à plus de 4 000 kilomètres !',
+      'Arrivés au Mexique, ils se regroupent par millions dans des forêts de sapins, s\'accrochant aux branches en grappes si denses que les arbres semblent orange. Ils y passent tout l\'hiver au chaud, avant de repartir vers le nord au printemps.',
+      'Le plus étonnant, c\'est qu\'aucun papillon ne fait le voyage complet aller-retour : le trajet du retour s\'étale sur plusieurs générations. Les arrière-petits-enfants des papillons partis du Canada retrouvent pourtant exactement les mêmes forêts que leurs ancêtres, sans jamais y être allés !',
+    ],
+    questions: [
+      { q: 'De quelles couleurs est le papillon monarque ?', correct: 'Orange et noir', wrong: ['Bleu et blanc','Vert et jaune','Rouge et gris'] },
+      { q: 'Où les monarques passent-ils l\'hiver ?', correct: 'Au Mexique', wrong: ['Au Canada','En France','Au Brésil'] },
+      { q: 'Quelle distance peuvent-ils parcourir ?', correct: 'Plus de 4 000 km', wrong: ['40 km','400 mètres','100 km'] },
+      { q: 'Qui effectue le voyage de retour vers le Canada ?', correct: 'Leurs descendants, sur plusieurs générations', wrong: ['Les mêmes papillons','Leurs parents','Des oiseaux'] },
+    ]
+  },
+  {
+    title: '🗿 La grotte de Lascaux',
+    paragraphs: [
+      'En 1940, en Dordogne, quatre adolescents partis chercher leur chien tombé dans un trou ont fait une découverte extraordinaire : une grotte dont les parois étaient couvertes de peintures préhistoriques vieilles d\'environ 20 000 ans !',
+      'Sur les murs de Lascaux, les hommes de la préhistoire ont peint près de 600 animaux : des chevaux, des taureaux géants, des cerfs et des bouquetins. Ils fabriquaient leurs couleurs avec des matériaux naturels : du charbon de bois pour le noir, et des terres colorées appelées ocres pour le jaune et le rouge.',
+      'La grotte est devenue si célèbre que des milliers de visiteurs s\'y pressaient chaque jour. Mais leur souffle abîmait les peintures ! La vraie grotte a donc été fermée en 1963, et des copies parfaites, comme Lascaux IV, permettent aujourd\'hui d\'admirer ce chef-d\'œuvre sans le détruire.',
+    ],
+    questions: [
+      { q: 'Qui a découvert la grotte de Lascaux ?', correct: 'Quatre adolescents', wrong: ['Des scientifiques','Des mineurs','Un roi'] },
+      { q: 'Quel âge ont environ les peintures de Lascaux ?', correct: '20 000 ans', wrong: ['200 ans','2 000 ans','2 millions d\'années'] },
+      { q: 'Qu\'ont surtout peint les hommes préhistoriques ?', correct: 'Des animaux', wrong: ['Des maisons','Des bateaux','Des lettres'] },
+      { q: 'Pourquoi la vraie grotte a-t-elle été fermée ?', correct: 'Le souffle des visiteurs abîmait les peintures', wrong: ['Elle s\'est effondrée','Elle a été inondée','Elle a été vendue'] },
+    ]
+  },
+  {
+    title: '🦈 Les requins',
+    paragraphs: [
+      'Les requins nagent dans les océans depuis plus de 400 millions d\'années : ils existaient bien avant les dinosaures ! Contrairement aux autres poissons, leur squelette n\'est pas fait d\'os mais de cartilage, la même matière souple que ton nez et tes oreilles.',
+      'Les dents des requins repoussent sans arrêt : elles sont rangées en plusieurs rangées, et quand une dent tombe, celle de derrière avance pour la remplacer. Un requin peut ainsi user des milliers de dents dans sa vie ! Son odorat est si fin qu\'il détecte une goutte de sang très loin dans l\'eau.',
+      'Il existe plus de 500 espèces de requins, du minuscule requin lanterne de 20 centimètres au gigantesque requin-baleine de 18 mètres, qui ne mange que du plancton. La grande majorité des requins sont inoffensifs pour l\'homme : c\'est plutôt l\'homme, en les pêchant trop, qui est un danger pour eux.',
+    ],
+    questions: [
+      { q: 'De quoi est fait le squelette des requins ?', correct: 'De cartilage', wrong: ['D\'os','De coquille','De bois'] },
+      { q: 'Que se passe-t-il quand un requin perd une dent ?', correct: 'Une autre dent avance pour la remplacer', wrong: ['Elle ne repousse jamais','Il ne peut plus manger','Il change de mâchoire'] },
+      { q: 'Que mange le requin-baleine ?', correct: 'Du plancton', wrong: ['Des baleines','Des humains','Des algues géantes'] },
+      { q: 'Les requins existaient-ils avant les dinosaures ?', correct: 'Oui, bien avant', wrong: ['Non, bien après','Ils sont apparus en même temps','Non, ils sont récents'] },
+    ]
+  },
+  {
+    title: '🎼 Mozart',
+    paragraphs: [
+      'Wolfgang Amadeus Mozart est né en 1756 à Salzbourg, en Autriche. C\'était un enfant prodige : à 4 ans, il jouait déjà du clavecin, et à 6 ans, il composait ses premières pièces de musique ! Son père, musicien lui aussi, l\'a très vite emmené jouer dans toute l\'Europe.',
+      'Enfant, Mozart a donné des concerts devant des rois et des impératrices, notamment au château de Versailles devant la cour du roi de France. Le public était stupéfait : il pouvait rejouer parfaitement un morceau entendu une seule fois !',
+      'Devenu adulte, Mozart a composé à une vitesse incroyable : plus de 600 œuvres en tout, dont des opéras célèbres comme La Flûte enchantée. Il est mort très jeune, à 35 ans, mais sa musique est encore jouée et aimée dans le monde entier, plus de 200 ans après.',
+    ],
+    questions: [
+      { q: 'Dans quel pays est né Mozart ?', correct: 'En Autriche', wrong: ['En Allemagne','En France','En Italie'] },
+      { q: 'À quel âge Mozart a-t-il composé ses premières pièces ?', correct: 'À 6 ans', wrong: ['À 20 ans','À 15 ans','À 30 ans'] },
+      { q: 'Combien d\'œuvres Mozart a-t-il composées environ ?', correct: 'Plus de 600', wrong: ['Une dizaine','Une cinquantaine','Plus de 10 000'] },
+      { q: 'Quel est l\'un de ses opéras les plus célèbres ?', correct: 'La Flûte enchantée', wrong: ['Le Violon magique','La Trompette dorée','Le Piano volant'] },
+    ]
+  },
+  {
+    title: '🌈 Les arcs-en-ciel',
+    paragraphs: [
+      'Pour voir un arc-en-ciel, il faut deux ingrédients en même temps : de la pluie et du soleil. Il faut aussi se placer au bon endroit : le soleil doit être derrière toi, et la pluie devant toi.',
+      'La lumière du soleil paraît blanche, mais elle est en réalité composée de toutes les couleurs mélangées. Quand un rayon de soleil traverse une goutte de pluie, la goutte agit comme un minuscule prisme : elle sépare la lumière en sept couleurs, du rouge au violet.',
+      'Les couleurs de l\'arc-en-ciel apparaissent toujours dans le même ordre : rouge, orange, jaune, vert, bleu, indigo et violet, avec le rouge à l\'extérieur de l\'arc. Et si tu vois un jour un double arc-en-ciel, observe bien le deuxième : ses couleurs sont inversées !',
+    ],
+    questions: [
+      { q: 'Que faut-il pour voir un arc-en-ciel ?', correct: 'De la pluie et du soleil en même temps', wrong: ['De la neige','Du vent et des nuages','Une nuit claire'] },
+      { q: 'De quoi est composée la lumière blanche du soleil ?', correct: 'De toutes les couleurs mélangées', wrong: ['De blanc uniquement','De jaune et de rouge','D\'électricité'] },
+      { q: 'Combien de couleurs compte l\'arc-en-ciel ?', correct: '7', wrong: ['3','5','12'] },
+      { q: 'Quelle couleur est à l\'extérieur de l\'arc ?', correct: 'Le rouge', wrong: ['Le violet','Le vert','Le bleu'] },
+    ]
+  },
+  {
+    title: '🐜 Les fourmis',
+    paragraphs: [
+      'Les fourmis vivent en immenses sociétés organisées, les colonies, qui peuvent compter des millions d\'individus. Comme chez les abeilles, une reine pond tous les œufs, tandis que les ouvrières construisent la fourmilière, cherchent la nourriture et s\'occupent des larves.',
+      'Pour leur petite taille, les fourmis sont incroyablement fortes : une fourmi peut porter plusieurs dizaines de fois son propre poids ! C\'est comme si tu soulevais une voiture au-dessus de ta tête. Pour se parler, les fourmis utilisent des odeurs chimiques appelées phéromones : en suivant ces pistes odorantes, toute la colonie retrouve le chemin de la nourriture.',
+      'Certaines espèces sont de véritables agricultrices : les fourmis coupe-feuilles cultivent un champignon dans leur nid pour se nourrir, et d\'autres élèvent des pucerons comme nous élevons des vaches, pour récolter leur miellat sucré !',
+    ],
+    questions: [
+      { q: 'Qui pond les œufs dans la fourmilière ?', correct: 'La reine', wrong: ['Les ouvrières','Toutes les fourmis','Les soldats'] },
+      { q: 'Comment les fourmis communiquent-elles ?', correct: 'Avec des odeurs (phéromones)', wrong: ['En chantant','Par gestes','Par télépathie'] },
+      { q: 'Que peut porter une fourmi ?', correct: 'Plusieurs dizaines de fois son poids', wrong: ['La moitié de son poids','Rien du tout','Son poids exactement'] },
+      { q: 'Que font les fourmis coupe-feuilles avec les feuilles ?', correct: 'Elles cultivent un champignon', wrong: ['Elles les mangent directement','Elles font des lits','Elles les vendent'] },
+    ]
+  },
+  {
+    title: '🗽 La statue de la Liberté',
+    paragraphs: [
+      'La statue de la Liberté, qui accueille les visiteurs à l\'entrée du port de New York, est un cadeau de la France aux États-Unis ! Elle a été offerte en 1886 pour célébrer l\'amitié entre les deux pays et le centenaire de l\'indépendance américaine.',
+      'C\'est le sculpteur français Auguste Bartholdi qui l\'a dessinée, et sa structure métallique intérieure a été conçue par Gustave Eiffel, l\'ingénieur de la célèbre tour ! La statue a été construite à Paris, puis découpée en 350 morceaux et transportée en bateau dans des caisses.',
+      'La statue est recouverte de fines plaques de cuivre. À l\'origine, elle était donc brune et brillante comme une pièce de monnaie ! C\'est l\'air marin qui, en une trentaine d\'années, lui a donné sa célèbre couleur verte. De la torche à ses pieds, elle mesure 46 mètres, et 93 mètres avec son socle.',
+    ],
+    questions: [
+      { q: 'Quel pays a offert la statue de la Liberté aux États-Unis ?', correct: 'La France', wrong: ['L\'Angleterre','L\'Italie','L\'Espagne'] },
+      { q: 'Qui a conçu sa structure métallique intérieure ?', correct: 'Gustave Eiffel', wrong: ['Auguste Bartholdi','Léonard de Vinci','Thomas Edison'] },
+      { q: 'De quelle couleur était la statue à l\'origine ?', correct: 'Brune et brillante comme le cuivre', wrong: ['Verte','Blanche','Dorée'] },
+      { q: 'Comment la statue est-elle arrivée en Amérique ?', correct: 'En bateau, découpée en morceaux', wrong: ['En avion','Elle a été construite sur place','En train'] },
+    ]
+  },
+  {
+    title: '🍫 L\'histoire du chocolat',
+    paragraphs: [
+      'Le chocolat est fabriqué à partir des fèves de cacao, les graines d\'un arbre appelé cacaoyer qui pousse dans les pays chauds et humides, près de l\'équateur. Chaque fruit du cacaoyer, la cabosse, contient une quarantaine de fèves.',
+      'Il y a des centaines d\'années, les Aztèques du Mexique préparaient déjà une boisson au cacao, le xocoatl. Mais elle ne ressemblait pas à notre chocolat chaud : elle était épicée et très amère ! Les fèves de cacao étaient si précieuses qu\'elles servaient aussi de monnaie.',
+      'Ce sont les Espagnols qui ont rapporté le cacao en Europe au XVIe siècle. En y ajoutant du sucre, ils en ont fait une boisson à la mode dans toutes les cours royales. Aujourd\'hui, pour fabriquer du chocolat, on fait fermenter les fèves, on les sèche, on les torréfie comme du café, puis on les broie pour obtenir la pâte de cacao.',
+    ],
+    questions: [
+      { q: 'À partir de quoi fabrique-t-on le chocolat ?', correct: 'Des fèves de cacao', wrong: ['Des noisettes','Des grains de café','Des racines sucrées'] },
+      { q: 'Comment s\'appelle l\'arbre qui produit le cacao ?', correct: 'Le cacaoyer', wrong: ['Le chocolatier','Le cacaotier des neiges','Le palmier'] },
+      { q: 'Comment était la boisson au cacao des Aztèques ?', correct: 'Épicée et amère', wrong: ['Sucrée et douce','Glacée','Pétillante'] },
+      { q: 'À quoi servaient aussi les fèves de cacao chez les Aztèques ?', correct: 'De monnaie', wrong: ['De bijoux','De médicaments','De jouets'] },
+    ]
   }
 ];
 
@@ -2483,19 +2888,33 @@ let cm2LectureQIdx = 0;
 let cm2LecturePhase = 'reading'; // 'reading' | 'questions'
 
 // Pioche les textes dans un paquet mélangé (mémorisé dans localStorage) :
-// tous les textes passent une fois avant qu'un texte ne revienne,
-// et jamais deux fois le même à la suite.
+// les textes jamais lus passent en premier (y compris les textes ajoutés
+// lors d'une mise à jour de l'app), tous les textes passent une fois avant
+// qu'un texte ne revienne, et jamais deux fois le même à la suite.
 function cm2PickLectureText() {
+  let read = [];
+  try { read = JSON.parse(localStorage.getItem('cm2-lecture-read') || '[]'); } catch(e) {}
+  if(!Array.isArray(read)) read = [];
+  read = read.filter(i => Number.isInteger(i) && i >= 0 && i < CM2_TEXTS.length);
+
   let deck = [];
   try { deck = JSON.parse(localStorage.getItem('cm2-lecture-deck') || '[]'); } catch(e) {}
   if(!Array.isArray(deck)) deck = [];
   deck = deck.filter(i => Number.isInteger(i) && i >= 0 && i < CM2_TEXTS.length);
+
+  // Les textes jamais lus et absents du paquet passent devant, mélangés
+  const unread = CM2_TEXTS.map((_, i) => i).filter(i => !read.includes(i) && !deck.includes(i));
+  if(unread.length) deck = shuffle(unread).concat(deck);
+
   if(deck.length === 0) {
+    // Tout a été lu : on remélange l'ensemble des textes
     deck = shuffle(CM2_TEXTS.map((_, i) => i));
     const last = parseInt(localStorage.getItem('cm2-lecture-last') || '-1', 10);
     if(deck.length > 1 && deck[0] === last) deck.push(deck.shift());
   }
   const idx = deck.shift();
+  if(!read.includes(idx)) read.push(idx);
+  localStorage.setItem('cm2-lecture-read', JSON.stringify(read));
   localStorage.setItem('cm2-lecture-deck', JSON.stringify(deck));
   localStorage.setItem('cm2-lecture-last', String(idx));
   return CM2_TEXTS[idx];
@@ -2568,54 +2987,65 @@ let cm2ChronoMax = 30;
 let cm2ChronoLeft = 12;
 let cm2ChronoInterval = null;
 
+// --- Explications pédagogiques pour le calcul mental ---
+function cm2ExplainAdd(a, b) {
+  const parts = [Math.floor(b/100)*100, Math.floor((b%100)/10)*10, b%10].filter(p => p > 0);
+  const steps = []; let cur = a;
+  parts.forEach(p => { steps.push(`${cur} + ${p} = ${cur+p}`); cur += p; });
+  return `Découpe ${b} en morceaux faciles à ajouter : ${steps.join(', puis ')}.`;
+}
+function cm2ExplainSub(a, b) {
+  const parts = [Math.floor(b/100)*100, Math.floor((b%100)/10)*10, b%10].filter(p => p > 0);
+  const steps = []; let cur = a;
+  parts.forEach(p => { steps.push(`${cur} − ${p} = ${cur-p}`); cur -= p; });
+  return `Enlève ${b} en morceaux faciles : ${steps.join(', puis ')}.`;
+}
+function cm2ExplainMul(a, b) {
+  if(b === 10) return `Multiplier par 10, c'est facile : on ajoute un zéro. ${a} × 10 = ${a*10}.`;
+  if(b >= 6) return `C'est dans la table de ${a} : ${a} × ${b} = ${a*b}. Astuce si tu as oublié : ${a} × 10 = ${a*10}, puis on enlève ${10-b} fois ${a} : ${a*10} − ${a*(10-b)} = ${a*b}.`;
+  return `${a} × ${b}, c'est ${b} fois le nombre ${a} : ${Array(b).fill(a).join(' + ')} = ${a*b}. Revois la table de ${a} !`;
+}
+
 function cm2GenerateMathsQuestions() {
   const qs = [];
 
   // 2 additions jusqu'à 1000
   for(let i=0;i<2;i++) {
     const a=randInt(50,500), b=randInt(10,400);
-    qs.push({ expr:`${a} + ${b}`, answer: a+b });
+    qs.push({ expr:`${a} + ${b}`, answer: a+b, explain: cm2ExplainAdd(a,b) });
   }
   // 1 soustraction
   for(let i=0;i<1;i++) {
     const b=randInt(10,200), a=randInt(b+1, b+400);
-    qs.push({ expr:`${a} − ${b}`, answer: a-b });
+    qs.push({ expr:`${a} − ${b}`, answer: a-b, explain: cm2ExplainSub(a,b) });
   }
   // 2 multiplications tables
   for(let i=0;i<2;i++) {
     const a=randInt(2,10), b=randInt(2,10);
-    qs.push({ expr:`${a} × ${b}`, answer: a*b });
+    qs.push({ expr:`${a} × ${b}`, answer: a*b, explain: cm2ExplainMul(a,b) });
   }
   // 1 division simple
   const db=randInt(2,9), da=db*randInt(2,10);
-  qs.push({ expr:`${da} ÷ ${db}`, answer: da/db });
+  qs.push({ expr:`${da} ÷ ${db}`, answer: da/db,
+    explain:`Cherche combien de fois ${db} rentre dans ${da}. Dans la table de ${db} : ${db} × ${da/db} = ${da}. Donc ${da} ÷ ${db} = ${da/db}.` });
 
   // 2 fractions simples (réponse entière) — priorité bulletin
   const fracTypes = shuffle([
-    () => { const n=randInt(2,8)*2; return { expr:`½ de ${n}`, answer: n/2 }; },
-    () => { const n=randInt(1,6)*4; return { expr:`¼ de ${n}`, answer: n/4 }; },
-    () => { const n=randInt(1,5)*4; return { expr:`¾ de ${n}`, answer: Math.round(3*n/4) }; },
-    () => { const n=randInt(2,7)*3; return { expr:`⅓ de ${n}`, answer: n/3 }; },
-    () => { const n=randInt(1,4)*3; return { expr:`⅔ de ${n}`, answer: Math.round(2*n/3) }; },
+    () => { const n=randInt(2,8)*2; return { expr:`½ de ${n}`, answer: n/2, explain:`Prendre la moitié, c'est partager en 2 parts égales : ${n} ÷ 2 = ${n/2}.` }; },
+    () => { const n=randInt(1,6)*4; return { expr:`¼ de ${n}`, answer: n/4, explain:`Prendre le quart, c'est partager en 4 parts égales : ${n} ÷ 4 = ${n/4}.` }; },
+    () => { const n=randInt(1,5)*4; return { expr:`¾ de ${n}`, answer: Math.round(3*n/4), explain:`On partage ${n} en 4 parts égales : ${n} ÷ 4 = ${n/4}. Puis on prend 3 parts : ${n/4} × 3 = ${3*n/4}.` }; },
+    () => { const n=randInt(2,7)*3; return { expr:`⅓ de ${n}`, answer: n/3, explain:`Prendre le tiers, c'est partager en 3 parts égales : ${n} ÷ 3 = ${n/3}.` }; },
+    () => { const n=randInt(1,4)*3; return { expr:`⅔ de ${n}`, answer: Math.round(2*n/3), explain:`On partage ${n} en 3 parts égales : ${n} ÷ 3 = ${n/3}. Puis on prend 2 parts : ${n/3} × 2 = ${2*n/3}.` }; },
   ]);
   qs.push(fracTypes[0](), fracTypes[1]());
 
-  // 2 décimaux ×10/100/1000 — priorité bulletin
-  const decOps = shuffle([
-    () => { const d=randInt(1,9); return { expr:`${d},${randInt(1,9)} × 10`, answer: d*10+randInt(1,9) }; },
-    () => { const d=randInt(1,5); const c=randInt(1,9); return { expr:`${d},${c} × 100`, answer: d*100+c*10 }; },
-    () => { const d=randInt(1,3); return { expr:`${d},${randInt(1,9)}${randInt(0,9)} × 100`, answer: null }; }, // skip complex
-    () => { const x=randInt(1,9); return { expr:`${x} ÷ 10`, answer: null }; }, // skip — needs decimal answer
-    () => { const a=randInt(1,8); const b=10-a; return { expr:`${a},${randInt(1,9)} + ${b-1},${10-randInt(1,9)}`, answer: a+b-1+1 }; },
-  ]);
-  // Générer 2 questions décimales valides (réponse entière)
+  // 2 décimaux (réponse entière) — priorité bulletin
   const decValid = [
-    () => { const a=randInt(1,9); const b=randInt(1,9); return { expr:`${a},${b} × 10`, answer: a*10+b }; },
-    () => { const a=randInt(1,5); const b=randInt(1,9); return { expr:`${a},${b}0 × 10`, answer: a*10+b }; },
-    () => { const a=randInt(1,4); const b=randInt(1,9); return { expr:`${a},0${b} × 100`, answer: a*100+b }; },
-    () => { const t=randInt(1,9); const u=10-t; return { expr:`${t},${randInt(1,8)} + ${u-1},${randInt(2,9)}`, answer: null }; },
-    () => { const a=randInt(1,5); const b=10-a; return { expr:`${a},5 + ${b-1},5`, answer: a+b }; },
-    () => { const a=randInt(2,8); const b=10-a; return { expr:`${a},3 + ${b-1},7`, answer: a+b }; },
+    () => { const a=randInt(1,9); const b=randInt(1,9); return { expr:`${a},${b} × 10`, answer: a*10+b, explain:`Multiplier par 10 décale la virgule d'un rang vers la droite : ${a},${b} devient ${a*10+b}.` }; },
+    () => { const a=randInt(1,5); const b=randInt(1,9); return { expr:`${a},${b}0 × 10`, answer: a*10+b, explain:`Multiplier par 10 décale la virgule d'un rang vers la droite : ${a},${b}0 devient ${a}${b},0, c'est-à-dire ${a*10+b}.` }; },
+    () => { const a=randInt(1,4); const b=randInt(1,9); return { expr:`${a},0${b} × 100`, answer: a*100+b, explain:`Multiplier par 100 décale la virgule de 2 rangs vers la droite : ${a},0${b} devient ${a*100+b}.` }; },
+    () => { const a=randInt(1,5); const b=10-a; return { expr:`${a},5 + ${b-1},5`, answer: a+b, explain:`Additionne d'abord les parties décimales : 0,5 + 0,5 = 1. Puis les entiers : ${a} + ${b-1} = ${a+b-1}. Enfin ${a+b-1} + 1 = ${a+b}.` }; },
+    () => { const a=randInt(2,8); const b=10-a; return { expr:`${a},3 + ${b-1},7`, answer: a+b, explain:`Additionne d'abord les parties décimales : 0,3 + 0,7 = 1. Puis les entiers : ${a} + ${b-1} = ${a+b-1}. Enfin ${a+b-1} + 1 = ${a+b}.` }; },
   ];
   let added=0;
   for(const fn of shuffle(decValid)) {
@@ -2626,10 +3056,37 @@ function cm2GenerateMathsQuestions() {
   // Compléter si besoin
   while(qs.length < 10) {
     const a=randInt(2,10), b=randInt(2,10);
-    qs.push({ expr:`${a} × ${b}`, answer: a*b });
+    qs.push({ expr:`${a} × ${b}`, answer: a*b, explain: cm2ExplainMul(a,b) });
   }
 
   return shuffle(qs.slice(0,10));
+}
+
+// Questions adaptées au niveau CM1 (Daphné) — mêmes mécanique et écran que le CM2
+function cm1GenerateMathsQuestions() {
+  const qs = [];
+  // 3 additions à 2 chiffres
+  for(let i=0;i<3;i++) {
+    const a=randInt(12,60), b=randInt(11,39);
+    qs.push({ expr:`${a} + ${b}`, answer: a+b, explain: cm2ExplainAdd(a,b) });
+  }
+  // 2 soustractions sans passage difficile
+  for(let i=0;i<2;i++) {
+    const b=randInt(11,40), a=randInt(b+5, b+55);
+    qs.push({ expr:`${a} − ${b}`, answer: a-b, explain: cm2ExplainSub(a,b) });
+  }
+  // 3 tables de multiplication (2 à 9)
+  for(let i=0;i<3;i++) {
+    const a=randInt(2,9), b=randInt(2,9);
+    qs.push({ expr:`${a} × ${b}`, answer: a*b, explain: cm2ExplainMul(a,b) });
+  }
+  // 1 double
+  { const n=randInt(13,45);
+    qs.push({ expr:`Le double de ${n}`, answer: 2*n, explain:`Le double, c'est 2 fois le nombre : ${n} + ${n} = ${2*n}.` }); }
+  // 1 moitié
+  { const n=randInt(7,49)*2;
+    qs.push({ expr:`La moitié de ${n}`, answer: n/2, explain:`La moitié, c'est partager en 2 parts égales : ${n} ÷ 2 = ${n/2}.` }); }
+  return shuffle(qs);
 }
 
 let cm2NumpadValue = '';
@@ -2667,14 +3124,24 @@ function cm2SetNumpadDisabled(disabled) {
   });
 }
 
+// 'cm2' = Alexia, 'cm1' = Daphné — même écran, questions et résultats différents
+let mentalLevel = 'cm2';
+let cm2NoChrono = false;
+
 function cm2StartMaths() {
-  cm2MathsQuestions = cm2GenerateMathsQuestions();
+  cm2MathsQuestions = mentalLevel === 'cm1' ? cm1GenerateMathsQuestions() : cm2GenerateMathsQuestions();
   cm2MathsIdx = 0;
   cm2State.sessionScore = 0;
-  cm2ChronoMax = 30;
+  cm2ChronoMax = mentalLevel === 'cm1' ? 35 : 30;
   document.getElementById('cm2-maths-score-live').textContent = '⭐ 0';
   cm2BuildNumpad();
   cm2RenderMathsQuestion();
+}
+
+function mentalShowResult(score) {
+  clearInterval(cm2ChronoInterval);
+  if(mentalLevel === 'cm1') cm1ShowResult('maths', score, 10);
+  else cm2ShowResult('maths', score, 10);
 }
 
 function cm2RenderMathsQuestion() {
@@ -2684,6 +3151,8 @@ function cm2RenderMathsQuestion() {
   cm2NumpadValue = '';
   document.getElementById('cm2-maths-display').textContent = '?';
   cm2SetNumpadDisabled(false);
+  cm2NoChrono = false;
+  document.getElementById('cm2-chrono-wrap').style.display = '';
   cm2StartChrono();
 }
 
@@ -2713,29 +3182,47 @@ function cm2UpdateChronoUI() {
 }
 
 function cm2TimeExpired() {
-  const q = cm2MathsQuestions[cm2MathsIdx];
   cm2SetNumpadDisabled(true);
-  cm2ChronoMax = Math.min(20, cm2ChronoMax + 2);
   playWrong();
-  setTimeout(() => {
-    showFeedback(false, String(q.answer), () => {
-      cm2MathsIdx++;
-      if(cm2MathsIdx < 10) cm2RenderMathsQuestion();
-      else { clearInterval(cm2ChronoInterval); cm2ShowResult('maths', cm2State.sessionScore, 10); }
-    });
-  }, 200);
+  document.getElementById('cm2-timeup').classList.remove('hidden');
+}
+
+// Option 1 : reprendre la même question, sans chrono
+function cm2TakeMyTime() {
+  document.getElementById('cm2-timeup').classList.add('hidden');
+  cm2NoChrono = true;
+  cm2ChronoMax = Math.min(45, cm2ChronoMax + 3);
+  document.getElementById('cm2-chrono-wrap').style.display = 'none';
+  cm2SetNumpadDisabled(false);
+}
+
+// Option 2 : montrer la bonne réponse avec une explication
+function cm2GiveMeAnswer() {
+  document.getElementById('cm2-timeup').classList.add('hidden');
+  const q = cm2MathsQuestions[cm2MathsIdx];
+  cm2ChronoMax = Math.min(45, cm2ChronoMax + 3);
+  document.getElementById('cm2-explain-answer').textContent = q.expr + ' = ' + q.answer;
+  document.getElementById('cm2-explain-text').textContent = q.explain || '';
+  document.getElementById('cm2-explain').classList.remove('hidden');
+}
+
+function cm2ExplainNext() {
+  document.getElementById('cm2-explain').classList.add('hidden');
+  cm2MathsIdx++;
+  if(cm2MathsIdx < 10) cm2RenderMathsQuestion();
+  else mentalShowResult(cm2State.sessionScore);
 }
 
 function cm2ValidateMaths() {
   clearInterval(cm2ChronoInterval);
   const val = parseInt(cm2NumpadValue, 10);
   const q = cm2MathsQuestions[cm2MathsIdx];
-  if(isNaN(val)) { cm2StartChrono(); return; }
+  if(isNaN(val)) { if(!cm2NoChrono) cm2StartChrono(); return; }
   const correct = val === q.answer;
   cm2SetNumpadDisabled(true);
   if(correct) {
     cm2State.sessionScore++;
-    cm2ChronoMax = Math.max(10, cm2ChronoMax - 2);
+    if(!cm2NoChrono) cm2ChronoMax = Math.max(10, cm2ChronoMax - 2);
     document.getElementById('cm2-maths-score-live').textContent = '⭐ ' + cm2State.sessionScore;
   } else {
     cm2ChronoMax = Math.min(45, cm2ChronoMax + 3);
@@ -2744,7 +3231,7 @@ function cm2ValidateMaths() {
     showFeedback(correct, correct ? null : String(q.answer), () => {
       cm2MathsIdx++;
       if(cm2MathsIdx < 10) cm2RenderMathsQuestion();
-      else cm2ShowResult('maths', cm2State.sessionScore, 10);
+      else mentalShowResult(cm2State.sessionScore);
     });
   }, 300);
 }
@@ -3060,6 +3547,324 @@ document.addEventListener('touchend', e => {
 //  REWARD & CHARACTER SYSTEM
 // ===================================================================
 
+// ===================================================================
+//  PROFILS : menu déroulant d'accueil
+// ===================================================================
+function enterProfile() {
+  const sel = document.getElementById('profile-select');
+  const v = sel.value;
+  if(!v) { sel.focus(); return; }
+  localStorage.setItem('last-profile', v);
+  if(v === 'olivia') { updateHomeUI(); showScreen('home'); }
+  else if(v === 'alexia') { cm2UpdateHomeUI(); showScreen('cm2-home'); }
+  else if(v === 'daphne') { cm1UpdateHomeUI(); showScreen('cm1-home'); }
+  else if(v === 'charly') { secUpdateHomeUI(); showScreen('sec-home'); }
+}
+
+// ===================================================================
+//  CM1 (Daphné) — état, accueil, modules
+// ===================================================================
+const cm1State = {
+  stars: JSON.parse(localStorage.getItem('cm1app-stars') || '{"maths":0,"francais":0,"english":0}'),
+};
+
+function cm1SaveStars() {
+  localStorage.setItem('cm1app-stars', JSON.stringify(cm1State.stars));
+}
+
+function cm1UpdateHomeUI() {
+  const total = Object.values(cm1State.stars).reduce((a,b)=>a+b,0);
+  document.getElementById('cm1-total-stars').textContent = total;
+  ['maths','francais','english'].forEach(m => {
+    const el = document.getElementById('cm1-stars-'+m);
+    if(el) el.textContent = '⭐ ' + (cm1State.stars[m]||0);
+  });
+  const sb = document.getElementById('cm1-snake-best');
+  if(sb) sb.textContent = '🏆 ' + parseInt(localStorage.getItem('snake-best')||'0');
+  updateCoinBadges();
+}
+
+function cm1StartModule(mod) {
+  clearInterval(cm2ChronoInterval);
+  currentProfile = 'daphne';
+  if(mod === 'maths') { mentalLevel = 'cm1'; showScreen('cm2-maths'); cm2StartMaths(); }
+  else if(mod === 'francais') gqStart('cm1-francais');
+  else if(mod === 'english') gqStart('cm1-english');
+}
+
+function cm1ShowResult(mod, score, total) {
+  const pct = score/total;
+  let msg, stars;
+  if(pct >= 0.75) { msg = 'Excellent travail, Daphné ! 🏆'; stars = '⭐⭐⭐'; }
+  else if(pct >= 0.5) { msg = 'Bien ! Encore un peu d\'entraînement ! 💪'; stars = '⭐⭐'; }
+  else { msg = 'Continue à réviser, tu vas progresser ! 🌈'; stars = '⭐'; }
+
+  const earned = pct >= 0.75 ? 3 : pct >= 0.5 ? 2 : 1;
+  cm1State.stars[mod] = (cm1State.stars[mod]||0) + earned;
+  cm1SaveStars();
+  if(score >= Math.round(total * 0.8)) awardCoins('daphne', 3);
+
+  document.getElementById('result-stars').textContent = stars;
+  document.getElementById('result-title').textContent = score >= Math.round(total*0.75) ? 'Félicitations ! 🎊' : 'Activité terminée !';
+  document.getElementById('result-score').textContent = score + ' bonne' + (score>1?'s':'') + ' réponse' + (score>1?'s':'') + ' sur ' + total;
+  document.getElementById('result-msg').textContent = msg;
+  document.getElementById('result-home-btn').onclick = () => { cm1UpdateHomeUI(); showScreen('welcome'); };
+  document.getElementById('play-again-btn').onclick = () => cm1StartModule(mod);
+
+  showScreen('result');
+  if(pct >= 0.5) launchConfetti();
+  cm1UpdateHomeUI();
+}
+
+// ===================================================================
+//  SECONDE (Charly) — état, accueil, modules
+// ===================================================================
+const secState = {
+  stars: JSON.parse(localStorage.getItem('secapp-stars') || '{"maths":0,"francais":0,"english":0}'),
+};
+
+function secSaveStars() {
+  localStorage.setItem('secapp-stars', JSON.stringify(secState.stars));
+}
+
+function secUpdateHomeUI() {
+  const total = Object.values(secState.stars).reduce((a,b)=>a+b,0);
+  document.getElementById('sec-total-stars').textContent = total;
+  ['maths','francais','english'].forEach(m => {
+    const el = document.getElementById('sec-stars-'+m);
+    if(el) el.textContent = '⭐ ' + (secState.stars[m]||0);
+  });
+  const sb = document.getElementById('sec-snake-best');
+  if(sb) sb.textContent = '🏆 ' + parseInt(localStorage.getItem('snake-best')||'0');
+}
+
+function secStartModule(mod) {
+  clearInterval(cm2ChronoInterval);
+  currentProfile = 'sec';
+  gqStart('sec-'+mod);
+}
+
+function secShowResult(mod, score, total) {
+  const pct = score/total;
+  let msg, stars;
+  if(pct >= 0.75) { msg = 'Excellent travail, Charly ! 🏆'; stars = '⭐⭐⭐'; }
+  else if(pct >= 0.5) { msg = 'Bien ! Encore un peu d\'entraînement ! 💪'; stars = '⭐⭐'; }
+  else { msg = 'Continue à réviser, ça va payer ! 🎯'; stars = '⭐'; }
+
+  const earned = pct >= 0.75 ? 3 : pct >= 0.5 ? 2 : 1;
+  secState.stars[mod] = (secState.stars[mod]||0) + earned;
+  secSaveStars();
+
+  document.getElementById('result-stars').textContent = stars;
+  document.getElementById('result-title').textContent = score >= Math.round(total*0.75) ? 'Félicitations ! 🎊' : 'Activité terminée !';
+  document.getElementById('result-score').textContent = score + ' bonne' + (score>1?'s':'') + ' réponse' + (score>1?'s':'') + ' sur ' + total;
+  document.getElementById('result-msg').textContent = msg;
+  document.getElementById('result-home-btn').onclick = () => { secUpdateHomeUI(); showScreen('welcome'); };
+  document.getElementById('play-again-btn').onclick = () => secStartModule(mod);
+
+  showScreen('result');
+  if(pct >= 0.5) launchConfetti();
+  secUpdateHomeUI();
+}
+
+// ===================================================================
+//  BANQUES DE QUESTIONS CM1 (Daphné)
+// ===================================================================
+const CM1_FRANCAIS_DATA = [
+  { q:'Les enfants … au ballon. (jouer, présent)', correct:'jouent', wrong:['joue','joues','jouons'], explain:'Avec « ils/elles », les verbes du 1er groupe se terminent par -ent : ils jouent.' },
+  { q:'Nous … à la mer. (aller, présent)', correct:'allons', wrong:['allont','allez','va'], explain:'Le verbe aller au présent : je vais, tu vas, il va, nous allons, vous allez, ils vont.' },
+  { q:'Tu … ton cartable. (préparer, présent)', correct:'prépares', wrong:['prépare','préparent','préparer'], explain:'Avec « tu », les verbes prennent toujours un -s au présent : tu prépares.' },
+  { q:'Demain, je … chez ma grand-mère. (aller, futur)', correct:'irai', wrong:['irais','vais','irait'], explain:'Le verbe aller au futur : j\'irai, tu iras, il ira, nous irons, vous irez, ils iront.' },
+  { q:'Hier, il … beau. (faire, imparfait)', correct:'faisait', wrong:['fait','fera','faisais'], explain:'À l\'imparfait avec « il », la terminaison est -ait : il faisait beau.' },
+  { q:'Mon frère … les fraises. (adorer, présent)', correct:'adore', wrong:['adores','adorent','adorez'], explain:'« Mon frère » = il. Au 1er groupe, pas de -s avec il/elle : il adore.' },
+  { q:'Complète : Il … parti très tôt.', correct:'est', wrong:['et','ai','es'], explain:'« est » = verbe être (il est). « et » sert à relier deux mots. Astuce : remplace par « était » — si ça marche, écris « est ».' },
+  { q:'Complète : Elle … un chat noir.', correct:'a', wrong:['à','as','ah'], explain:'« a » = verbe avoir (elle a). « à » avec accent est une préposition (à l\'école). Astuce : remplace par « avait ».' },
+  { q:'Complète : … vont au cinéma ce soir.', correct:'Ils', wrong:['Il','Île','Ils y'], explain:'Le verbe « vont » est au pluriel, donc le sujet doit être au pluriel : ils vont.' },
+  { q:'Complète : … amis arrivent demain.', correct:'Mes', wrong:['Mais','Met','Mets'], explain:'« Mes » est un déterminant possessif pluriel : mes amis. « Mais » exprime une opposition.' },
+  { q:'Quel est le pluriel de « un cheval » ?', correct:'des chevaux', wrong:['des chevals','des chevales','des cheval'], explain:'Les noms en -al font leur pluriel en -aux : un cheval → des chevaux, un journal → des journaux.' },
+  { q:'Quel est le pluriel de « un bijou » ?', correct:'des bijoux', wrong:['des bijous','des bijoues','des bijou'], explain:'Sept noms en -ou prennent un -x au pluriel : bijoux, cailloux, choux, genoux, hiboux, joujoux, poux.' },
+  { q:'Quel est le féminin de « un chanteur » ?', correct:'une chanteuse', wrong:['une chanteure','une chantrice','une chanteuresse'], explain:'Les noms en -eur font souvent leur féminin en -euse : chanteur → chanteuse, vendeur → vendeuse.' },
+  { q:'Complète : Les fleurs sont … .', correct:'jolies', wrong:['jolie','jolis','joli'], explain:'L\'adjectif s\'accorde avec « les fleurs » (féminin pluriel) : jolie + s = jolies.' },
+  { q:'Complète : … chien est très gentil.', correct:'Son', wrong:['Sont','Sons','S\'ont'], explain:'« Son » = déterminant possessif (son chien). « Sont » = verbe être (ils sont). Astuce : remplace par « mon ».' },
+  { q:'Complète : Les élèves … fini leur travail.', correct:'ont', wrong:['on','onts','sont'], explain:'« ont » = verbe avoir (ils ont fini). « on » = pronom (on joue). Astuce : remplace par « avaient ».' },
+  { q:'Quel mot est un verbe ?', correct:'courir', wrong:['course','coureur','courageux'], explain:'« Courir » est un verbe (une action). « Course » et « coureur » sont des noms, « courageux » est un adjectif.' },
+  { q:'Quel est le contraire de « rapide » ?', correct:'lent', wrong:['vite','pressé','léger'], explain:'« Lent » est le contraire (l\'antonyme) de « rapide ». « Vite » veut au contraire dire la même chose !' },
+  { q:'Je … grand quand je serai adulte. (être, futur)', correct:'serai', wrong:['serais','suis','serait'], explain:'Le verbe être au futur : je serai, tu seras, il sera. « Serais » avec -s est du conditionnel.' },
+  { q:'Dans « Le petit chat dort », quel est le sujet ?', correct:'Le petit chat', wrong:['dort','petit','Le'], explain:'Le sujet fait l\'action du verbe. Qui est-ce qui dort ? → le petit chat.' },
+];
+
+const CM1_ENGLISH_DATA = [
+  { q:'Comment dit-on « douze » en anglais ?', correct:'twelve', wrong:['twenty','two','ten'], explain:'12 = twelve. Attention à ne pas confondre avec twenty (20) et two (2) !' },
+  { q:'Comment dit-on « vert » en anglais ?', correct:'green', wrong:['grey','brown','blue'], explain:'Green = vert. Grey = gris, brown = marron, blue = bleu.' },
+  { q:'Que veut dire « rabbit » ?', correct:'un lapin', wrong:['un rat','un renard','un mouton'], explain:'Rabbit = lapin. Rat = rat, fox = renard, sheep = mouton.' },
+  { q:'Comment dit-on « mercredi » en anglais ?', correct:'Wednesday', wrong:['Monday','Thursday','Saturday'], explain:'Wednesday = mercredi. Monday = lundi, Thursday = jeudi, Saturday = samedi.' },
+  { q:'Que veut dire « My name is Tom » ?', correct:'Je m\'appelle Tom', wrong:['Mon ami s\'appelle Tom','J\'aime Tom','Je vais chez Tom'], explain:'« My name is… » = « Je m\'appelle… ». Pour demander : What\'s your name?' },
+  { q:'Comment dit-on « la sœur » en anglais ?', correct:'sister', wrong:['brother','mother','daughter'], explain:'Sister = sœur. Brother = frère, mother = maman, daughter = fille.' },
+  { q:'Que veut dire « It is raining » ?', correct:'Il pleut', wrong:['Il neige','Il fait beau','Il fait froid'], explain:'Rain = la pluie, donc « it is raining » = il pleut. Il neige = it is snowing.' },
+  { q:'Comment dit-on « un livre » en anglais ?', correct:'a book', wrong:['a look','a bike','a box'], explain:'Book = livre. Bike = vélo, box = boîte.' },
+  { q:'« … am ten years old. »', correct:'I', wrong:['Me','My','You'], explain:'Pour dire son âge : I am ten = j\'ai dix ans. En anglais on utilise le verbe être (am), pas avoir !' },
+  { q:'Que veut dire « breakfast » ?', correct:'le petit-déjeuner', wrong:['le déjeuner','le goûter','le dîner'], explain:'Breakfast = petit-déjeuner. Lunch = déjeuner, dinner = dîner.' },
+  { q:'Comment dit-on « J\'aime le chocolat » ?', correct:'I like chocolate', wrong:['I am chocolate','I chocolate like','Me like chocolate'], explain:'Sujet + verbe + complément : I like chocolate. L\'ordre des mots est important !' },
+  { q:'Comment dit-on « quinze » en anglais ?', correct:'fifteen', wrong:['fifty','five','fourteen'], explain:'15 = fifteen. Fifty = 50, five = 5, fourteen = 14.' },
+  { q:'Que veut dire « Where is the cat? » ?', correct:'Où est le chat ?', wrong:['Qui est le chat ?','Quel est ce chat ?','Quand vient le chat ?'], explain:'Where = où. Who = qui, what = quoi/quel, when = quand.' },
+  { q:'Comment dit-on « une pomme » en anglais ?', correct:'an apple', wrong:['a pear','an orange','a peach'], explain:'Apple = pomme. Devant une voyelle, « a » devient « an » : an apple.' },
+  { q:'Que veut dire « school bag » ?', correct:'le cartable', wrong:['la cour d\'école','le cahier','la trousse'], explain:'School = école, bag = sac → school bag = cartable. La trousse = pencil case.' },
+  { q:'Comment dit-on « Il y a un chien » ?', correct:'There is a dog', wrong:['It has a dog','He is a dog','This dog'], explain:'« Il y a » (singulier) = there is. Au pluriel : there are.' },
+  { q:'Quelle est la couleur « purple » ?', correct:'violet', wrong:['rose','rouge','orange'], explain:'Purple = violet. Pink = rose, red = rouge.' },
+  { q:'Comment dit-on « bonne nuit » ?', correct:'good night', wrong:['good morning','good afternoon','goodbye'], explain:'Good night = bonne nuit. Good morning = bonjour (le matin), goodbye = au revoir.' },
+];
+
+// ===================================================================
+//  BANQUES DE QUESTIONS SECONDE (Charly)
+// ===================================================================
+const SEC_MATHS_DATA = [
+  { q:'(−3) + (−5) = ?', correct:'−8', wrong:['−2','8','2'], explain:'Additionner deux négatifs : on additionne les distances à zéro et on garde le signe − : (−3) + (−5) = −8.' },
+  { q:'(−4) × (−6) = ?', correct:'24', wrong:['−24','−10','10'], explain:'Règle des signes : moins par moins donne plus. Donc (−4) × (−6) = +24.' },
+  { q:'7 − 12 = ?', correct:'−5', wrong:['5','−19','19'], explain:'7 − 12 : on dépasse zéro de 5, le résultat est négatif : −5.' },
+  { q:'2/3 + 1/6 = ?', correct:'5/6', wrong:['3/9','1/2','4/6'], explain:'Même dénominateur d\'abord : 2/3 = 4/6. Puis 4/6 + 1/6 = 5/6.' },
+  { q:'3/4 × 2/5 = ?', correct:'3/10', wrong:['6/9','5/9','3/20'], explain:'On multiplie numérateurs entre eux et dénominateurs entre eux : 6/20, qu\'on simplifie par 2 : 3/10.' },
+  { q:'Forme irréductible de 12/18 ?', correct:'2/3', wrong:['6/9','4/6','3/4'], explain:'On divise en haut et en bas par 6 (le plus grand diviseur commun de 12 et 18) : 12/18 = 2/3.' },
+  { q:'2⁵ = ?', correct:'32', wrong:['10','25','64'], explain:'2⁵ = 2×2×2×2×2 = 32. Attention : ce n\'est pas 2×5 !' },
+  { q:'10⁻² = ?', correct:'0,01', wrong:['−100','0,1','−20'], explain:'Un exposant négatif signifie l\'inverse : 10⁻² = 1/10² = 1/100 = 0,01.' },
+  { q:'Développe : 3(x + 5)', correct:'3x + 15', wrong:['3x + 5','x + 15','8x'], explain:'On distribue le 3 sur chaque terme : 3×x + 3×5 = 3x + 15.' },
+  { q:'Développe : 2(3x − 4)', correct:'6x − 8', wrong:['6x − 4','5x − 8','6x + 8'], explain:'On distribue : 2×3x − 2×4 = 6x − 8. Attention au signe moins !' },
+  { q:'Factorise : 5x + 10', correct:'5(x + 2)', wrong:['5(x + 10)','x(5 + 10)','5x(1 + 2)'], explain:'5 est un facteur commun : 5x + 10 = 5×x + 5×2 = 5(x + 2). Vérifie en redéveloppant !' },
+  { q:'Résous : 2x + 3 = 11', correct:'x = 4', wrong:['x = 7','x = 4,5','x = 3'], explain:'2x = 11 − 3 = 8, puis x = 8 ÷ 2 = 4. Vérification : 2×4 + 3 = 11 ✓' },
+  { q:'Résous : 5x − 7 = 13', correct:'x = 4', wrong:['x = 1,2','x = 5','x = 20'], explain:'5x = 13 + 7 = 20, puis x = 20 ÷ 5 = 4.' },
+  { q:'(a + b)² = ?', correct:'a² + 2ab + b²', wrong:['a² + b²','a² + ab + b²','2a + 2b'], explain:'Identité remarquable : (a+b)² = a² + 2ab + b². Le double produit 2ab est souvent oublié !' },
+  { q:'√81 = ?', correct:'9', wrong:['8','40,5','81'], explain:'√81 = 9 car 9² = 81.' },
+  { q:'30 % de 250 = ?', correct:'75', wrong:['30','83','125'], explain:'30 % = 30/100 = 0,3. Donc 250 × 0,3 = 75.' },
+  { q:'Augmenter un prix de 10 %, c\'est le multiplier par…', correct:'1,1', wrong:['0,1','10','1,01'], explain:'+10 % → coefficient 1 + 10/100 = 1,1. Pour diminuer de 10 % : ×0,9.' },
+  { q:'Si f(x) = 2x − 3, que vaut f(5) ?', correct:'7', wrong:['10','−3','13'], explain:'On remplace x par 5 : f(5) = 2×5 − 3 = 10 − 3 = 7.' },
+  { q:'x² = 49. Quelles sont les solutions ?', correct:'x = 7 ou x = −7', wrong:['x = 7 seulement','x = 24,5','aucune solution'], explain:'Deux nombres ont pour carré 49 : 7 et −7. Ne pas oublier la solution négative !' },
+  { q:'5 + 3 × 4 = ?', correct:'17', wrong:['32','27','60'], explain:'Priorité des opérations : la multiplication d\'abord. 3×4 = 12, puis 5 + 12 = 17.' },
+];
+
+const SEC_FRANCAIS_DATA = [
+  { q:'« Cette femme est un roc. » Quelle figure de style ?', correct:'Une métaphore', wrong:['Une comparaison','Une hyperbole','Une périphrase'], explain:'La métaphore rapproche deux éléments sans outil de comparaison. Avec « comme », ce serait une comparaison.' },
+  { q:'« Il est fort comme un lion. » Quelle figure de style ?', correct:'Une comparaison', wrong:['Une métaphore','Un oxymore','Une litote'], explain:'La comparaison utilise un outil comparatif : comme, tel que, semblable à…' },
+  { q:'« Cette obscure clarté qui tombe des étoiles » contient…', correct:'Un oxymore', wrong:['Un pléonasme','Une anaphore','Une antithèse'], explain:'L\'oxymore réunit deux mots de sens contraires dans une même expression : « obscure clarté » (Corneille, Le Cid).' },
+  { q:'« Je meurs de faim » est…', correct:'Une hyperbole', wrong:['Une litote','Un euphémisme','Une métonymie'], explain:'L\'hyperbole est une exagération volontaire. La litote, au contraire, dit moins pour suggérer plus (« Va, je ne te hais point »).' },
+  { q:'« Le vent hurle dans la nuit. » Quelle figure ?', correct:'Une personnification', wrong:['Une comparaison','Une allitération','Un oxymore'], explain:'La personnification attribue un comportement humain (hurler) à une chose (le vent).' },
+  { q:'« Une plume » pour désigner un écrivain, c\'est…', correct:'Une métonymie', wrong:['Une métaphore','Une hyperbole','Un oxymore'], explain:'La métonymie désigne une chose par un élément qui lui est lié : la plume (l\'outil) pour l\'écrivain.' },
+  { q:'Combien de syllabes compte un alexandrin ?', correct:'12', wrong:['10','8','14'], explain:'L\'alexandrin est un vers de 12 syllabes, très utilisé au théâtre classique (Corneille, Racine).' },
+  { q:'Un sonnet compte…', correct:'14 vers', wrong:['12 vers','16 vers','10 vers'], explain:'Le sonnet : deux quatrains (4 vers) + deux tercets (3 vers) = 14 vers.' },
+  { q:'Les lettres qu\'il a … étaient magnifiques.', correct:'écrites', wrong:['écrit','écrits','écrite'], explain:'Avec « avoir », le participe passé s\'accorde avec le COD placé avant : « les lettres » (féminin pluriel) → écrites.' },
+  { q:'Elles se sont … au parc.', correct:'promenées', wrong:['promené','promenés','promener'], explain:'« Se promener » : le participe passé s\'accorde avec le sujet « elles » → promenées.' },
+  { q:'Il faut que tu … tes devoirs. (faire)', correct:'fasses', wrong:['fais','feras','faisais'], explain:'« Il faut que » entraîne le subjonctif : que je fasse, que tu fasses, qu\'il fasse.' },
+  { q:'« Il … la porte et sortit. » (ouvrir, passé simple)', correct:'ouvrit', wrong:['ouvra','ouvrait','a ouvert'], explain:'Passé simple des verbes en -ir : il ouvrit. « Ouvrait » est de l\'imparfait.' },
+  { q:'Si j\'avais le temps, je … du sport. (faire)', correct:'ferais', wrong:['ferai','faisais','fasse'], explain:'Après « si + imparfait », on emploie le conditionnel : je ferais. Le futur « ferai » s\'emploie après « si + présent ».' },
+  { q:'Quel est le registre de langue de « bagnole » ?', correct:'Familier', wrong:['Courant','Soutenu','Littéraire'], explain:'« Bagnole » est familier ; « voiture » est courant ; « automobile » est plus soutenu.' },
+  { q:'Que signifie « éphémère » ?', correct:'Qui dure très peu de temps', wrong:['Qui revient chaque année','Qui est très ancien','Qui brille faiblement'], explain:'Éphémère = de courte durée. À l\'origine : qui ne vit qu\'un jour (du grec hêmera, « jour »).' },
+  { q:'Quel est le synonyme de « prolixe » ?', correct:'Bavard', wrong:['Précis','Silencieux','Rapide'], explain:'Prolixe = qui parle ou écrit trop longuement. Ses contraires : concis, laconique.' },
+  { q:'« Ils sont tout étonnés. » Ici, « tout » est…', correct:'Un adverbe', wrong:['Un déterminant','Un pronom','Un nom'], explain:'Ici « tout » signifie « complètement » : c\'est un adverbe, donc invariable devant un adjectif masculin.' },
+  { q:'Un roman écrit sous forme de lettres est un roman…', correct:'épistolaire', wrong:['autobiographique','historique','fantastique'], explain:'Le roman épistolaire est composé de lettres, comme « Les Liaisons dangereuses » de Laclos.' },
+  { q:'« Quelles que … vos raisons, partez ! » (être)', correct:'soient', wrong:['soit','sont','soies'], explain:'« Quel(le)s que + être au subjonctif » s\'accorde avec le sujet : quelles que soient vos raisons.' },
+  { q:'Qui a écrit « Les Misérables » ?', correct:'Victor Hugo', wrong:['Émile Zola','Gustave Flaubert','Honoré de Balzac'], explain:'Victor Hugo (1802-1885), figure du romantisme, auteur des Misérables et de Notre-Dame de Paris.' },
+];
+
+const SEC_ENGLISH_DATA = [
+  { q:'Prétérit de « go » ?', correct:'went', wrong:['goed','gone','goes'], explain:'Go est irrégulier : go / went / gone. « Gone » est le participe passé.' },
+  { q:'Participe passé de « write » ?', correct:'written', wrong:['wrote','writed','writing'], explain:'Write / wrote / written. « He has written a letter. »' },
+  { q:'« I … never … this film. » (see)', correct:'have never seen', wrong:['has never seen','have never saw','am never seeing'], explain:'Present perfect : have/has + participe passé. Avec « I » → have ; participe de see → seen.' },
+  { q:'« She has lived here … 2020. »', correct:'since', wrong:['for','during','ago'], explain:'Since + point de départ (2020) ; for + durée (for five years).' },
+  { q:'« He has worked there … ten years. »', correct:'for', wrong:['since','from','while'], explain:'For + durée (ten years) ; since + date de début.' },
+  { q:'Comparatif de « good » ?', correct:'better', wrong:['gooder','more good','best'], explain:'Good est irrégulier : good / better / the best.' },
+  { q:'« This exercise is … than the first one. » (difficult)', correct:'more difficult', wrong:['difficulter','most difficult','difficultest'], explain:'Les adjectifs longs forment leur comparatif avec more : more difficult than…' },
+  { q:'Que veut dire « however » ?', correct:'cependant', wrong:['comment','toujours','désormais'], explain:'However = cependant, pourtant. À ne pas confondre avec how (comment).' },
+  { q:'Que veut dire « although » ?', correct:'bien que', wrong:['déjà','à travers','tout à fait'], explain:'Although = bien que, même si : « Although it was raining, we went out. »' },
+  { q:'« The book … by J.K. Rowling. » (write, voix passive)', correct:'was written', wrong:['wrote','is wrote','has wrote'], explain:'Voix passive au prétérit : was/were + participe passé → was written.' },
+  { q:'Comment dit-on « améliorer » ?', correct:'to improve', wrong:['to prove','to move','to imply'], explain:'Improve = améliorer. « I want to improve my English. »' },
+  { q:'« If I … rich, I would travel. » (be)', correct:'were', wrong:['am','will be','would be'], explain:'Hypothèse irréelle : if + prétérit → conditionnel. On dit « If I were », même avec I.' },
+  { q:'Prétérit de « take » ?', correct:'took', wrong:['taked','taken','takes'], explain:'Take / took / taken. « Taken » est le participe passé.' },
+  { q:'« She … TV when I arrived. »', correct:'was watching', wrong:['watched','is watching','has watched'], explain:'Action en cours dans le passé : past continuous (was/were + -ing) → she was watching TV.' },
+  { q:'Que veut dire « to succeed » ?', correct:'réussir', wrong:['succéder','céder','suggérer'], explain:'To succeed = réussir. « She succeeded in passing her exam. »' },
+  { q:'« There … a lot of people at the party. »', correct:'were', wrong:['was','is been','has'], explain:'« People » est un pluriel en anglais → there were. Au singulier : there was.' },
+  { q:'Comment s\'écrit « la réussite » ?', correct:'success', wrong:['succeed','sucess','succes'], explain:'Success (nom) s\'écrit avec deux c et deux s. Le verbe est to succeed.' },
+  { q:'« You should … more. » (dormir)', correct:'sleep', wrong:['to sleep','sleeping','slept'], explain:'Après un modal (should, can, must…), le verbe est à la base verbale, sans « to » : you should sleep.' },
+  { q:'Que veut dire « a library » ?', correct:'une bibliothèque', wrong:['une librairie','un livre','une liberté'], explain:'Faux ami ! Library = bibliothèque. La librairie (le magasin) = bookshop.' },
+  { q:'Participe passé de « eat » ?', correct:'eaten', wrong:['ate','eated','eating'], explain:'Eat / ate / eaten. « I have already eaten. »' },
+];
+
+// ===================================================================
+//  MOTEUR DE QUIZ GÉNÉRIQUE (CM1 Français/Anglais + Seconde)
+// ===================================================================
+const GQ_MODULES = {
+  'cm1-francais': { title:'✏️ Français',  color:'#F59E0B', bank:CM1_FRANCAIS_DATA, level:'cm1', mod:'francais' },
+  'cm1-english':  { title:'🌍 Anglais',   color:'#3B82F6', bank:CM1_ENGLISH_DATA,  level:'cm1', mod:'english' },
+  'sec-maths':    { title:'🔢 Maths',     color:'#0EA5E9', bank:SEC_MATHS_DATA,    level:'sec', mod:'maths' },
+  'sec-francais': { title:'📚 Français',  color:'#EF4444', bank:SEC_FRANCAIS_DATA, level:'sec', mod:'francais' },
+  'sec-english':  { title:'🌍 Anglais',   color:'#8B5CF6', bank:SEC_ENGLISH_DATA,  level:'sec', mod:'english' },
+};
+
+let gqKey = null, gqQuestions = [], gqIdx = 0, gqScore = 0;
+
+function gqStart(key) {
+  gqKey = key;
+  const m = GQ_MODULES[key];
+  gqQuestions = shuffle([...m.bank]).slice(0, 10);
+  gqIdx = 0; gqScore = 0;
+  const title = document.getElementById('gq-title');
+  title.textContent = m.title;
+  title.style.color = m.color;
+  const score = document.getElementById('gq-score-live');
+  score.textContent = '⭐ 0';
+  score.style.color = m.color;
+  showScreen('gq');
+  gqRender();
+}
+
+function gqRender() {
+  document.getElementById('gq-prog').style.width = (gqIdx/10*100)+'%';
+  document.getElementById('gq-prog-text').textContent = gqIdx + ' / 10';
+  document.getElementById('gq-explain').style.display = 'none';
+  const q = gqQuestions[gqIdx];
+  document.getElementById('gq-prompt').textContent = q.q;
+  const grid = document.getElementById('gq-choices');
+  grid.innerHTML = '';
+  shuffle([q.correct, ...q.wrong]).forEach(opt => {
+    const btn = document.createElement('div');
+    btn.className = 'choice-btn';
+    btn.dataset.val = opt;
+    btn.innerHTML = `<div class="choice-label" style="font-size:17px;padding:4px">${opt}</div>`;
+    btn.addEventListener('click', () => gqHandleAnswer(btn, opt, q));
+    grid.appendChild(btn);
+  });
+}
+
+function gqHandleAnswer(btn, val, q) {
+  document.querySelectorAll('#gq-choices .choice-btn').forEach(b => {
+    b.classList.add('disabled');
+    if(b.dataset.val === q.correct) b.classList.add('correct');
+  });
+  const isCorrect = val === q.correct;
+  if(!isCorrect) btn.classList.add('wrong');
+  if(isCorrect) {
+    gqScore++;
+    playCorrect();
+    if(GQ_MODULES[gqKey].level === 'cm1') awardCoins('daphne', 1);
+  } else playWrong();
+  document.getElementById('gq-score-live').textContent = '⭐ ' + gqScore;
+
+  const box = document.getElementById('gq-explain');
+  document.getElementById('gq-explain-text').textContent = q.explain || ('La bonne réponse était : ' + q.correct);
+  box.style.display = 'block';
+  box.style.borderColor = isCorrect ? '#10B981' : '#F59E0B';
+  box.style.background = isCorrect ? '#F0FDF4' : '#FFFBEB';
+  setTimeout(() => box.scrollIntoView({ behavior:'smooth', block:'nearest' }), 80);
+
+  document.getElementById('gq-next-btn').onclick = () => {
+    box.style.display = 'none';
+    gqIdx++;
+    if(gqIdx < 10) gqRender();
+    else {
+      const m = GQ_MODULES[gqKey];
+      if(m.level === 'cm1') cm1ShowResult(m.mod, gqScore, 10);
+      else secShowResult(m.mod, gqScore, 10);
+    }
+  };
+}
+
 const ITEMS_CATALOG = {
   hair: [
     { id:'hair_default',  name:'Cheveux bruns',   cost:0,  color:'#6D3B1C' },
@@ -3103,7 +3908,8 @@ function saveRewardData(profile, data) {
 }
 
 function awardCoins(profile, amount) {
-  if(!amount) return;
+  if(!amount || profile === 'sec') return; // pas de boutique pour Charly
+
   const data = getRewardData(profile);
   data.coins += amount;
   saveRewardData(profile, data);
@@ -3117,13 +3923,13 @@ function awardCoins(profile, amount) {
 }
 
 function updateCoinBadges() {
-  const cp = getRewardData('cp').coins;
-  const cm2 = getRewardData('cm2').coins;
   const cpEl = document.getElementById('cp-coins-display');
   const cm2El = document.getElementById('cm2-coins-display');
+  const cm1El = document.getElementById('cm1-coins-display');
   const charEl = document.getElementById('char-coins-display');
-  if(cpEl) cpEl.textContent = '🪙 ' + cp;
-  if(cm2El) cm2El.textContent = '🪙 ' + cm2;
+  if(cpEl) cpEl.textContent = '🪙 ' + getRewardData('cp').coins;
+  if(cm2El) cm2El.textContent = '🪙 ' + getRewardData('cm2').coins;
+  if(cm1El) cm1El.textContent = '🪙 ' + getRewardData('daphne').coins;
   if(charEl) charEl.textContent = '🪙 ' + getRewardData(charProfile).coins;
 }
 
@@ -3215,8 +4021,9 @@ function openCharacterScreen(profile, returnScreen) {
   charReturnScreen = returnScreen;
   currentProfile = profile;
   document.getElementById('char-back-btn').onclick = () => showScreen(returnScreen);
-  document.getElementById('char-name-tag').textContent = profile === 'cp' ? 'Olivia' : 'Alexia';
-  document.getElementById('char-screen-title').textContent = profile === 'cp' ? '👗 Olivia' : '👗 Alexia';
+  const charName = profile === 'cp' ? 'Olivia' : profile === 'daphne' ? 'Daphné' : 'Alexia';
+  document.getElementById('char-name-tag').textContent = charName;
+  document.getElementById('char-screen-title').textContent = '👗 ' + charName;
   charShopCategory = 'hair';
   refreshCharacterPreview();
   updateCoinBadges();
@@ -3313,6 +4120,13 @@ const _origCm2StartModule = cm2StartModule;
 cm2StartModule = function(mod) { currentProfile = 'cm2'; _origCm2StartModule(mod); };
 
 updateCoinBadges();
+
+// Présélectionne le dernier profil utilisé dans le menu déroulant
+(() => {
+  const last = localStorage.getItem('last-profile');
+  const sel = document.getElementById('profile-select');
+  if(last && sel && sel.querySelector(`option[value="${last}"]`)) sel.value = last;
+})();
 </script>
 </body>
 </html>
