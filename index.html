@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Prête pour le CP ! 🌟</title>
+<title>L'École des Étoiles ⭐</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -653,7 +653,7 @@ html, body {
 <!-- ===== HOME SCREEN ===== -->
 <div id="home" class="screen">
   <div class="home-header">
-    <div class="home-title">✨ Prête pour le CP !</div>
+    <div class="home-title">🌸 Espace CP</div>
     <div class="home-subtitle">Choisis une activité 👇</div>
   </div>
   <div class="treasure-box">
@@ -827,8 +827,8 @@ html, body {
 
 <!-- ===== WELCOME SCREEN ===== -->
 <div id="welcome" class="screen hidden">
-  <div class="welcome-title">👋 Bonjour !<br>Qui es-tu ?</div>
-  <div class="welcome-subtitle">Choisis ton profil pour commencer 👇</div>
+  <div class="welcome-title">⭐ L'École<br>des Étoiles</div>
+  <div class="welcome-subtitle">Bonjour ! Choisis ton profil pour commencer 👇</div>
   <div class="profile-cards">
     <div class="profile-card profile-card-cp" onclick="showScreen('home');updateHomeUI()">
       <div class="p-icon">🌸</div>
@@ -2363,6 +2363,118 @@ const CM2_TEXTS = [
       { q: 'Combien de romans Jules Verne a-t-il écrits environ ?', correct: 'Plus de 60', wrong: ['10','30','100'] },
       { q: 'Comment s\'appelle la série de romans de Jules Verne ?', correct: 'Les Voyages extraordinaires', wrong: ['Les Aventures incroyables','Les Romans merveilleux','Les Contes fantastiques'] },
     ]
+  },
+  {
+    title: '🌋 Les volcans',
+    paragraphs: [
+      'Un volcan est une montagne formée par la remontée de roche fondue venue des profondeurs de la Terre. Cette roche brûlante s\'appelle le magma tant qu\'elle est sous terre. Quand elle jaillit à la surface lors d\'une éruption, on l\'appelle la lave. En refroidissant, la lave durcit et forme de nouvelles roches.',
+      'Il existe deux grands types d\'éruptions. Les éruptions effusives, où la lave coule doucement le long des pentes, et les éruptions explosives, beaucoup plus dangereuses, qui projettent des cendres et des blocs de pierre très haut dans le ciel.',
+      'En France, on trouve des volcans endormis en Auvergne : c\'est la chaîne des Puys. Ils n\'ont pas eu d\'éruption depuis des milliers d\'années. Les savants qui étudient les volcans s\'appellent les volcanologues. Ils surveillent les volcans actifs pour prévenir les habitants en cas de danger.',
+    ],
+    questions: [
+      { q: 'Comment s\'appelle la roche fondue quand elle est sous terre ?', correct: 'Le magma', wrong: ['La lave','Le granit','Le charbon'] },
+      { q: 'Comment s\'appelle la roche fondue qui jaillit à la surface ?', correct: 'La lave', wrong: ['Le magma','La cendre','Le sable'] },
+      { q: 'Où trouve-t-on des volcans endormis en France ?', correct: 'En Auvergne', wrong: ['En Bretagne','En Alsace','En Normandie'] },
+      { q: 'Comment s\'appelle le savant qui étudie les volcans ?', correct: 'Un volcanologue', wrong: ['Un astronome','Un archéologue','Un météorologue'] },
+    ]
+  },
+  {
+    title: '🐝 Les abeilles',
+    paragraphs: [
+      'Les abeilles sont des insectes qui vivent en colonies dans une ruche. Une seule ruche peut abriter jusqu\'à 50 000 abeilles ! Chaque colonie a une reine unique : c\'est la seule abeille qui pond des œufs, parfois plus de 2 000 par jour.',
+      'Les abeilles butineuses sortent de la ruche pour récolter le nectar et le pollen des fleurs. De retour à la ruche, le nectar est transformé en miel, qui servira de nourriture à toute la colonie pendant l\'hiver. Pour indiquer aux autres où se trouvent les meilleures fleurs, une abeille effectue une danse spéciale en forme de huit.',
+      'En allant de fleur en fleur, les abeilles transportent le pollen et permettent aux plantes de se reproduire : c\'est la pollinisation. Sans les abeilles, beaucoup de fruits et de légumes ne pousseraient plus. C\'est pourquoi il est très important de les protéger.',
+    ],
+    questions: [
+      { q: 'Comment s\'appelle la maison des abeilles ?', correct: 'La ruche', wrong: ['Le nid','La fourmilière','La tanière'] },
+      { q: 'Qui pond les œufs dans la colonie ?', correct: 'La reine', wrong: ['Les butineuses','Toutes les abeilles','Les gardiennes'] },
+      { q: 'Que récoltent les abeilles butineuses ?', correct: 'Le nectar et le pollen', wrong: ['Le miel tout fait','Des feuilles','De l\'eau sucrée'] },
+      { q: 'Comment une abeille indique-t-elle où sont les fleurs ?', correct: 'En dansant', wrong: ['En chantant','En laissant des traces','En criant'] },
+    ]
+  },
+  {
+    title: '🌙 La Lune',
+    paragraphs: [
+      'La Lune est le satellite naturel de la Terre : elle tourne autour de notre planète en un peu plus de 27 jours. Contrairement au Soleil, la Lune ne produit pas de lumière. Si elle brille dans la nuit, c\'est parce qu\'elle reflète la lumière du Soleil, comme un immense miroir.',
+      'Au fil du mois, la Lune semble changer de forme : c\'est ce qu\'on appelle les phases de la Lune. Quand on la voit entière, c\'est la pleine lune. Quand on ne la voit plus du tout, c\'est la nouvelle lune. Sa surface est couverte de cratères, des trous creusés par la chute de météorites il y a très longtemps.',
+      'En 1969, la mission américaine Apollo 11 a permis à des hommes de marcher sur la Lune pour la première fois. L\'astronaute Neil Armstrong y a posé le pied en premier. Sur la Lune, il n\'y a pas d\'air : les astronautes doivent porter des combinaisons spéciales pour respirer.',
+    ],
+    questions: [
+      { q: 'Qu\'est-ce que la Lune pour la Terre ?', correct: 'Son satellite naturel', wrong: ['Une étoile','Une planète','Une comète'] },
+      { q: 'D\'où vient la lumière de la Lune ?', correct: 'Elle reflète celle du Soleil', wrong: ['Elle brûle comme le Soleil','Des volcans lunaires','De l\'électricité'] },
+      { q: 'Qui a marché le premier sur la Lune ?', correct: 'Neil Armstrong', wrong: ['Thomas Pesquet','Youri Gagarine','Buzz l\'Éclair'] },
+      { q: 'Qu\'est-ce qui a creusé les cratères de la Lune ?', correct: 'Des météorites', wrong: ['Des volcans','Des rivières','Des tremblements de terre'] },
+    ]
+  },
+  {
+    title: '🏰 Les châteaux forts',
+    paragraphs: [
+      'Au Moyen Âge, les seigneurs faisaient construire des châteaux forts pour se protéger des attaques ennemies. Ces immenses forteresses de pierre étaient entourées de hauts remparts. La tour la plus haute et la plus solide s\'appelait le donjon : c\'est là que vivait le seigneur avec sa famille.',
+      'Pour rendre le château encore plus difficile à attaquer, on creusait tout autour un large fossé rempli d\'eau : les douves. Pour entrer dans le château, il fallait passer par le pont-levis, un pont de bois que l\'on pouvait relever en cas de danger pour bloquer l\'entrée.',
+      'Les chevaliers défendaient le château et son seigneur. En temps de paix, ils s\'entraînaient au combat lors de grands spectacles appelés tournois. La vie au château était animée : on y trouvait des cuisines, des écuries, une chapelle, et parfois même des troubadours qui venaient chanter et raconter des histoires.',
+    ],
+    questions: [
+      { q: 'À quelle époque construisait-on les châteaux forts ?', correct: 'Au Moyen Âge', wrong: ['À la Préhistoire','Pendant l\'Antiquité','Au siècle dernier'] },
+      { q: 'Comment s\'appelle la tour la plus haute du château ?', correct: 'Le donjon', wrong: ['Le phare','Le beffroi','La flèche'] },
+      { q: 'Que sont les douves ?', correct: 'Des fossés remplis d\'eau', wrong: ['Des tours de garde','Des salles secrètes','Des escaliers cachés'] },
+      { q: 'Comment entrait-on dans le château ?', correct: 'Par le pont-levis', wrong: ['Par un tunnel','En escaladant les murs','Par la cheminée'] },
+    ]
+  },
+  {
+    title: '🗼 La tour Eiffel',
+    paragraphs: [
+      'La tour Eiffel a été construite à Paris par l\'ingénieur Gustave Eiffel pour l\'Exposition universelle de 1889. Avec ses 300 mètres de haut, elle était à l\'époque le monument le plus haut du monde ! Il a fallu un peu plus de deux ans et des millions de rivets pour assembler ses milliers de pièces de fer.',
+      'Au début, beaucoup de Parisiens trouvaient la tour affreuse et voulaient la détruire. Elle ne devait d\'ailleurs rester debout que vingt ans. Mais elle a été sauvée grâce à son antenne de radio, très utile pour envoyer des messages : on a alors décidé de la garder.',
+      'Aujourd\'hui, la tour Eiffel est devenue le symbole de la France dans le monde entier. Elle accueille environ sept millions de visiteurs chaque année. Pour la protéger de la rouille, elle est entièrement repeinte environ tous les sept ans, à la main !',
+    ],
+    questions: [
+      { q: 'Qui a fait construire la tour Eiffel ?', correct: 'Gustave Eiffel', wrong: ['Napoléon','Jules Verne','Louis XIV'] },
+      { q: 'Pour quel événement a-t-elle été construite ?', correct: 'L\'Exposition universelle de 1889', wrong: ['Les Jeux olympiques','Le 14 juillet','Un mariage royal'] },
+      { q: 'Qu\'est-ce qui a sauvé la tour de la destruction ?', correct: 'Son antenne de radio', wrong: ['Sa beauté','Son restaurant','Une pétition'] },
+      { q: 'Combien de visiteurs accueille-t-elle environ chaque année ?', correct: 'Sept millions', wrong: ['Mille','Cent mille','Cent millions'] },
+    ]
+  },
+  {
+    title: '🐧 Les manchots',
+    paragraphs: [
+      'Les manchots sont des oiseaux qui ne savent pas voler, mais ce sont d\'excellents nageurs ! Leurs ailes se sont transformées en nageoires qui leur permettent de filer sous l\'eau à toute vitesse pour attraper des poissons. Ils vivent dans l\'hémisphère sud, notamment en Antarctique, le continent le plus froid de la planète.',
+      'Chez le manchot empereur, c\'est le papa qui couve l\'œuf ! Il le garde bien au chaud sur ses pattes, sous un repli de sa peau, pendant environ deux mois, sans rien manger, en plein hiver antarctique. Pendant ce temps, la maman part pêcher en mer pour rapporter de la nourriture au poussin.',
+      'Pour résister au froid glacial et au blizzard, les manchots se serrent les uns contre les autres par milliers et forment une énorme mêlée appelée la tortue. Ils échangent régulièrement leur place pour que chacun profite de la chaleur du centre du groupe. Leurs plumes imperméables et leur épaisse couche de graisse les protègent aussi du froid.',
+    ],
+    questions: [
+      { q: 'Les manchots savent-ils voler ?', correct: 'Non, mais ils nagent très bien', wrong: ['Oui, très haut','Oui, mais seulement la nuit','Non, et ils ne nagent pas'] },
+      { q: 'Qui couve l\'œuf chez le manchot empereur ?', correct: 'Le papa', wrong: ['La maman','Les grands-parents','Personne'] },
+      { q: 'Sur quel continent très froid vivent les manchots empereurs ?', correct: 'L\'Antarctique', wrong: ['L\'Afrique','L\'Europe','L\'Australie'] },
+      { q: 'Comment les manchots se protègent-ils du froid ?', correct: 'En se serrant les uns contre les autres', wrong: ['En creusant des igloos','En migrant vers le désert','En hibernant tout l\'hiver'] },
+    ]
+  },
+  {
+    title: '❤️ Le cœur',
+    paragraphs: [
+      'Le cœur est un muscle extraordinaire, à peu près de la taille de ton poing. Jour et nuit, sans jamais s\'arrêter, il pompe le sang et l\'envoie dans tout le corps. Il bat environ 100 000 fois par jour, et des milliards de fois au cours d\'une vie !',
+      'Le sang transporte l\'oxygène et les nutriments dont tous les organes ont besoin pour fonctionner. Il circule dans des tuyaux appelés vaisseaux sanguins : les artères emportent le sang qui sort du cœur, et les veines le ramènent vers le cœur.',
+      'Quand tu cours ou fais du sport, tes muscles ont besoin de plus d\'oxygène : ton cœur bat alors plus vite pour envoyer plus de sang. Faire régulièrement de l\'exercice rend le cœur plus fort et plus endurant. C\'est pour cela que le sport est si bon pour la santé !',
+    ],
+    questions: [
+      { q: 'Qu\'est-ce que le cœur ?', correct: 'Un muscle', wrong: ['Un os','Un nerf','Une glande'] },
+      { q: 'Que transporte le sang dans le corps ?', correct: 'L\'oxygène et les nutriments', wrong: ['De l\'air uniquement','Des pensées','De la lumière'] },
+      { q: 'Comment s\'appellent les vaisseaux qui emportent le sang hors du cœur ?', correct: 'Les artères', wrong: ['Les veines','Les nerfs','Les tendons'] },
+      { q: 'Que fait le cœur quand tu fais du sport ?', correct: 'Il bat plus vite', wrong: ['Il s\'arrête','Il bat plus lentement','Il rétrécit'] },
+    ]
+  },
+  {
+    title: '🦖 Les dinosaures',
+    paragraphs: [
+      'Les dinosaures sont des reptiles qui ont vécu sur Terre pendant plus de 160 millions d\'années, bien avant l\'apparition des humains. Il en existait de toutes les tailles : certains étaient carnivores, comme le terrible tyrannosaure, et d\'autres herbivores, comme le diplodocus au très long cou qui mangeait des plantes.',
+      'On connaît les dinosaures grâce aux fossiles : des os, des dents ou des empreintes conservés dans la roche pendant des millions d\'années. Les savants qui recherchent et étudient ces fossiles s\'appellent les paléontologues. Grâce à eux, on peut reconstituer les squelettes exposés dans les musées.',
+      'Les dinosaures ont disparu il y a 66 millions d\'années, probablement à cause de la chute d\'un énorme astéroïde qui a bouleversé le climat de la planète. Mais ils n\'ont pas tous disparu : les oiseaux d\'aujourd\'hui sont les descendants de petits dinosaures à plumes !',
+    ],
+    questions: [
+      { q: 'Que mangeait le diplodocus ?', correct: 'Des plantes', wrong: ['De la viande','Des poissons','Des insectes'] },
+      { q: 'Comment s\'appellent les savants qui étudient les fossiles ?', correct: 'Les paléontologues', wrong: ['Les astronautes','Les vétérinaires','Les architectes'] },
+      { q: 'Qu\'est-ce qui a probablement causé la disparition des dinosaures ?', correct: 'La chute d\'un astéroïde', wrong: ['Une grande inondation','Les chasseurs préhistoriques','Une maladie des plantes'] },
+      { q: 'Quels animaux d\'aujourd\'hui descendent des dinosaures ?', correct: 'Les oiseaux', wrong: ['Les chats','Les requins','Les serpents'] },
+    ]
   }
 ];
 
@@ -2370,8 +2482,27 @@ let cm2LectureText = null;
 let cm2LectureQIdx = 0;
 let cm2LecturePhase = 'reading'; // 'reading' | 'questions'
 
+// Pioche les textes dans un paquet mélangé (mémorisé dans localStorage) :
+// tous les textes passent une fois avant qu'un texte ne revienne,
+// et jamais deux fois le même à la suite.
+function cm2PickLectureText() {
+  let deck = [];
+  try { deck = JSON.parse(localStorage.getItem('cm2-lecture-deck') || '[]'); } catch(e) {}
+  if(!Array.isArray(deck)) deck = [];
+  deck = deck.filter(i => Number.isInteger(i) && i >= 0 && i < CM2_TEXTS.length);
+  if(deck.length === 0) {
+    deck = shuffle(CM2_TEXTS.map((_, i) => i));
+    const last = parseInt(localStorage.getItem('cm2-lecture-last') || '-1', 10);
+    if(deck.length > 1 && deck[0] === last) deck.push(deck.shift());
+  }
+  const idx = deck.shift();
+  localStorage.setItem('cm2-lecture-deck', JSON.stringify(deck));
+  localStorage.setItem('cm2-lecture-last', String(idx));
+  return CM2_TEXTS[idx];
+}
+
 function cm2StartLecture() {
-  cm2LectureText = CM2_TEXTS[randInt(0, CM2_TEXTS.length - 1)];
+  cm2LectureText = cm2PickLectureText();
   cm2LectureQIdx = 0;
   cm2State.sessionScore = 0;
   document.getElementById('cm2-lecture-score-live').textContent = '⭐ 0';
