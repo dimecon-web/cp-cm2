@@ -626,6 +626,24 @@ html, body {
   font-size: 17px; font-weight: 800; padding: 12px 24px; border-radius: 20px; border: none;
   cursor: pointer; box-shadow: 0 4px 0 #7b38b2; font-family: inherit; width: 100%; max-width: 300px; }
 .btn-character:active { transform: translateY(2px); box-shadow: 0 2px 0 #7b38b2; }
+/* ===== TABLEAU DE BORD ===== */
+.btn-dash {
+  background: linear-gradient(135deg, #0EA5E9, #6C63FF); color: white;
+  font-size: 17px; font-weight: 800; padding: 12px 24px; border-radius: 20px; border: none;
+  cursor: pointer; box-shadow: 0 4px 0 #4338ca; font-family: inherit; width: 100%; max-width: 300px; margin-top: 10px;
+}
+.btn-dash:active { transform: translateY(2px); box-shadow: 0 2px 0 #4338ca; }
+.dash-sum { flex: 1; background: var(--card); border-radius: 18px; padding: 14px 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  box-shadow: var(--shadow-sm); font-size: 22px; }
+.dash-sum b { font-size: 26px; }
+.dash-sum span { font-size: 12px; color: #888; font-weight: 700; text-align: center; }
+.dash-row { background: var(--card); border-radius: 18px; padding: 12px 16px; box-shadow: var(--shadow-sm); }
+.dash-row-head { display: flex; align-items: center; gap: 10px; font-size: 17px; }
+.dash-row-stats { display: flex; justify-content: space-between; font-size: 13px; color: #777; font-weight: 700; margin-top: 6px; flex-wrap: wrap; gap: 4px; }
+.dash-bar { height: 8px; background: #eee; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+.dash-bar > div { height: 100%; background: linear-gradient(90deg, #22C55E, #0EA5E9); border-radius: 4px; }
+
 .coin-flash { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
   font-size: 36px; font-weight: 900; color: #F59E0B; z-index: 200; pointer-events: none;
   animation: coinPop 0.9s ease forwards; }
@@ -727,6 +745,7 @@ html, body {
   </div>
   <div class="coin-home-badge" id="cp-coins-display">🪙 0</div>
   <button class="btn-character" onclick="openCharacterScreen('cp','home')">👗 Mon personnage — Olivia</button>
+  <button class="btn-dash" onclick="openDashboard('cp')">📊 Mon tableau de bord</button>
   <button class="btn btn-back mt16" onclick="showScreen('welcome')" style="margin-top:20px;font-size:18px">🏠 Changer de profil</button>
 </div>
 
@@ -921,6 +940,7 @@ html, body {
   </div>
   <div class="coin-home-badge" id="cm2-coins-display">🪙 0</div>
   <button class="btn-character" onclick="openCharacterScreen('cm2','cm2-home')">👗 Mon personnage — Alexia</button>
+  <button class="btn-dash" onclick="openDashboard('cm2')">📊 Mon tableau de bord</button>
   <button class="btn btn-back mt16" onclick="showScreen('welcome')" style="margin-top:20px;font-size:18px">🏠 Changer de profil</button>
 </div>
 
@@ -958,6 +978,7 @@ html, body {
   </div>
   <div class="coin-home-badge" id="cm1-coins-display">🪙 0</div>
   <button class="btn-character" onclick="openCharacterScreen('daphne','cm1-home')">👗 Mon personnage — Daphné</button>
+  <button class="btn-dash" onclick="openDashboard('daphne')">📊 Mon tableau de bord</button>
   <button class="btn btn-back mt16" onclick="showScreen('welcome')" style="margin-top:20px;font-size:18px">🏠 Changer de profil</button>
 </div>
 
@@ -993,7 +1014,18 @@ html, body {
       <div class="mod-stars" id="sec-snake-best">🏆 0</div>
     </div>
   </div>
+  <button class="btn-dash" onclick="openDashboard('sec')">📊 Mon tableau de bord</button>
   <button class="btn btn-back mt16" onclick="showScreen('welcome')" style="margin-top:20px;font-size:18px">🏠 Changer de profil</button>
+</div>
+
+<!-- ===== TABLEAU DE BORD ===== -->
+<div id="dash" class="screen hidden" style="justify-content:flex-start">
+  <div class="activity-header w100">
+    <button class="btn btn-back" id="dash-back-btn">🏠</button>
+    <div class="activity-title" id="dash-title" style="color:#0EA5E9">📊 Tableau de bord</div>
+    <div style="width:44px"></div>
+  </div>
+  <div id="dash-content" style="width:100%;max-width:680px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;padding-bottom:16px"></div>
 </div>
 
 <!-- ===== QUIZ GÉNÉRIQUE (CM1 Français/Anglais + Seconde) ===== -->
@@ -1567,6 +1599,7 @@ function showResult(module, score, total) {
   const earned = pct >= 0.9 ? 3 : pct >= 0.6 ? 2 : 1;
   state.stars[module] = (state.stars[module]||0) + earned;
   saveStars();
+  recordSession('cp', module, score, total);
 
   document.getElementById('result-stars').textContent = stars;
   document.getElementById('result-title').textContent = score >= 8 ? 'Félicitations ! 🎊' : 'Activité terminée !';
@@ -2180,6 +2213,10 @@ function initSnakeCanvas() {
 
 function startSnake() {
   stopSnake();
+  const snakeProfile = snakeReturnScreen === 'cm2-home' ? 'cm2'
+    : snakeReturnScreen === 'cm1-home' ? 'daphne'
+    : snakeReturnScreen === 'sec-home' ? 'sec' : 'cp';
+  recordSession(snakeProfile, 'snake', 0, 0);
   showScreen('snake');
   buildSpeedBtns();
 
@@ -2419,6 +2456,7 @@ function cm2ShowResult(mod, score, total) {
   const earned = pct >= 0.75 ? 3 : pct >= 0.5 ? 2 : 1;
   cm2State.stars[mod] = (cm2State.stars[mod]||0) + earned;
   cm2SaveStars();
+  recordSession('cm2', mod, score, total);
 
   document.getElementById('result-stars').textContent = stars;
   document.getElementById('result-title').textContent = score >= Math.round(total*0.75) ? 'Félicitations ! 🎊' : 'Activité terminée !';
@@ -3573,6 +3611,84 @@ document.addEventListener('touchend', e => {
 // ===================================================================
 
 // ===================================================================
+//  STATISTIQUES D'UTILISATION (sauvegardées dans localStorage)
+// ===================================================================
+function getStats(profile) {
+  try {
+    const s = JSON.parse(localStorage.getItem('stats_'+profile) || '{}');
+    return (s && typeof s === 'object') ? s : {};
+  } catch(e) { return {}; }
+}
+function saveStats(profile, s) {
+  localStorage.setItem('stats_'+profile, JSON.stringify(s));
+}
+// Enregistre une session terminée : nombre de parties, questions vues, bonnes réponses
+function recordSession(profile, module, score, total) {
+  const s = getStats(profile);
+  const m = s[module] || { sessions:0, questions:0, correct:0 };
+  m.sessions += 1;
+  m.questions += total;
+  m.correct += score;
+  s[module] = m;
+  saveStats(profile, s);
+}
+
+// ===================================================================
+//  TABLEAU DE BORD PAR ENFANT
+// ===================================================================
+const DASH_PROFILES = {
+  cp:     { name:'Olivia', home:'home',     coins:'cp',     stars:()=>state.stars,
+            modules:[['phono','🔤','Phonologie'],['maths','🔢','Maths'],['vocab','📚','Vocabulaire'],['english','🌍','Anglais']] },
+  cm2:    { name:'Alexia', home:'cm2-home', coins:'cm2',    stars:()=>cm2State.stars,
+            modules:[['lecture','📖','Lecture'],['maths','🔢','Calcul Mental'],['sciences','🔬','Sciences'],['ortho','✏️','Orthographe'],['english','🌍','Anglais']] },
+  daphne: { name:'Daphné', home:'cm1-home', coins:'daphne', stars:()=>cm1State.stars,
+            modules:[['maths','🔢','Calcul Mental'],['francais','✏️','Français'],['english','🌍','Anglais']] },
+  sec:    { name:'Charly', home:'sec-home', coins:null,     stars:()=>secState.stars,
+            modules:[['maths','🔢','Maths'],['francais','📚','Français'],['english','🌍','Anglais']] },
+};
+
+function openDashboard(profileKey) {
+  const p = DASH_PROFILES[profileKey];
+  const stats = getStats(profileKey);
+  const stars = p.stars();
+  const totalStars = Object.values(stars).reduce((a,b)=>a+b,0);
+  const coins = p.coins ? getRewardData(p.coins).coins : null;
+  const totalSessions = Object.values(stats).reduce((a,m)=>a+(m.sessions||0),0);
+
+  document.getElementById('dash-title').textContent = '📊 ' + p.name;
+  document.getElementById('dash-back-btn').onclick = () => showScreen(p.home);
+
+  let html = `
+    <div style="display:flex;gap:10px">
+      ${coins !== null ? `<div class="dash-sum">🪙<b>${coins}</b><span>pièces</span></div>` : ''}
+      <div class="dash-sum">⭐<b>${totalStars}</b><span>étoiles</span></div>
+      <div class="dash-sum">🎯<b>${totalSessions}</b><span>activités jouées</span></div>
+    </div>`;
+
+  html += p.modules.map(([key, icon, label]) => {
+    const m = stats[key] || { sessions:0, questions:0, correct:0 };
+    const pct = m.questions ? Math.round(m.correct / m.questions * 100) : null;
+    return `<div class="dash-row">
+      <div class="dash-row-head"><span style="font-size:24px">${icon}</span><b>${label}</b><span style="margin-left:auto;font-weight:800">⭐ ${stars[key]||0}</span></div>
+      <div class="dash-row-stats">
+        <span>🕐 ${m.sessions === 0 ? 'Jamais jouée' : m.sessions === 1 ? 'Jouée 1 fois' : 'Jouée ' + m.sessions + ' fois'}</span>
+        <span>${pct === null ? '' : '✅ ' + m.correct + ' / ' + m.questions + ' bonnes réponses (' + pct + ' %)'}</span>
+      </div>
+      <div class="dash-bar"><div style="width:${pct || 0}%"></div></div>
+    </div>`;
+  }).join('');
+
+  const sn = stats.snake || { sessions:0 };
+  html += `<div class="dash-row">
+    <div class="dash-row-head"><span style="font-size:24px">🐍</span><b>Snake</b><span style="margin-left:auto;font-weight:800">🏆 ${parseInt(localStorage.getItem('snake-best')||'0')}</span></div>
+    <div class="dash-row-stats"><span>🕐 ${sn.sessions === 0 ? 'Jamais joué' : sn.sessions === 1 ? 'Joué 1 fois' : 'Joué ' + sn.sessions + ' fois'}</span><span>record partagé entre tous</span></div>
+  </div>`;
+
+  document.getElementById('dash-content').innerHTML = html;
+  showScreen('dash');
+}
+
+// ===================================================================
 //  PROFILS : menu déroulant d'accueil
 // ===================================================================
 function enterProfile() {
@@ -3627,6 +3743,7 @@ function cm1ShowResult(mod, score, total) {
   const earned = pct >= 0.75 ? 3 : pct >= 0.5 ? 2 : 1;
   cm1State.stars[mod] = (cm1State.stars[mod]||0) + earned;
   cm1SaveStars();
+  recordSession('daphne', mod, score, total);
   if(score >= Math.round(total * 0.8)) awardCoins('daphne', 3);
 
   document.getElementById('result-stars').textContent = stars;
@@ -3679,6 +3796,7 @@ function secShowResult(mod, score, total) {
   const earned = pct >= 0.75 ? 3 : pct >= 0.5 ? 2 : 1;
   secState.stars[mod] = (secState.stars[mod]||0) + earned;
   secSaveStars();
+  recordSession('sec', mod, score, total);
 
   document.getElementById('result-stars').textContent = stars;
   document.getElementById('result-title').textContent = score >= Math.round(total*0.75) ? 'Félicitations ! 🎊' : 'Activité terminée !';
