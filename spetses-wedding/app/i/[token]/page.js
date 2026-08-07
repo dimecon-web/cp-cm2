@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { config } from "@/lib/config";
-import { useT, usePick } from "@/lib/i18n";
+import { useT, usePick, useLang } from "@/lib/i18n";
 import { getHousehold, getRsvp } from "@/lib/store";
 
 export default function GuestHome() {
   const { token } = useParams();
   const t = useT();
   const pick = usePick();
+  const { lang } = useLang();
   const [household, setHousehold] = useState(null);
   const [hasRsvp, setHasRsvp] = useState(false);
   const [days, setDays] = useState(null);
@@ -22,7 +23,8 @@ export default function GuestHome() {
     setDays(Math.max(0, Math.ceil(diff / 86400000)));
   }, [token]);
 
-  const dateStr = new Date(config.weddingDate).toLocaleDateString("fr-FR", {
+  const locale = lang === "en" ? "en-GB" : lang === "el" ? "el-GR" : "fr-FR";
+  const dateStr = new Date(config.weddingDate).toLocaleDateString(locale, {
     day: "numeric", month: "long", year: "numeric",
   });
 

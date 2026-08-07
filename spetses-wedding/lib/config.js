@@ -1,11 +1,12 @@
 // Configuration centrale du site — TOUT ce qui est personnel se change ici.
-// ⚠️ Les noms, dates et textes ci-dessous sont des PLACEHOLDERS à remplacer.
+// Noms et dates confirmés ; les horaires, la frise et les descriptions
+// d'événements restent à ajuster.
 
 export const config = {
-  coupleNames: "Camille & Dimitri", // ← à personnaliser
-  initials: "C · D",
-  weddingDate: "2027-06-05", // ← date réelle à confirmer
-  rsvpDeadline: "2027-03-31",
+  coupleNames: "Thierry & Themis",
+  initials: "T · T",
+  weddingDate: "2027-07-10", // samedi
+  rsvpDeadline: "2027-05-10", // deux mois avant — ajustable
   location: { fr: "Spetses, Grèce", en: "Spetses, Greece", el: "Σπέτσες, Ελλάδα" },
   contactEmail: "dimecon@gmail.com", // adresse qui reçoit les messages du formulaire
   whatsappGroupUrl: "", // lien du groupe WhatsApp — affiché sur le site quand renseigné
@@ -14,7 +15,7 @@ export const config = {
   events: [
     {
       id: "party",
-      date: "2027-06-03",
+      date: "2027-07-08",
       time: "19:00",
       detailsPublic: false,
       name: { fr: "Pré-wedding party", en: "Pre-wedding party", el: "Πάρτι πριν τον γάμο" },
@@ -26,7 +27,7 @@ export const config = {
     },
     {
       id: "tour",
-      date: "2027-06-04",
+      date: "2027-07-09",
       time: "10:30",
       detailsPublic: false,
       name: { fr: "Visite guidée de l'île", en: "Guided island tour", el: "Ξενάγηση στο νησί" },
@@ -38,7 +39,7 @@ export const config = {
     },
     {
       id: "wedding",
-      date: "2027-06-05",
+      date: "2027-07-10",
       time: "17:00",
       detailsPublic: false,
       name: { fr: "Le mariage", en: "The wedding", el: "Ο γάμος" },
@@ -50,7 +51,7 @@ export const config = {
     },
     {
       id: "brunch",
-      date: "2027-06-06",
+      date: "2027-07-11",
       time: "12:00",
       detailsPublic: false,
       name: { fr: "Brunch & debrief", en: "Brunch & debrief", el: "Brunch & απολογισμός" },
