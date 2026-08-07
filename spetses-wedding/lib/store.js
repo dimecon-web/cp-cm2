@@ -104,6 +104,53 @@ export function getAllHouseholds() {
   return [...SEED_HOUSEHOLDS, ...extras];
 }
 
+// Token court, sans caractères ambigus (0/O, 1/l) — il finit sur un faire-part.
+export function makeToken() {
+  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+  let token;
+  do {
+    token = Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+  } while (getHousehold(token));
+  return token;
+}
+
+export function addHousehold({ name, email = "", phone = "", lang = "fr" }) {
+  const household = { token: makeToken(), name, email, phone, lang };
+  ls.set("sw:households", [...ls.get("sw:households", []), household]);
+  return household;
+}
+
+// Import CSV : « nom,email,téléphone,langue » — une ligne par foyer,
+// en-tête optionnel. Renvoie les foyers créés.
+export function importHouseholdsCsv(text) {
+  const created = [];
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const [name, email = "", phone = "", lang = "fr"] = line
+      .split(/[,;]/)
+      .map((c) => c.trim().replace(/^"|"$/g, ""));
+    if (!name || /^(nom|name)$/i.test(name)) continue;
+    created.push(addHousehold({ name, email, phone, lang: ["fr", "en", "el"].includes(lang) ? lang : "fr" }));
+  }
+  return created;
+}
+
+export function removeHousehold(token) {
+  ls.set("sw:households", ls.get("sw:households", []).filter((h) => h.token !== token));
+}
+
+// Destinataires d'un envoi d'actualité (choix D1b) : tous, ou seulement les « oui ».
+export function recipientsFor(audience) {
+  return getAllHouseholds()
+    .filter((h) => {
+      if (audience !== "yes") return true;
+      return getRsvp(h.token)?.attending === "yes";
+    })
+    .map((h) => ({ ...h, email: getRsvp(h.token)?.email || h.email }))
+    .filter((h) => h.email);
+}
+
 export function emptyRsvp() {
   const events = Object.fromEntries(EVENT_IDS.map((id) => [id, id === "wedding"]));
   return {
@@ -127,11 +174,14 @@ export function saveRsvp(token, rsvp) {
   ls.set(`sw:rsvp:${token}`, { ...rsvp, updatedAt: new Date().toISOString() });
 }
 
-// ---------- Actualités ----------
+// ---------- Actualités (choix D1) ----------
+// audience : 'all' = tous les foyers, 'yes' = seulement ceux qui ont dit oui.
 export const SEED_NEWS = [
   {
     id: 1,
     date: "2026-07-01",
+    audience: "all",
+    photo: null,
     title: { fr: "Le site est ouvert !", en: "The website is live!", el: "Η ιστοσελίδα άνοιξε!" },
     body: {
       fr: "Bienvenue sur notre site de mariage. Première mission : répondez au RSVP, ça nous aide énormément pour la suite.",
@@ -142,6 +192,8 @@ export const SEED_NEWS = [
   {
     id: 2,
     date: "2026-08-01",
+    audience: "all",
+    photo: null,
     title: { fr: "Pensez aux ferries", en: "Think about ferries", el: "Σκεφτείτε τα πλοία" },
     body: {
       fr: "Les billets de ferry Le Pirée → Spetses s'ouvrent à la réservation environ 3 mois avant. On vous fera signe au bon moment.",
@@ -150,6 +202,71 @@ export const SEED_NEWS = [
     },
   },
 ];
+
+export const newsStore = {
+  all: () => ls.get("sw:news", SEED_NEWS),
+  save: (items) => ls.set("sw:news", items),
+  add(post) {
+    const all = this.all();
+    this.save([{ ...post, id: Date.now(), date: new Date().toISOString().slice(0, 10) }, ...all]);
+  },
+  remove(id) {
+    this.save(this.all().filter((p) => p.id !== id));
+  },
+};
+
+// Actualités visibles par un foyer donné (filtre d'audience).
+export function newsForHousehold(token) {
+  const rsvp = getRsvp(token);
+  return newsStore
+    .all()
+    .filter((p) => p.audience !== "yes" || rsvp?.attending === "yes")
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+
+// ---------- Mur de photos des invités, avec modération (choix D1d) ----------
+export const photoStore = {
+  all: () => ls.get("sw:photos", []),
+  save: (items) => ls.set("sw:photos", items),
+  approved() {
+    return this.all().filter((p) => p.approved).sort((a, b) => (a.date < b.date ? 1 : -1));
+  },
+  pending() {
+    return this.all().filter((p) => !p.approved);
+  },
+  submit(photo) {
+    this.save([{ ...photo, id: Date.now(), date: new Date().toISOString(), approved: false }, ...this.all()]);
+  },
+  approve(id) {
+    this.save(this.all().map((p) => (p.id === id ? { ...p, approved: true } : p)));
+  },
+  remove(id) {
+    this.save(this.all().filter((p) => p.id !== id));
+  },
+};
+
+// Réduit une image choisie par l'invité avant stockage (démo : localStorage).
+// En v2, l'upload ira dans Supabase Storage sans cette contrainte de taille.
+export function shrinkImage(file, maxSize = 900) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.72));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 // ---------- Messages de contact ----------
 export function getMessages() {

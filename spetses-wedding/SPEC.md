@@ -39,7 +39,8 @@ spetses-wedding/
 │   │   └── contact/         Formulaire + futur lien groupe WhatsApp
 │   └── admin/               Espace organisateurs (FR)
 │       ├── page.js          Tableau de bord RSVP, arrivées/jour, relances, messages
-│       ├── invites/         Liste foyers, liens personnels, envois email/WhatsApp, CSV
+│       ├── invites/         Foyers (ajout/import CSV), liens perso, QR codes, envois
+│       ├── news/            Rédaction trilingue, envoi segmenté, modération photos
 │       ├── budget/          Budget (rôle « mariés » uniquement)
 │       ├── todos/           Qui fait quoi, pour quand
 │       └── fournisseurs/    Annuaire fournisseurs
@@ -56,6 +57,17 @@ spetses-wedding/
 Toutes les pages et parcours fonctionnent, avec des données d'exemple stockées
 dans le navigateur (localStorage). Aucune dépendance externe : `npm install && npm run dev`.
 Foyers de démo : `/i/demo` (vierge), `/i/a7f2k9`, `/i/b3x8m1`… (voir `lib/store.js`).
+
+Couvert en v1 : parcours RSVP complet, actualités publiées depuis l'espace
+organisateurs (trilingue, segment « tous » / « oui », email pré-rempli en copie
+cachée, texte prêt pour WhatsApp), mur de photos des invités avec file de
+modération, ajout et import CSV de foyers, QR codes des liens personnels,
+export CSV des réponses.
+
+Limites assumées du mode démo : les données restent dans le navigateur de
+chacun (elles ne circulent donc pas entre invités et organisateurs), les photos
+sont réduites avant stockage, et l'envoi d'emails passe par votre messagerie.
+Ces trois limites disparaissent en v2/v3.
 
 ## Feuille de route
 

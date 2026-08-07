@@ -79,6 +79,11 @@ p { margin: 0 0 1em; }
   font-size: 22px;
   font-style: italic;
 }
+@media (max-width: 480px) {
+  .monogram { width: 44px; height: 44px; font-size: 17px; }
+  .header-names { font-size: 18px; }
+}
+
 .lang-switcher { display: flex; gap: 4px; }
 .lang-btn {
   background: rgba(255, 255, 255, 0.12);

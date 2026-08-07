@@ -18,6 +18,7 @@ export default function AdminLayout({ children }) {
   const links = [
     ["/admin", "Tableau de bord"],
     ["/admin/invites", "Invités & envois"],
+    ["/admin/news", "Actualités"],
     ["/admin/budget", "Budget"],
     ["/admin/todos", "To-dos"],
     ["/admin/fournisseurs", "Fournisseurs"],

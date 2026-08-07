@@ -67,7 +67,13 @@ export const dict = {
     news: {
       title: "Actualités",
       intro: "Les dernières nouvelles des préparatifs, nos rappels et quelques photos.",
-      wallSoon: "📸 Bientôt : un mur de photos où vous pourrez poster les vôtres (avec notre validation avant publication).",
+      wallTitle: "Le mur de photos",
+      wallIntro: "Partagez vos photos ! On y jette un œil avant publication, histoire d'éviter les surprises.",
+      wallEmpty: "Aucune photo pour l'instant — lancez-vous, soyez les premiers !",
+      addPhoto: "Choisir une photo",
+      caption: "Une légende ? (optionnel)",
+      submit: "Envoyer la photo",
+      submitted: "Merci ! Votre photo apparaîtra dès qu'on l'aura validée.",
     },
     contact: {
       title: "Une question ?",
@@ -151,7 +157,13 @@ export const dict = {
     news: {
       title: "News",
       intro: "The latest from the preparations, our reminders and a few photos.",
-      wallSoon: "📸 Coming soon: a photo wall where you can post yours (with our approval before publishing).",
+      wallTitle: "The photo wall",
+      wallIntro: "Share your photos! We take a quick look before publishing, just to avoid surprises.",
+      wallEmpty: "No photos yet — go on, be the first!",
+      addPhoto: "Choose a photo",
+      caption: "A caption? (optional)",
+      submit: "Send the photo",
+      submitted: "Thank you! Your photo will appear as soon as we've approved it.",
     },
     contact: {
       title: "A question?",
@@ -235,7 +247,13 @@ export const dict = {
     news: {
       title: "Νέα",
       intro: "Τα τελευταία νέα των προετοιμασιών, υπενθυμίσεις και μερικές φωτογραφίες.",
-      wallSoon: "📸 Σύντομα: ένας τοίχος φωτογραφιών όπου θα ανεβάζετε τις δικές σας (με έγκριση πριν τη δημοσίευση).",
+      wallTitle: "Ο τοίχος φωτογραφιών",
+      wallIntro: "Μοιραστείτε τις φωτογραφίες σας! Τις βλέπουμε πριν τη δημοσίευση, για να αποφύγουμε τις εκπλήξεις.",
+      wallEmpty: "Καμία φωτογραφία ακόμα — γίνετε οι πρώτοι!",
+      addPhoto: "Επιλέξτε φωτογραφία",
+      caption: "Λεζάντα; (προαιρετικό)",
+      submit: "Αποστολή φωτογραφίας",
+      submitted: "Ευχαριστούμε! Η φωτογραφία σας θα εμφανιστεί μόλις εγκριθεί.",
     },
     contact: {
       title: "Έχετε ερωτήσεις;",

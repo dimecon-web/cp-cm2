@@ -104,7 +104,7 @@ export default function AdminDashboard() {
           </div>
         )}
         <p className="hint" style={{ marginTop: 10, marginBottom: 0 }}>
-          En v2, des relances email automatiques (choix C4a) partiront à J-30, J-14 et J-7 de la date limite.
+          En v2, les relances email partiront automatiquement à J-30, J-14 et J-7 de la date limite.
         </p>
       </div>
 
