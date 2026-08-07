@@ -1,75 +1,95 @@
--- Schéma Supabase cible (v2) pour le site de mariage à Spetses.
--- La v1 fonctionne en mode démo (localStorage) ; ce schéma est le modèle
--- vers lequel lib/store.js sera migré.
+-- Schéma de la base du site de mariage à Spetses.
+--
+-- Toutes les tables sont préfixées `wedding_` : le schéma peut donc être
+-- appliqué dans un projet Supabase dédié comme dans un projet existant
+-- déjà utilisé par une autre application, sans aucun risque de collision.
+--
+-- Modèle d'accès : le navigateur ne parle JAMAIS directement à la base.
+-- Les pages passent par les routes serveur de l'application (app/api/…),
+-- qui utilisent la clé de service et vérifient le jeton du foyer ou le mot
+-- de passe organisateur. La sécurité au niveau des lignes est donc en
+-- « tout refuser » : aucune lecture ni écriture n'est possible avec la clé
+-- publique, même si celle-ci venait à fuiter.
 
--- Foyers invités : un token unique par foyer = le lien d'invitation (choix B1a).
-create table households (
+-- ---------- Foyers invités ----------
+-- Le jeton est le lien d'invitation : site.com/i/<token>
+create table if not exists wedding_households (
   id uuid primary key default gen_random_uuid(),
-  token text unique not null,            -- ex. 'a7f2k9' → site.com/i/a7f2k9
+  token text unique not null,
   name text not null,
   email text,
-  phone text,                            -- numéro WhatsApp
-  lang text not null default 'fr' check (lang in ('fr','en','el')),
-  invited_at timestamptz,                -- date d'envoi de l'invitation
+  phone text,                       -- numéro WhatsApp, format international
+  lang text not null default 'fr' check (lang in ('fr', 'en', 'el')),
+  invited_at timestamptz,           -- date d'envoi de l'invitation
   created_at timestamptz not null default now()
 );
 
--- Réponse RSVP : une par foyer, modifiable jusqu'à la date limite (choix C2c).
-create table rsvps (
-  household_id uuid primary key references households(id) on delete cascade,
-  attending text check (attending in ('yes','no')),
-  email text,                            -- collecté si absent du foyer (choix B3c)
+-- ---------- Réponse RSVP : une par foyer, modifiable jusqu'à la date limite ----------
+create table if not exists wedding_rsvps (
+  household_id uuid primary key references wedding_households(id) on delete cascade,
+  attending text check (attending in ('yes', 'no')),
+  email text,                       -- collecté si absent du carnet d'adresses
   arrival date,
   departure date,
-  transport text check (transport in ('plane','ferry','car','other')),
-  accommodation text check (accommodation in ('booked','searching','hosted','unknown')),
+  transport text check (transport in ('plane', 'ferry', 'car', 'other')),
+  accommodation text check (accommodation in ('booked', 'searching', 'hosted', 'unknown')),
   notes text,
   updated_at timestamptz not null default now()
 );
 
--- Participants d'un foyer : adultes/enfants, allergies, présence par événement (choix C1).
-create table participants (
+-- ---------- Participants : adultes/enfants, allergies, présence par événement ----------
+create table if not exists wedding_participants (
   id uuid primary key default gen_random_uuid(),
-  household_id uuid not null references households(id) on delete cascade,
+  household_id uuid not null references wedding_households(id) on delete cascade,
+  position int not null default 0,  -- ordre d'affichage dans le formulaire
   name text not null,
-  type text not null default 'adult' check (type in ('adult','child')),
-  age int,
-  diet text not null default 'none' check (diet in ('none','veg','allergy')),
-  diet_note text,                        -- détail de l'allergie grave
-  events jsonb not null default '{}'    -- { "party": true, "wedding": true, ... }
+  type text not null default 'adult' check (type in ('adult', 'child')),
+  age int check (age is null or (age >= 0 and age < 18)),
+  diet text not null default 'none' check (diet in ('none', 'veg', 'allergy')),
+  diet_note text,                   -- détail obligatoire côté application si diet = 'allergy'
+  events jsonb not null default '{}'::jsonb   -- { "party": true, "wedding": true, … }
 );
 
--- Actualités : fil de news + futures photos du mur (choix D1).
-create table news_posts (
+create index if not exists wedding_participants_household_idx
+  on wedding_participants(household_id);
+
+-- ---------- Actualités ----------
+-- audience : 'all' = tous les foyers ; 'yes' = seulement ceux qui ont accepté
+create table if not exists wedding_news (
   id uuid primary key default gen_random_uuid(),
   published_at timestamptz not null default now(),
-  title jsonb not null,                  -- { fr, en, el }
+  audience text not null default 'all' check (audience in ('all', 'yes')),
+  title jsonb not null,             -- { "fr": …, "en": …, "el": … }
   body jsonb not null,
-  author_id uuid,                        -- organisateur, ou null
-  photo_url text,
-  submitted_by uuid references households(id),  -- post d'invité (mur de photos)
-  approved boolean not null default true        -- modération organisateurs (choix D1d)
+  photo_url text
 );
 
--- Messages du formulaire de contact (choix E1a).
-create table messages (
+-- ---------- Mur de photos des invités, publié après validation ----------
+create table if not exists wedding_photos (
   id uuid primary key default gen_random_uuid(),
-  household_id uuid references households(id),
+  household_id uuid references wedding_households(id) on delete set null,
+  caption text,
+  url text not null,                -- Supabase Storage en production
+  approved boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists wedding_photos_approved_idx
+  on wedding_photos(approved, created_at desc);
+
+-- ---------- Messages du formulaire de contact ----------
+create table if not exists wedding_messages (
+  id uuid primary key default gen_random_uuid(),
+  household_id uuid references wedding_households(id) on delete set null,
   name text not null,
   email text not null,
   body text not null,
-  created_at timestamptz not null default now(),
-  handled boolean not null default false
+  handled boolean not null default false,
+  created_at timestamptz not null default now()
 );
 
--- Organisateurs : liés à Supabase Auth ; rôle 'couple' voit le budget (choix F2b).
-create table organizers (
-  user_id uuid primary key references auth.users(id) on delete cascade,
-  name text not null,
-  role text not null default 'organisateur' check (role in ('couple','organisateur'))
-);
-
-create table budget_items (
+-- ---------- Outils organisateurs ----------
+create table if not exists wedding_budget_items (
   id uuid primary key default gen_random_uuid(),
   label text not null,
   planned numeric not null default 0,
@@ -78,7 +98,7 @@ create table budget_items (
   due date
 );
 
-create table todos (
+create table if not exists wedding_todos (
   id uuid primary key default gen_random_uuid(),
   label text not null,
   who text,
@@ -86,7 +106,7 @@ create table todos (
   done boolean not null default false
 );
 
-create table suppliers (
+create table if not exists wedding_suppliers (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   role text,
@@ -95,43 +115,27 @@ create table suppliers (
   notes text
 );
 
--- Relances automatiques (choix C4a) : journal des envois, alimenté par un
--- cron (Supabase Edge Function + Resend) à J-30 / J-14 / J-7 de la deadline.
-create table reminders_log (
+-- ---------- Journal des envois (invitations, relances, actualités) ----------
+create table if not exists wedding_sends (
   id uuid primary key default gen_random_uuid(),
-  household_id uuid not null references households(id) on delete cascade,
-  kind text not null,                    -- 'invite' | 'reminder' | 'news'
-  channel text not null,                 -- 'email'
+  household_id uuid references wedding_households(id) on delete cascade,
+  kind text not null check (kind in ('invite', 'reminder', 'news')),
+  channel text not null check (channel in ('email', 'whatsapp')),
   sent_at timestamptz not null default now()
 );
 
--- ============ Row Level Security ============
-alter table households enable row level security;
-alter table rsvps enable row level security;
-alter table participants enable row level security;
-alter table news_posts enable row level security;
-alter table messages enable row level security;
-alter table organizers enable row level security;
-alter table budget_items enable row level security;
-alter table todos enable row level security;
-alter table suppliers enable row level security;
-alter table reminders_log enable row level security;
-
--- Les invités accèdent à leurs données via une Edge Function qui vérifie le
--- token du foyer (pas d'accès direct anon). Les organisateurs authentifiés
--- lisent tout ; le budget est réservé au rôle 'couple'.
-create policy organizers_read_all on households for select
-  using (exists (select 1 from organizers o where o.user_id = auth.uid()));
-create policy organizers_rsvps on rsvps for select
-  using (exists (select 1 from organizers o where o.user_id = auth.uid()));
-create policy organizers_participants on participants for select
-  using (exists (select 1 from organizers o where o.user_id = auth.uid()));
-create policy organizers_messages on messages for all
-  using (exists (select 1 from organizers o where o.user_id = auth.uid()));
-create policy organizers_todos on todos for all
-  using (exists (select 1 from organizers o where o.user_id = auth.uid()));
-create policy organizers_suppliers on suppliers for all
-  using (exists (select 1 from organizers o where o.user_id = auth.uid()));
-create policy couple_budget on budget_items for all
-  using (exists (select 1 from organizers o where o.user_id = auth.uid() and o.role = 'couple'));
-create policy news_public_read on news_posts for select using (approved = true);
+-- ---------- Sécurité : tout refuser côté client ----------
+-- RLS activée sans aucune politique = aucun accès avec la clé publique.
+-- Seule la clé de service, utilisée exclusivement côté serveur, contourne
+-- ces règles. Les invités sont identifiés par leur jeton, vérifié par les
+-- routes serveur ; les organisateurs par un mot de passe.
+alter table wedding_households   enable row level security;
+alter table wedding_rsvps        enable row level security;
+alter table wedding_participants enable row level security;
+alter table wedding_news         enable row level security;
+alter table wedding_photos       enable row level security;
+alter table wedding_messages     enable row level security;
+alter table wedding_budget_items enable row level security;
+alter table wedding_todos        enable row level security;
+alter table wedding_suppliers    enable row level security;
+alter table wedding_sends        enable row level security;

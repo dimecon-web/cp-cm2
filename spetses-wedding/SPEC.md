@@ -49,7 +49,7 @@ Spécification consolidée à partir du QCM (réponses du 07/08/2026).
 │   ├── dict.js              Dictionnaire FR/EN/ΕΛ
 │   ├── i18n.js              Contexte de langue + sélecteur
 │   └── store.js             Couche données v1 (localStorage + seeds) → Supabase en v2
-└── supabase/schema.sql      Modèle de données cible + RLS
+└── supabase/schema.sql      Schéma de la base (tables préfixées wedding_)
 ```
 
 ## v1 (cette version) — mode démo
