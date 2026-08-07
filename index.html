@@ -665,6 +665,17 @@ html, body {
   </div>
 </div>
 
+<!-- MAUVAISE RÉPONSE (calcul mental) -->
+<div id="cm2-wrong" class="feedback-overlay hidden">
+  <div class="feedback-box">
+    <div class="feedback-emoji">💪</div>
+    <div class="feedback-msg">Pas tout à fait…</div>
+    <div class="feedback-sub">Que veux-tu faire ?</div>
+    <button class="btn btn-primary w100" onclick="cm2TryAgain()">🔄 J'essaie encore</button>
+    <button class="btn btn-success w100" style="margin-top:12px" onclick="cm2GiveMeAnswer()">💡 Donne-moi la réponse</button>
+  </div>
+</div>
+
 <!-- EXPLICATION DE LA RÉPONSE (calcul mental CM2) -->
 <div id="cm2-explain" class="feedback-overlay hidden">
   <div class="feedback-box">
@@ -1440,10 +1451,10 @@ function saveStars() {
 function showScreen(id) {
   if(id !== 'cm2-maths') { clearInterval(cm2ChronoInterval); cm2ChronoInterval = null; }
   document.getElementById('feedback').classList.add('hidden');
-  const timeup = document.getElementById('cm2-timeup');
-  if(timeup) timeup.classList.add('hidden');
-  const explain = document.getElementById('cm2-explain');
-  if(explain) explain.classList.add('hidden');
+  ['cm2-timeup', 'cm2-wrong', 'cm2-explain'].forEach(oid => {
+    const o = document.getElementById(oid);
+    if(o) o.classList.add('hidden');
+  });
   document.querySelectorAll('.screen').forEach(s => {
     if (s.id === id) {
       s.classList.remove('hidden', 'slide-left');
@@ -3197,8 +3208,10 @@ function cm2TakeMyTime() {
 }
 
 // Option 2 : montrer la bonne réponse avec une explication
+// (appelée depuis l'overlay temps écoulé ET l'overlay mauvaise réponse)
 function cm2GiveMeAnswer() {
   document.getElementById('cm2-timeup').classList.add('hidden');
+  document.getElementById('cm2-wrong').classList.add('hidden');
   const q = cm2MathsQuestions[cm2MathsIdx];
   cm2ChronoMax = Math.min(45, cm2ChronoMax + 3);
   document.getElementById('cm2-explain-answer').textContent = q.expr + ' = ' + q.answer;
@@ -3224,16 +3237,28 @@ function cm2ValidateMaths() {
     cm2State.sessionScore++;
     if(!cm2NoChrono) cm2ChronoMax = Math.max(10, cm2ChronoMax - 2);
     document.getElementById('cm2-maths-score-live').textContent = '⭐ ' + cm2State.sessionScore;
+    setTimeout(() => {
+      showFeedback(true, null, () => {
+        cm2MathsIdx++;
+        if(cm2MathsIdx < 10) cm2RenderMathsQuestion();
+        else mentalShowResult(cm2State.sessionScore);
+      });
+    }, 300);
   } else {
+    // Mauvaise réponse : proposer de réessayer ou de voir la réponse expliquée
     cm2ChronoMax = Math.min(45, cm2ChronoMax + 3);
+    playWrong();
+    setTimeout(() => document.getElementById('cm2-wrong').classList.remove('hidden'), 300);
   }
-  setTimeout(() => {
-    showFeedback(correct, correct ? null : String(q.answer), () => {
-      cm2MathsIdx++;
-      if(cm2MathsIdx < 10) cm2RenderMathsQuestion();
-      else mentalShowResult(cm2State.sessionScore);
-    });
-  }, 300);
+}
+
+// Nouvel essai sur la même question (le chrono repart, sauf en mode sans chrono)
+function cm2TryAgain() {
+  document.getElementById('cm2-wrong').classList.add('hidden');
+  cm2NumpadValue = '';
+  document.getElementById('cm2-maths-display').textContent = '?';
+  cm2SetNumpadDisabled(false);
+  if(!cm2NoChrono) cm2StartChrono();
 }
 
 // ===================================================================
