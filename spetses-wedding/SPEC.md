@@ -26,7 +26,7 @@ Spécification consolidée à partir du QCM (réponses du 07/08/2026).
 ## Architecture
 
 ```
-spetses-wedding/
+.  (racine du dépôt)
 ├── app/
 │   ├── page.js              Porte d'entrée privée (code / lien d'invitation)
 │   ├── i/[token]/           Espace invités (trilingue)

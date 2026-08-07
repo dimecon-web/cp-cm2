@@ -7,7 +7,6 @@ to-dos, fournisseurs). Voir [SPEC.md](./SPEC.md) pour la spécification complèt
 ## Démarrer
 
 ```bash
-cd spetses-wedding
 npm install
 npm run dev
 ```
@@ -37,5 +36,7 @@ Tout le contenu personnel est centralisé :
 
 ## Déployer sur Vercel
 
-Importer le dépôt sur vercel.com avec **Root Directory = `spetses-wedding`**.
-Aucune variable d'environnement n'est requise en v1.
+Importer ce dépôt sur vercel.com : l'application est à la racine, donc il n'y a
+ni Root Directory à préciser ni variable d'environnement à définir en v1.
+Vercel détecte Next.js et construit tout seul ; chaque push redéploie ensuite
+automatiquement.
