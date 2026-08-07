@@ -48,15 +48,30 @@ Spécification consolidée à partir du QCM (réponses du 07/08/2026).
 │   ├── config.js            Noms, dates, événements, liens — tout le personnalisable
 │   ├── dict.js              Dictionnaire FR/EN/ΕΛ
 │   ├── i18n.js              Contexte de langue + sélecteur
-│   └── store.js             Couche données v1 (localStorage + seeds) → Supabase en v2
+│   ├── store.js             Bascule base ↔ mode démo, appels aux routes API
+│   ├── admin.js             État partagé de l'espace organisateurs
+│   └── db.js                Client Supabase, côté serveur uniquement
+├── app/api/                 Routes serveur (guest, public, admin, status)
 └── supabase/schema.sql      Schéma de la base (tables préfixées wedding_)
 ```
 
-## v1 (cette version) — mode démo
+## État actuel — v2, base partagée
 
-Toutes les pages et parcours fonctionnent, avec des données d'exemple stockées
-dans le navigateur (localStorage). Aucune dépendance externe : `npm install && npm run dev`.
-Foyers de démo : `/i/demo` (vierge), `/i/a7f2k9`, `/i/b3x8m1`… (voir `lib/store.js`).
+Les données vivent dans une base Supabase (tables préfixées `wedding_`,
+hébergées dans le projet `personal-hub`). Un invité répond depuis son
+téléphone, les organisateurs voient la réponse : c'est ce qui rend le site
+réellement utilisable.
+
+Le navigateur ne joint jamais la base directement. Les pages passent par les
+routes de `app/api/`, exécutées côté serveur avec la clé de service :
+`guest/[token]` limite lecture et écriture au foyer du jeton, `public` reçoit
+messages et photos, `admin` sert le tableau de bord après vérification du mot
+de passe. Les tables ont la sécurité au niveau des lignes activée sans
+politique, donc la clé publique ne donne accès à rien.
+
+Un **mode démo** prend le relais tant que les variables d'environnement sont
+absentes : les données restent alors dans le navigateur. Le site ne casse donc
+jamais pendant la configuration.
 
 Couvert en v1 : parcours RSVP complet, actualités publiées depuis l'espace
 organisateurs (trilingue, segment « tous » / « oui », email pré-rempli en copie
@@ -64,21 +79,24 @@ cachée, texte prêt pour WhatsApp), mur de photos des invités avec file de
 modération, ajout et import CSV de foyers, QR codes des liens personnels,
 export CSV des réponses.
 
-Limites assumées du mode démo : les données restent dans le navigateur de
-chacun (elles ne circulent donc pas entre invités et organisateurs), les photos
-sont réduites avant stockage, et l'envoi d'emails passe par votre messagerie.
-Ces trois limites disparaissent en v2/v3.
+Limites connues : les photos sont réduites côté navigateur puis stockées en
+base (Supabase Storage serait plus adapté au-delà de quelques centaines), et
+l'envoi d'emails passe encore par votre messagerie.
 
 ## Feuille de route
 
-- **v2 — Supabase** : provisionner le projet, appliquer `schema.sql`, remplacer
-  `lib/store.js` par des appels API (Edge Function vérifiant le token invité),
-  Supabase Auth (lien magique) + rôles pour `/admin`, import CSV des foyers.
 - **v3 — Emails** : service d'envoi (Resend), invitation groupée, relances
   automatiques J-30/J-14/J-7, envoi d'actualités segmenté (tous / les « oui »).
 - **v4 — Contenu & finitions** : vraie histoire + photos, traductions finales
   relues, liste d'hôtels recommandés, monogramme définitif, lien du groupe
   WhatsApp, mur de photos avec modération.
+
+## Reste à faire
+
+- Renseigner les variables d'environnement sur Vercel (voir README) pour
+  activer le mode base en production.
+- Saisir la vraie liste des foyers dans `/admin/invites`.
+- Remplacer les textes et photos par les vôtres.
 
 ## À fournir par les mariés
 
