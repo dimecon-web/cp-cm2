@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { config } from "@/lib/config";
-import { newsStore, photoStore, recipientsFor, shrinkImage } from "@/lib/store";
+import { useAdmin } from "@/lib/admin";
+import { shrinkImage } from "@/lib/store";
 
 const LANGS = [["fr", "Français"], ["en", "English"], ["el", "Ελληνικά"]];
 const EMPTY = {
@@ -12,33 +13,24 @@ const EMPTY = {
   body: { fr: "", en: "", el: "" },
 };
 
-// Diffusion des actualités (choix D1) : publication sur le site,
-// envoi email au segment choisi, message WhatsApp prêt à coller,
-// et modération des photos envoyées par les invités.
+// Diffusion des actualités : publication sur le site, envoi email au segment
+// choisi, message WhatsApp prêt à coller, et modération des photos d'invités.
 export default function AdminNewsPage() {
-  const [posts, setPosts] = useState([]);
-  const [pending, setPending] = useState([]);
+  const { data, act } = useAdmin();
+  const posts = data?.news || [];
+  const pending = (data?.photos || []).filter((p) => !p.approved);
+  const households = data?.households || [];
+
   const [draft, setDraft] = useState(EMPTY);
   const [tab, setTab] = useState("fr");
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    setPosts(newsStore.all());
-    setPending(photoStore.pending());
-  }, []);
-
-  const refresh = () => {
-    setPosts(newsStore.all());
-    setPending(photoStore.pending());
-  };
-
-  const publish = (e) => {
+  const publish = async (e) => {
     e.preventDefault();
     if (!draft.title.fr.trim()) return;
-    newsStore.add(draft);
+    await act({ action: "publishNews", ...draft });
     setDraft(EMPTY);
     setTab("fr");
-    refresh();
   };
 
   const onPhoto = async (e) => {
@@ -48,13 +40,15 @@ export default function AdminNewsPage() {
     setDraft((d) => ({ ...d, photo }));
   };
 
-  const remove = (id) => { newsStore.remove(id); refresh(); };
+  // Destinataires : tous les foyers, ou seulement ceux qui ont accepté.
+  const recipients = households
+    .filter((h) => (draft.audience === "yes" ? h.rsvp?.attending === "yes" : true))
+    .map((h) => h.rsvp?.email || h.email)
+    .filter(Boolean);
 
-  const recipients = recipientsFor(draft.audience);
   const plainText = `${draft.title.fr}\n\n${draft.body.fr}\n\n— ${config.coupleNames}`;
-
   const mailtoHref =
-    `mailto:?bcc=${recipients.map((r) => r.email).join(",")}` +
+    `mailto:?bcc=${recipients.join(",")}` +
     `&subject=${encodeURIComponent(draft.title.fr || "Des nouvelles du mariage")}` +
     `&body=${encodeURIComponent(plainText)}`;
 
@@ -68,8 +62,8 @@ export default function AdminNewsPage() {
     <>
       <h1>Actualités</h1>
       <p className="hint" style={{ marginBottom: 18 }}>
-        Une actualité publiée apparaît immédiatement sur le site des invités. Vous pouvez ensuite
-        l'envoyer par email au segment choisi, ou la copier pour le groupe WhatsApp.
+        Une actualité publiée apparaît immédiatement sur le site des invités. Vous pouvez
+        ensuite l'envoyer par email au segment choisi, ou la copier pour le groupe WhatsApp.
       </p>
 
       <form className="card" onSubmit={publish}>
@@ -93,9 +87,7 @@ export default function AdminNewsPage() {
           <span className="lbl">Texte ({tab.toUpperCase()})</span>
           <textarea rows={4} value={draft.body[tab]}
             onChange={(e) => setDraft({ ...draft, body: { ...draft.body, [tab]: e.target.value } })} />
-          <div className="hint">
-            Les langues laissées vides retombent sur le français.
-          </div>
+          <div className="hint">Les langues laissées vides retombent sur le français.</div>
         </label>
 
         <label className="field">
@@ -131,8 +123,7 @@ export default function AdminNewsPage() {
           </button>
         </div>
         <p className="hint" style={{ marginTop: 10, marginBottom: 0 }}>
-          En v1, l'email s'ouvre dans votre logiciel de messagerie avec les invités en copie cachée.
-          En v2, l'envoi partira directement du site (Resend), avec suivi des envois.
+          L'email s'ouvre dans votre logiciel de messagerie avec les invités en copie cachée.
         </p>
       </form>
 
@@ -148,14 +139,13 @@ export default function AdminNewsPage() {
               <figure key={p.id} style={{ margin: 0 }}>
                 <img src={p.dataUrl} alt="" style={{ width: "100%", borderRadius: 12, display: "block" }} />
                 <figcaption style={{ fontSize: 13 }}>
-                  <strong>{p.householdName}</strong>
-                  {p.caption ? ` — ${p.caption}` : ""}
+                  <strong>{p.householdName}</strong>{p.caption ? ` — ${p.caption}` : ""}
                 </figcaption>
                 <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-                  <button className="btn small" onClick={() => { photoStore.approve(p.id); refresh(); }}>
+                  <button className="btn small" onClick={() => act({ action: "approvePhoto", id: p.id })}>
                     ✓ Publier
                   </button>
-                  <button className="btn ghost small" onClick={() => { photoStore.remove(p.id); refresh(); }}>
+                  <button className="btn ghost small" onClick={() => act({ action: "removePhoto", id: p.id })}>
                     ✕ Refuser
                   </button>
                 </div>
@@ -177,7 +167,8 @@ export default function AdminNewsPage() {
                   {p.audience === "yes" ? "foyers « oui »" : "tous les foyers"}
                 </div>
               </div>
-              <button className="icon-btn" aria-label="Supprimer" onClick={() => remove(p.id)}>✕</button>
+              <button className="icon-btn" aria-label="Supprimer"
+                onClick={() => act({ action: "removeNews", id: p.id })}>✕</button>
             </div>
           </div>
         ))}

@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { config } from "@/lib/config";
 import { useT, usePick, useLang } from "@/lib/i18n";
-import { getHousehold, getRsvp, saveRsvp, emptyRsvp } from "@/lib/store";
+import { loadGuest, saveRsvp, emptyRsvp } from "@/lib/store";
 
 export default function RsvpPage() {
   const { token } = useParams();
@@ -14,10 +14,19 @@ export default function RsvpPage() {
   const [household, setHousehold] = useState(null);
   const [rsvp, setRsvp] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    setHousehold(getHousehold(token));
-    setRsvp(getRsvp(token) || emptyRsvp());
+    let cancelled = false;
+    loadGuest(token)
+      .then((data) => {
+        if (cancelled) return;
+        setHousehold(data.household);
+        setRsvp(data.rsvp || emptyRsvp());
+      })
+      .catch(() => { if (!cancelled) setRsvp(emptyRsvp()); });
+    return () => { cancelled = true; };
   }, [token]);
 
   if (!rsvp) return null;
@@ -30,34 +39,37 @@ export default function RsvpPage() {
 
   const set = (patch) => { setRsvp((r) => ({ ...r, ...patch })); setSaved(false); };
   const setParticipant = (i, patch) => {
-    setRsvp((r) => {
-      const participants = r.participants.map((p, j) => (j === i ? { ...p, ...patch } : p));
-      return { ...r, participants };
-    });
+    setRsvp((r) => ({ ...r, participants: r.participants.map((p, j) => (j === i ? { ...p, ...patch } : p)) }));
     setSaved(false);
   };
   const toggleEvent = (i, eventId) => {
-    setRsvp((r) => {
-      const participants = r.participants.map((p, j) =>
+    setRsvp((r) => ({
+      ...r,
+      participants: r.participants.map((p, j) =>
         j === i ? { ...p, events: { ...p.events, [eventId]: !p.events?.[eventId] } } : p
-      );
-      return { ...r, participants };
-    });
+      ),
+    }));
     setSaved(false);
   };
   const addParticipant = () => {
     const base = emptyRsvp().participants[0];
     set({ participants: [...rsvp.participants, { ...base, events: { ...base.events } }] });
   };
-  const removeParticipant = (i) => {
-    set({ participants: rsvp.participants.filter((_, j) => j !== i) });
-  };
+  const removeParticipant = (i) => set({ participants: rsvp.participants.filter((_, j) => j !== i) });
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    saveRsvp(token, rsvp);
-    setSaved(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setBusy(true);
+    setError("");
+    try {
+      await saveRsvp(token, rsvp);
+      setSaved(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      setError("L'enregistrement a échoué. Vérifiez votre connexion et réessayez.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -77,6 +89,7 @@ export default function RsvpPage() {
           {rsvp.attending === "no" ? t("rsvp.noMsg") : t("rsvp.saved")}
         </div>
       )}
+      {error && <div className="notice" role="alert">{error}</div>}
 
       <form onSubmit={submit}>
         <div className="card">
@@ -93,7 +106,7 @@ export default function RsvpPage() {
           </div>
         </div>
 
-        {/* Collecte d'email si absente du carnet (choix B3c) */}
+        {/* Demande d'email quand le carnet d'adresses ne l'a pas déjà */}
         {rsvp.attending && (!household || !household.email || rsvp.email) && (
           <div className="card">
             <label className="field">
@@ -235,8 +248,8 @@ export default function RsvpPage() {
         )}
 
         {rsvp.attending && !closed && (
-          <button className="btn" type="submit" style={{ width: "100%" }}>
-            {t("rsvp.save")}
+          <button className="btn" type="submit" style={{ width: "100%" }} disabled={busy}>
+            {busy ? "…" : t("rsvp.save")}
           </button>
         )}
       </form>

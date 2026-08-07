@@ -2,18 +2,34 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { getRole, setRole } from "@/lib/store";
+import { useState } from "react";
+import { AdminProvider, useAdmin } from "@/lib/admin";
+import { adminLogin, adminLogout, adminAction } from "@/lib/store";
 
-// Espace organisateurs (FR uniquement en v1).
-// En v2 : accès protégé par Supabase Auth (lien magique par email),
-// rôles 'couple' / 'organisateur' stockés en base. Ici : bascule de démo.
 export default function AdminLayout({ children }) {
-  const pathname = usePathname();
-  const [role, setRoleState] = useState("couple");
+  return (
+    <AdminProvider>
+      <AdminShell>{children}</AdminShell>
+    </AdminProvider>
+  );
+}
 
-  useEffect(() => { setRoleState(getRole()); }, []);
-  const switchRole = (r) => { setRole(r); setRoleState(r); };
+function AdminShell({ children }) {
+  const pathname = usePathname();
+  const { data, mode, loading, reload } = useAdmin();
+
+  if (loading) {
+    return (
+      <main className="page">
+        <div className="wrap"><p className="hint">Chargement…</p></div>
+      </main>
+    );
+  }
+
+  // Mode serveur sans session valide : on demande le mot de passe.
+  if (mode?.configured && !data?.role) {
+    return <LoginScreen adminEnabled={mode.adminEnabled} onSuccess={reload} />;
+  }
 
   const links = [
     ["/admin", "Tableau de bord"],
@@ -38,27 +54,91 @@ export default function AdminLayout({ children }) {
               </Link>
             ))}
           </nav>
-          <div className="role-switch">
-            <span>Rôle :</span>
-            <button className={role === "couple" ? "active" : ""} onClick={() => switchRole("couple")}>
-              Mariés
-            </button>
-            <button className={role === "organisateur" ? "active" : ""} onClick={() => switchRole("organisateur")}>
-              Organisateur
-            </button>
-          </div>
+          <RoleControls />
         </div>
       </header>
       <main className="page">
         <div className="wrap">
-          <div className="notice">
-            🔧 <strong>Mode démo</strong> — données d'exemple stockées dans ce navigateur.
-            En production, cet espace sera protégé par une connexion (lien magique par email)
-            et les données vivront dans Supabase.
-          </div>
+          {data?.demo && (
+            <div className="notice">
+              🔧 <strong>Mode démo</strong> — la base n'est pas configurée : ces données
+              d'exemple restent dans ce navigateur. Ajoutez les variables d'environnement
+              sur Vercel pour basculer sur la base partagée.
+            </div>
+          )}
           {children}
         </div>
       </main>
     </>
+  );
+}
+
+function RoleControls() {
+  const { data, mode, reload, act } = useAdmin();
+
+  // En mode démo, on garde la bascule de rôle pour pouvoir tout essayer.
+  if (!mode?.configured) {
+    return (
+      <div className="role-switch">
+        <span>Rôle :</span>
+        <button className={data?.role === "couple" ? "active" : ""}
+          onClick={() => act({ action: "setRole", role: "couple" })}>
+          Mariés
+        </button>
+        <button className={data?.role === "organisateur" ? "active" : ""}
+          onClick={() => act({ action: "setRole", role: "organisateur" })}>
+          Organisateur
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="role-switch">
+      <span>{data?.role === "couple" ? "Mariés" : "Organisateur"}</span>
+      <button onClick={async () => { await adminLogout(); reload(); }}>Se déconnecter</button>
+    </div>
+  );
+}
+
+function LoginScreen({ adminEnabled, onSuccess }) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    const role = await adminLogin(password);
+    setBusy(false);
+    if (role) onSuccess();
+    else setError("Mot de passe incorrect.");
+  };
+
+  return (
+    <div className="landing">
+      <h1>Espace organisateurs</h1>
+      {adminEnabled ? (
+        <>
+          <p style={{ color: "var(--muted)", maxWidth: "40ch" }}>
+            Cet espace est réservé aux mariés et à leurs témoins.
+          </p>
+          <form onSubmit={submit} style={{ display: "flex", gap: 10, width: "min(360px, 100%)" }}>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+              placeholder="Mot de passe" aria-label="Mot de passe" autoFocus />
+            <button className="btn" type="submit" disabled={busy}>{busy ? "…" : "Entrer"}</button>
+          </form>
+          {error && <p style={{ color: "var(--danger)", fontSize: 14, marginTop: 10 }}>{error}</p>}
+        </>
+      ) : (
+        <p style={{ color: "var(--muted)", maxWidth: "44ch" }}>
+          Aucun mot de passe n'est défini pour l'espace organisateurs. Ajoutez la variable
+          d'environnement <code>ADMIN_PASSWORD</code> (et éventuellement <code>COUPLE_PASSWORD</code>
+          pour l'accès au budget) dans les réglages Vercel, puis rechargez cette page.
+        </p>
+      )}
+      <p style={{ marginTop: 30, fontSize: 13 }}><Link href="/">Retour à l'accueil</Link></p>
+    </div>
   );
 }

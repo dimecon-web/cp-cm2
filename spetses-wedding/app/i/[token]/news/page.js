@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useT, usePick, useLang } from "@/lib/i18n";
-import { newsForHousehold, photoStore, shrinkImage, getHousehold } from "@/lib/store";
+import { loadGuest, submitPhoto, shrinkImage } from "@/lib/store";
 
 export default function NewsPage() {
   const { token } = useParams();
@@ -17,30 +17,40 @@ export default function NewsPage() {
   const [photo, setPhoto] = useState(null);
   const [caption, setCaption] = useState("");
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    setPosts(newsForHousehold(token));
-    setWall(photoStore.approved());
-  }, [token]);
+  const refresh = () =>
+    loadGuest(token)
+      .then(({ news, photos }) => { setPosts(news); setWall(photos); })
+      .catch(() => {});
+
+  useEffect(() => { refresh(); }, [token]);
 
   const onFile = async (e) => {
     const file = e.target.files?.[0];
-    if (file) { setPhoto(await shrinkImage(file)); setSent(false); }
+    if (!file) return;
+    setPhoto(await shrinkImage(file));
+    setSent(false);
+    setError("");
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     if (!photo) return;
-    photoStore.submit({
-      token,
-      householdName: getHousehold(token)?.name || "",
-      caption,
-      dataUrl: photo,
-    });
-    setPhoto(null);
-    setCaption("");
-    setSent(true);
-    e.target.reset();
+    setBusy(true);
+    try {
+      await submitPhoto(token, { dataUrl: photo, caption });
+      setPhoto(null);
+      setCaption("");
+      setSent(true);
+      e.target.reset();
+      refresh();
+    } catch {
+      setError("L'envoi a échoué. Réessayez avec une photo plus légère.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -78,6 +88,7 @@ export default function NewsPage() {
       )}
 
       {sent && <div className="notice ok" role="status">{t("news.submitted")}</div>}
+      {error && <div className="notice" role="alert">{error}</div>}
 
       <form className="card" onSubmit={submit}>
         <label className="field">
@@ -89,7 +100,9 @@ export default function NewsPage() {
           <span className="lbl">{t("news.caption")}</span>
           <input type="text" value={caption} onChange={(e) => setCaption(e.target.value)} />
         </label>
-        <button className="btn" type="submit">{t("news.submit")}</button>
+        <button className="btn" type="submit" disabled={busy}>
+          {busy ? "…" : t("news.submit")}
+        </button>
       </form>
     </div>
   );

@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { config } from "@/lib/config";
 import { useT, LangSwitcher } from "@/lib/i18n";
-import { getHousehold } from "@/lib/store";
-import { useEffect, useState } from "react";
+import { loadGuest } from "@/lib/store";
 
 export default function GuestLayout({ children }) {
   const { token } = useParams();
@@ -14,7 +14,11 @@ export default function GuestLayout({ children }) {
   const [household, setHousehold] = useState(undefined);
 
   useEffect(() => {
-    setHousehold(getHousehold(token));
+    let cancelled = false;
+    loadGuest(token)
+      .then((data) => { if (!cancelled) setHousehold(data.household); })
+      .catch(() => { if (!cancelled) setHousehold(undefined); });
+    return () => { cancelled = true; };
   }, [token]);
 
   if (household === null) {

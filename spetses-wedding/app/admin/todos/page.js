@@ -1,47 +1,71 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { todoStore } from "@/lib/store";
+import { useAdmin } from "@/lib/admin";
 
-// To-dos : qui fait quoi, pour quand (choix F1c).
+// To-dos : qui fait quoi, pour quand.
 export default function TodosPage() {
+  const { data, act } = useAdmin();
   const [items, setItems] = useState([]);
+  const [dirty, setDirty] = useState(false);
   const [draft, setDraft] = useState({ label: "", who: "", due: "" });
 
-  useEffect(() => { setItems(todoStore.all()); }, []);
+  useEffect(() => {
+    if (data?.todos) setItems(data.todos.map((it) => ({ ...it })));
+  }, [data?.todos]);
 
-  const save = (next) => { setItems(next); todoStore.save(next); };
-  const toggle = (id) => save(items.map((it) => (it.id === id ? { ...it, done: !it.done } : it)));
-  const remove = (id) => save(items.filter((it) => it.id !== id));
+  const toggle = (i) => {
+    setItems(items.map((it, j) => (j === i ? { ...it, done: !it.done } : it)));
+    setDirty(true);
+  };
+  const remove = (i) => { setItems(items.filter((_, j) => j !== i)); setDirty(true); };
   const add = (e) => {
     e.preventDefault();
-    if (!draft.label) return;
-    save([...items, { id: Date.now(), ...draft, done: false }]);
+    if (!draft.label.trim()) return;
+    setItems([...items, { ...draft, done: false }]);
     setDraft({ label: "", who: "", due: "" });
+    setDirty(true);
+  };
+  const save = async () => {
+    await act({ action: "saveList", list: "todos", items });
+    setDirty(false);
   };
 
-  const sorted = [...items].sort((a, b) => (a.done === b.done ? (a.due || "9999") < (b.due || "9999") ? -1 : 1 : a.done ? 1 : -1));
+  const order = [...items.keys()].sort((a, b) => {
+    const x = items[a], y = items[b];
+    if (x.done !== y.done) return x.done ? 1 : -1;
+    return (x.due || "9999") < (y.due || "9999") ? -1 : 1;
+  });
 
   return (
     <>
-      <h1>To-dos</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+        <h1 style={{ marginBottom: 10 }}>To-dos</h1>
+        <button className="btn small" onClick={save} disabled={!dirty}>
+          {dirty ? "Enregistrer" : "✓ À jour"}
+        </button>
+      </div>
+
       <div className="card">
-        {sorted.map((it) => (
-          <div className="check-row" key={it.id}
-            style={{ padding: "9px 0", borderBottom: "1px solid var(--line)", opacity: it.done ? 0.5 : 1 }}>
-            <input type="checkbox" checked={it.done} onChange={() => toggle(it.id)} id={`todo-${it.id}`} />
-            <label htmlFor={`todo-${it.id}`} style={{ flex: 1, cursor: "pointer", textDecoration: it.done ? "line-through" : "none" }}>
-              {it.label}
-            </label>
-            {it.who && <span className="badge sea">{it.who}</span>}
-            {it.due && (
-              <span className="badge grey">
-                {new Date(it.due + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
-              </span>
-            )}
-            <button className="icon-btn" aria-label="Supprimer" onClick={() => remove(it.id)}>✕</button>
-          </div>
-        ))}
+        {order.map((i) => {
+          const it = items[i];
+          return (
+            <div className="check-row" key={i}
+              style={{ padding: "9px 0", borderBottom: "1px solid var(--line)", opacity: it.done ? 0.5 : 1 }}>
+              <input type="checkbox" checked={it.done} onChange={() => toggle(i)} id={`todo-${i}`} />
+              <label htmlFor={`todo-${i}`} style={{ flex: 1, cursor: "pointer", textDecoration: it.done ? "line-through" : "none" }}>
+                {it.label}
+              </label>
+              {it.who && <span className="badge sea">{it.who}</span>}
+              {it.due && (
+                <span className="badge grey">
+                  {new Date(it.due + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                </span>
+              )}
+              <button className="icon-btn" aria-label="Supprimer" onClick={() => remove(i)}>✕</button>
+            </div>
+          );
+        })}
         <form onSubmit={add} style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
           <input type="text" placeholder="Nouvelle tâche…" value={draft.label} style={{ flex: 2, minWidth: 160 }}
             onChange={(e) => setDraft({ ...draft, label: e.target.value })} />

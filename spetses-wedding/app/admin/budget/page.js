@@ -1,38 +1,46 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { budgetStore, getRole } from "@/lib/store";
+import { useAdmin } from "@/lib/admin";
 
-// Budget — visible uniquement par les mariés (choix F2b).
+// Budget — réservé au rôle « mariés ». En mode serveur, le budget ne quitte
+// même pas la base pour les autres organisateurs.
 export default function BudgetPage() {
-  const [role, setRole] = useState("couple");
+  const { data, act } = useAdmin();
   const [items, setItems] = useState([]);
-  const [draft, setDraft] = useState({ label: "", planned: "", due: "" });
+  const [dirty, setDirty] = useState(false);
+  const [draft, setDraft] = useState({ label: "", planned: "" });
 
   useEffect(() => {
-    setRole(getRole());
-    setItems(budgetStore.all());
-  }, []);
+    if (data?.budget) setItems(data.budget.map((it) => ({ ...it })));
+  }, [data?.budget]);
 
-  if (role !== "couple") {
+  if (data && data.role !== "couple") {
     return (
       <div className="card" style={{ textAlign: "center", padding: 40 }}>
         <h2>🔒 Réservé aux mariés</h2>
         <p className="hint" style={{ marginBottom: 0 }}>
-          Le budget n'est visible que par les mariés. Basculez le rôle en haut à droite pour la démo.
+          Le budget n'est visible que par les mariés.
         </p>
       </div>
     );
   }
 
-  const save = (next) => { setItems(next); budgetStore.save(next); };
-  const update = (id, patch) => save(items.map((it) => (it.id === id ? { ...it, ...patch } : it)));
-  const remove = (id) => save(items.filter((it) => it.id !== id));
+  const update = (i, patch) => {
+    setItems(items.map((it, j) => (j === i ? { ...it, ...patch } : it)));
+    setDirty(true);
+  };
+  const remove = (i) => { setItems(items.filter((_, j) => j !== i)); setDirty(true); };
   const add = (e) => {
     e.preventDefault();
-    if (!draft.label) return;
-    save([...items, { id: Date.now(), label: draft.label, planned: Number(draft.planned) || 0, actual: 0, deposit: 0, due: draft.due }]);
-    setDraft({ label: "", planned: "", due: "" });
+    if (!draft.label.trim()) return;
+    setItems([...items, { label: draft.label, planned: Number(draft.planned) || 0, actual: 0, deposit: 0, due: null }]);
+    setDraft({ label: "", planned: "" });
+    setDirty(true);
+  };
+  const save = async () => {
+    await act({ action: "saveList", list: "budget", items });
+    setDirty(false);
   };
 
   const sum = (key) => items.reduce((acc, it) => acc + (Number(it[key]) || 0), 0);
@@ -40,7 +48,13 @@ export default function BudgetPage() {
 
   return (
     <>
-      <h1>Budget</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+        <h1 style={{ marginBottom: 10 }}>Budget</h1>
+        <button className="btn small" onClick={save} disabled={!dirty}>
+          {dirty ? "Enregistrer" : "✓ À jour"}
+        </button>
+      </div>
+
       <div className="stats-row">
         <div className="stat sea"><div className="num">{fmt(sum("planned"))}</div><div className="lbl">prévu</div></div>
         <div className="stat bougain"><div className="num">{fmt(sum("actual"))}</div><div className="lbl">réel</div></div>
@@ -57,24 +71,24 @@ export default function BudgetPage() {
               </tr>
             </thead>
             <tbody>
-              {items.map((it) => (
-                <tr key={it.id}>
-                  <td>{it.label}</td>
-                  <td className="num" style={{ width: 110 }}>
-                    <input type="number" value={it.planned} onChange={(e) => update(it.id, { planned: e.target.value })} />
+              {items.map((it, i) => (
+                <tr key={i}>
+                  <td>
+                    <input type="text" value={it.label} onChange={(e) => update(i, { label: e.target.value })} />
                   </td>
                   <td className="num" style={{ width: 110 }}>
-                    <input type="number" value={it.actual} onChange={(e) => update(it.id, { actual: e.target.value })} />
+                    <input type="number" value={it.planned} onChange={(e) => update(i, { planned: e.target.value })} />
                   </td>
                   <td className="num" style={{ width: 110 }}>
-                    <input type="number" value={it.deposit} onChange={(e) => update(it.id, { deposit: e.target.value })} />
+                    <input type="number" value={it.actual} onChange={(e) => update(i, { actual: e.target.value })} />
+                  </td>
+                  <td className="num" style={{ width: 110 }}>
+                    <input type="number" value={it.deposit} onChange={(e) => update(i, { deposit: e.target.value })} />
                   </td>
                   <td style={{ width: 150 }}>
-                    <input type="date" value={it.due} onChange={(e) => update(it.id, { due: e.target.value })} />
+                    <input type="date" value={it.due || ""} onChange={(e) => update(i, { due: e.target.value })} />
                   </td>
-                  <td>
-                    <button className="icon-btn" aria-label="Supprimer" onClick={() => remove(it.id)}>✕</button>
-                  </td>
+                  <td><button className="icon-btn" aria-label="Supprimer" onClick={() => remove(i)}>✕</button></td>
                 </tr>
               ))}
             </tbody>

@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { config } from "@/lib/config";
 import { useT, usePick, useLang } from "@/lib/i18n";
-import { getHousehold, getRsvp } from "@/lib/store";
+import { loadGuest } from "@/lib/store";
 
 export default function GuestHome() {
   const { token } = useParams();
@@ -17,10 +17,17 @@ export default function GuestHome() {
   const [days, setDays] = useState(null);
 
   useEffect(() => {
-    setHousehold(getHousehold(token));
-    setHasRsvp(!!getRsvp(token));
+    let cancelled = false;
+    loadGuest(token)
+      .then(({ household, rsvp }) => {
+        if (cancelled) return;
+        setHousehold(household);
+        setHasRsvp(Boolean(rsvp?.attending));
+      })
+      .catch(() => {});
     const diff = new Date(config.weddingDate) - new Date();
     setDays(Math.max(0, Math.ceil(diff / 86400000)));
+    return () => { cancelled = true; };
   }, [token]);
 
   const locale = lang === "en" ? "en-GB" : lang === "el" ? "el-GR" : "fr-FR";

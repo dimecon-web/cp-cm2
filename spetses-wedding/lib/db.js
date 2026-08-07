@@ -1,0 +1,76 @@
+import "server-only";
+import { createClient } from "@supabase/supabase-js";
+
+// Accès à la base, exclusivement côté serveur.
+// La clé de service ne quitte jamais le serveur : les pages appellent les
+// routes de app/api/, qui vérifient le jeton du foyer ou le mot de passe
+// organisateur avant de toucher aux données.
+
+const url = process.env.SUPABASE_URL;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+export const isConfigured = Boolean(url && serviceKey);
+
+export const db = isConfigured
+  ? createClient(url, serviceKey, { auth: { persistSession: false } })
+  : null;
+
+// Mots de passe de l'espace organisateurs. Deux rôles : « couple » voit le
+// budget, « organisateur » non. Si COUPLE_PASSWORD n'est pas défini, seul le
+// rôle organisateur existe.
+export function checkPassword(password) {
+  if (!password) return null;
+  const couple = process.env.COUPLE_PASSWORD;
+  const organiser = process.env.ADMIN_PASSWORD;
+  if (couple && password === couple) return "couple";
+  if (organiser && password === organiser) return "organisateur";
+  return null;
+}
+
+export const adminEnabled = Boolean(process.env.ADMIN_PASSWORD || process.env.COUPLE_PASSWORD);
+
+// Conversions entre le format de la base (colonnes) et celui de l'application.
+export function rowToRsvp(rsvp, participants) {
+  return {
+    attending: rsvp?.attending ?? null,
+    email: rsvp?.email ?? "",
+    arrival: rsvp?.arrival ?? "",
+    departure: rsvp?.departure ?? "",
+    transport: rsvp?.transport ?? "",
+    accommodation: rsvp?.accommodation ?? "",
+    notes: rsvp?.notes ?? "",
+    updatedAt: rsvp?.updated_at ?? null,
+    participants: (participants || [])
+      .sort((a, b) => a.position - b.position)
+      .map((p) => ({
+        name: p.name,
+        type: p.type,
+        age: p.age == null ? "" : String(p.age),
+        diet: p.diet,
+        dietNote: p.diet_note ?? "",
+        events: p.events || {},
+      })),
+  };
+}
+
+export function rowToNews(row) {
+  return {
+    id: row.id,
+    date: (row.published_at || "").slice(0, 10),
+    audience: row.audience,
+    photo: row.photo_url,
+    title: row.title,
+    body: row.body,
+  };
+}
+
+export function rowToPhoto(row, householdName = "") {
+  return {
+    id: row.id,
+    caption: row.caption ?? "",
+    dataUrl: row.url,
+    approved: row.approved,
+    date: row.created_at,
+    householdName,
+  };
+}

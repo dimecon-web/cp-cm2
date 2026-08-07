@@ -1,8 +1,15 @@
 "use client";
 
-// Couche de données v1 (mode démo) : localStorage + données seed.
-// En v2, ces fonctions seront remplacées par des appels Supabase
-// (même signatures — voir supabase/schema.sql pour le modèle cible).
+// Couche de données du navigateur.
+//
+// Deux modes, choisis automatiquement au premier appel :
+//   • mode serveur — les variables SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY
+//     sont configurées : tout passe par les routes de app/api/, donc par la
+//     base partagée. C'est le mode réel, celui qui permet à un invité de
+//     répondre depuis son téléphone et aux organisateurs de le voir.
+//   • mode démo — aucune variable configurée : les données restent dans le
+//     navigateur (localStorage), avec des exemples. Le site reste navigable,
+//     ce qui évite qu'il casse tant que la configuration n'est pas faite.
 
 import { EVENT_IDS } from "./config";
 
@@ -22,21 +29,28 @@ const ls = {
   },
 };
 
-// ---------- Foyers invités (seed démo) ----------
-// En production : table `households`, un token unique par foyer.
+// ---------- Détection du mode (une seule requête, mise en cache) ----------
+let modePromise = null;
 
+export function getMode() {
+  if (!modePromise) {
+    modePromise = fetch("/api/status")
+      .then((r) => r.json())
+      .catch(() => ({ configured: false, adminEnabled: false }));
+  }
+  return modePromise;
+}
+
+// ---------- Données d'exemple du mode démo ----------
 export const SEED_HOUSEHOLDS = [
   { token: "demo", name: "Famille Démo", email: "", phone: "", lang: "fr" },
   { token: "a7f2k9", name: "Sophie & Marc Durand", email: "sophie.durand@example.com", phone: "+33600000001", lang: "fr" },
   { token: "b3x8m1", name: "The Wilson family", email: "wilsons@example.com", phone: "+44700000002", lang: "en" },
   { token: "c9p4t6", name: "Οικογένεια Παπαδόπουλου", email: "", phone: "+30690000003", lang: "el" },
   { token: "d5r2w8", name: "Léa Martin", email: "lea.martin@example.com", phone: "", lang: "fr" },
-  { token: "e1q7z3", name: "Famille Ben Salah", email: "bensalah@example.com", phone: "+33600000005", lang: "fr" },
-  { token: "f8n3v5", name: "Anna & Jens Müller", email: "", phone: "+49150000006", lang: "en" },
   { token: "g4h9j2", name: "Nikos & Eleni", email: "nikos.eleni@example.com", phone: "+30690000007", lang: "el" },
 ];
 
-// Réponses RSVP simulées pour rendre le tableau de bord parlant.
 const SEED_RSVPS = {
   a7f2k9: {
     attending: "yes",
@@ -46,12 +60,8 @@ const SEED_RSVPS = {
       { name: "Marc Durand", type: "adult", age: "", diet: "none", dietNote: "", events: { party: true, tour: false, wedding: true, brunch: true } },
       { name: "Jules Durand", type: "child", age: "7", diet: "allergy", dietNote: "Arachides (grave)", events: { party: false, tour: false, wedding: true, brunch: true } },
     ],
-    arrival: "2027-07-07",
-    departure: "2027-07-12",
-    transport: "plane",
-    accommodation: "booked",
-    notes: "On a trop hâte !",
-    updatedAt: "2026-07-20T10:00:00Z",
+    arrival: "2027-07-07", departure: "2027-07-12", transport: "plane",
+    accommodation: "booked", notes: "On a trop hâte !", updatedAt: "2026-07-20T10:00:00Z",
   },
   b3x8m1: {
     attending: "yes",
@@ -60,128 +70,19 @@ const SEED_RSVPS = {
       { name: "Emma Wilson", type: "adult", age: "", diet: "veg", dietNote: "", events: { party: true, tour: true, wedding: true, brunch: false } },
       { name: "James Wilson", type: "adult", age: "", diet: "none", dietNote: "", events: { party: true, tour: true, wedding: true, brunch: false } },
     ],
-    arrival: "2027-07-08",
-    departure: "2027-07-11",
-    transport: "plane",
-    accommodation: "searching",
-    notes: "",
-    updatedAt: "2026-07-25T09:00:00Z",
+    arrival: "2027-07-08", departure: "2027-07-11", transport: "plane",
+    accommodation: "searching", notes: "", updatedAt: "2026-07-25T09:00:00Z",
   },
   d5r2w8: {
-    attending: "no",
-    email: "lea.martin@example.com",
-    participants: [],
-    arrival: "",
-    departure: "",
-    transport: "",
-    accommodation: "",
-    notes: "Je serai à l'étranger, pardon…",
-    updatedAt: "2026-07-22T18:30:00Z",
-  },
-  g4h9j2: {
-    attending: "yes",
-    email: "nikos.eleni@example.com",
-    participants: [
-      { name: "Nikos K.", type: "adult", age: "", diet: "none", dietNote: "", events: { party: true, tour: false, wedding: true, brunch: true } },
-      { name: "Eleni K.", type: "adult", age: "", diet: "none", dietNote: "", events: { party: true, tour: false, wedding: true, brunch: true } },
-    ],
-    arrival: "2027-07-09",
-    departure: "2027-07-11",
-    transport: "ferry",
-    accommodation: "booked",
-    notes: "",
-    updatedAt: "2026-08-01T12:00:00Z",
+    attending: "no", email: "lea.martin@example.com", participants: [],
+    arrival: "", departure: "", transport: "", accommodation: "",
+    notes: "Je serai à l'étranger, pardon…", updatedAt: "2026-07-22T18:30:00Z",
   },
 };
 
-export function getHousehold(token) {
-  const extras = ls.get("sw:households", []);
-  return [...SEED_HOUSEHOLDS, ...extras].find((h) => h.token === token) || null;
-}
-
-export function getAllHouseholds() {
-  const extras = ls.get("sw:households", []);
-  return [...SEED_HOUSEHOLDS, ...extras];
-}
-
-// Token court, sans caractères ambigus (0/O, 1/l) — il finit sur un faire-part.
-export function makeToken() {
-  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
-  let token;
-  do {
-    token = Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
-  } while (getHousehold(token));
-  return token;
-}
-
-export function addHousehold({ name, email = "", phone = "", lang = "fr" }) {
-  const household = { token: makeToken(), name, email, phone, lang };
-  ls.set("sw:households", [...ls.get("sw:households", []), household]);
-  return household;
-}
-
-// Import CSV : « nom,email,téléphone,langue » — une ligne par foyer,
-// en-tête optionnel. Renvoie les foyers créés.
-export function importHouseholdsCsv(text) {
-  const created = [];
-  for (const rawLine of text.split(/\r?\n/)) {
-    const line = rawLine.trim();
-    if (!line) continue;
-    const [name, email = "", phone = "", lang = "fr"] = line
-      .split(/[,;]/)
-      .map((c) => c.trim().replace(/^"|"$/g, ""));
-    if (!name || /^(nom|name)$/i.test(name)) continue;
-    created.push(addHousehold({ name, email, phone, lang: ["fr", "en", "el"].includes(lang) ? lang : "fr" }));
-  }
-  return created;
-}
-
-export function removeHousehold(token) {
-  ls.set("sw:households", ls.get("sw:households", []).filter((h) => h.token !== token));
-}
-
-// Destinataires d'un envoi d'actualité (choix D1b) : tous, ou seulement les « oui ».
-export function recipientsFor(audience) {
-  return getAllHouseholds()
-    .filter((h) => {
-      if (audience !== "yes") return true;
-      return getRsvp(h.token)?.attending === "yes";
-    })
-    .map((h) => ({ ...h, email: getRsvp(h.token)?.email || h.email }))
-    .filter((h) => h.email);
-}
-
-export function emptyRsvp() {
-  const events = Object.fromEntries(EVENT_IDS.map((id) => [id, id === "wedding"]));
-  return {
-    attending: null,
-    email: "",
-    participants: [{ name: "", type: "adult", age: "", diet: "none", dietNote: "", events: { ...events } }],
-    arrival: "",
-    departure: "",
-    transport: "",
-    accommodation: "",
-    notes: "",
-    updatedAt: null,
-  };
-}
-
-export function getRsvp(token) {
-  return ls.get(`sw:rsvp:${token}`, SEED_RSVPS[token] || null);
-}
-
-export function saveRsvp(token, rsvp) {
-  ls.set(`sw:rsvp:${token}`, { ...rsvp, updatedAt: new Date().toISOString() });
-}
-
-// ---------- Actualités (choix D1) ----------
-// audience : 'all' = tous les foyers, 'yes' = seulement ceux qui ont dit oui.
-export const SEED_NEWS = [
+const SEED_NEWS = [
   {
-    id: 1,
-    date: "2026-07-01",
-    audience: "all",
-    photo: null,
+    id: 1, date: "2026-07-01", audience: "all", photo: null,
     title: { fr: "Le site est ouvert !", en: "The website is live!", el: "Η ιστοσελίδα άνοιξε!" },
     body: {
       fr: "Bienvenue sur notre site de mariage. Première mission : répondez au RSVP, ça nous aide énormément pour la suite.",
@@ -189,64 +90,235 @@ export const SEED_NEWS = [
       el: "Καλώς ήρθατε στην ιστοσελίδα του γάμου μας. Πρώτη αποστολή: απαντήστε στο RSVP!",
     },
   },
-  {
-    id: 2,
-    date: "2026-08-01",
-    audience: "all",
-    photo: null,
-    title: { fr: "Pensez aux ferries", en: "Think about ferries", el: "Σκεφτείτε τα πλοία" },
-    body: {
-      fr: "Les billets de ferry Le Pirée → Spetses s'ouvrent à la réservation environ 3 mois avant. On vous fera signe au bon moment.",
-      en: "Piraeus → Spetses ferry tickets open for booking about 3 months ahead. We'll nudge you at the right time.",
-      el: "Τα εισιτήρια Πειραιάς → Σπέτσες ανοίγουν περίπου 3 μήνες πριν. Θα σας ειδοποιήσουμε.",
-    },
-  },
 ];
 
-export const newsStore = {
-  all: () => ls.get("sw:news", SEED_NEWS),
-  save: (items) => ls.set("sw:news", items),
-  add(post) {
-    const all = this.all();
-    this.save([{ ...post, id: Date.now(), date: new Date().toISOString().slice(0, 10) }, ...all]);
-  },
-  remove(id) {
-    this.save(this.all().filter((p) => p.id !== id));
-  },
-};
+const SEED_TODOS = [
+  { id: 1, label: "Confirmer le lieu de réception", who: "Les mariés", due: "2026-10-15", done: false },
+  { id: 2, label: "Établir la liste complète des invités", who: "Les mariés", due: "2026-10-31", done: false },
+  { id: 3, label: "Liste d'hôtels à recommander aux invités", who: "Témoins", due: "2026-11-30", done: false },
+];
 
-// Actualités visibles par un foyer donné (filtre d'audience).
-export function newsForHousehold(token) {
-  const rsvp = getRsvp(token);
-  return newsStore
-    .all()
-    .filter((p) => p.audience !== "yes" || rsvp?.attending === "yes")
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
+const SEED_BUDGET = [
+  { id: 1, label: "Lieu de réception", planned: 12000, actual: 0, deposit: 0, due: "2026-12-01" },
+  { id: 2, label: "Traiteur", planned: 9000, actual: 0, deposit: 0, due: "2027-02-01" },
+  { id: 3, label: "Photographe", planned: 2500, actual: 0, deposit: 0, due: "2027-03-01" },
+];
+
+const SEED_SUPPLIERS = [
+  { id: 1, name: "Poseidonion Grand Hotel", role: "Lieu / hébergement", phone: "+30 22980 74553", email: "", notes: "Devis demandé pour la réception." },
+];
+
+// ---------- Formulaire RSVP vierge ----------
+export function emptyRsvp() {
+  const events = Object.fromEntries(EVENT_IDS.map((id) => [id, id === "wedding"]));
+  return {
+    attending: null,
+    email: "",
+    participants: [{ name: "", type: "adult", age: "", diet: "none", dietNote: "", events: { ...events } }],
+    arrival: "", departure: "", transport: "", accommodation: "", notes: "", updatedAt: null,
+  };
 }
 
-// ---------- Mur de photos des invités, avec modération (choix D1d) ----------
-export const photoStore = {
-  all: () => ls.get("sw:photos", []),
-  save: (items) => ls.set("sw:photos", items),
-  approved() {
-    return this.all().filter((p) => p.approved).sort((a, b) => (a.date < b.date ? 1 : -1));
-  },
-  pending() {
-    return this.all().filter((p) => !p.approved);
-  },
-  submit(photo) {
-    this.save([{ ...photo, id: Date.now(), date: new Date().toISOString(), approved: false }, ...this.all()]);
-  },
-  approve(id) {
-    this.save(this.all().map((p) => (p.id === id ? { ...p, approved: true } : p)));
-  },
-  remove(id) {
-    this.save(this.all().filter((p) => p.id !== id));
-  },
-};
+// ---------- Espace invité ----------
+// Renvoie tout ce dont les pages invité ont besoin : le foyer, sa réponse,
+// les actualités qui lui sont destinées et le mur de photos validées.
+export async function loadGuest(token) {
+  const { configured } = await getMode();
 
-// Réduit une image choisie par l'invité avant stockage (démo : localStorage).
-// En v2, l'upload ira dans Supabase Storage sans cette contrainte de taille.
+  if (configured) {
+    const res = await fetch(`/api/guest/${encodeURIComponent(token)}`);
+    if (res.status === 404) return { household: null, rsvp: null, news: [], photos: [] };
+    if (!res.ok) throw new Error("guest_load_failed");
+    return res.json();
+  }
+
+  const extras = ls.get("sw:households", []);
+  const household = [...SEED_HOUSEHOLDS, ...extras].find((h) => h.token === token) || null;
+  const rsvp = ls.get(`sw:rsvp:${token}`, SEED_RSVPS[token] || null);
+  const news = ls
+    .get("sw:news", SEED_NEWS)
+    .filter((n) => n.audience !== "yes" || rsvp?.attending === "yes")
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
+  const photos = ls.get("sw:photos", []).filter((p) => p.approved);
+  return { household, rsvp, news, photos };
+}
+
+export async function saveRsvp(token, rsvp) {
+  const { configured } = await getMode();
+  if (configured) {
+    const res = await fetch(`/api/guest/${encodeURIComponent(token)}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(rsvp),
+    });
+    if (!res.ok) throw new Error("rsvp_save_failed");
+    return;
+  }
+  ls.set(`sw:rsvp:${token}`, { ...rsvp, updatedAt: new Date().toISOString() });
+}
+
+export async function submitPhoto(token, { dataUrl, caption }) {
+  const { configured } = await getMode();
+  if (configured) {
+    const res = await fetch("/api/public", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "photo", token, dataUrl, caption }),
+    });
+    if (!res.ok) throw new Error("photo_failed");
+    return;
+  }
+  const all = ls.get("sw:photos", []);
+  const household = [...SEED_HOUSEHOLDS, ...ls.get("sw:households", [])].find((h) => h.token === token);
+  all.unshift({
+    id: Date.now(), dataUrl, caption, approved: false,
+    date: new Date().toISOString(), householdName: household?.name || "",
+  });
+  ls.set("sw:photos", all);
+}
+
+export async function sendMessage(token, { name, email, message }) {
+  const { configured } = await getMode();
+  if (configured) {
+    const res = await fetch("/api/public", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "contact", token, name, email, message }),
+    });
+    if (!res.ok) throw new Error("message_failed");
+    return;
+  }
+  const all = ls.get("sw:messages", []);
+  const household = [...SEED_HOUSEHOLDS, ...ls.get("sw:households", [])].find((h) => h.token === token);
+  all.unshift({
+    id: Date.now(), name, email, message,
+    date: new Date().toISOString(), householdName: household?.name || "",
+  });
+  ls.set("sw:messages", all);
+}
+
+// ---------- Espace organisateurs ----------
+export async function adminLogin(password) {
+  const res = await fetch("/api/admin", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ action: "login", password }),
+  });
+  if (!res.ok) return null;
+  const { role } = await res.json();
+  return role;
+}
+
+export async function adminLogout() {
+  await fetch("/api/admin", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ action: "logout" }),
+  });
+}
+
+// Charge le tableau de bord complet. En mode démo, reconstitue la même
+// structure à partir du localStorage pour que les pages soient identiques.
+export async function adminLoad() {
+  const { configured } = await getMode();
+
+  if (configured) {
+    const res = await fetch("/api/admin");
+    if (res.status === 401) return { role: null };
+    if (!res.ok) throw new Error("admin_load_failed");
+    return res.json();
+  }
+
+  const households = [...SEED_HOUSEHOLDS, ...ls.get("sw:households", [])].map((h) => ({
+    ...h,
+    rsvp: ls.get(`sw:rsvp:${h.token}`, SEED_RSVPS[h.token] || null),
+  }));
+  return {
+    role: ls.get("sw:role", "couple"),
+    demo: true,
+    households,
+    news: ls.get("sw:news", SEED_NEWS),
+    photos: ls.get("sw:photos", []),
+    messages: ls.get("sw:messages", []),
+    todos: ls.get("sw:todos", SEED_TODOS),
+    suppliers: ls.get("sw:suppliers", SEED_SUPPLIERS),
+    budget: ls.get("sw:budget", SEED_BUDGET),
+  };
+}
+
+export async function adminAction(payload) {
+  const { configured } = await getMode();
+
+  if (configured) {
+    const res = await fetch("/api/admin", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`action_failed:${payload.action}`);
+    return res.json();
+  }
+
+  // Équivalents locaux, pour que le mode démo reste pleinement utilisable.
+  switch (payload.action) {
+    case "addHousehold": {
+      const token = makeLocalToken();
+      ls.set("sw:households", [
+        ...ls.get("sw:households", []),
+        { token, name: payload.name, email: payload.email || "", phone: payload.phone || "", lang: payload.lang || "fr" },
+      ]);
+      return { ok: true, token };
+    }
+    case "importHouseholds": {
+      const created = [];
+      const extras = ls.get("sw:households", []);
+      for (const line of (payload.csv || "").split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        const [name, email = "", phone = "", lang = "fr"] = trimmed.split(/[,;]/).map((c) => c.trim().replace(/^"|"$/g, ""));
+        if (!name || /^(nom|name)$/i.test(name)) continue;
+        const token = makeLocalToken();
+        extras.push({ token, name, email, phone, lang: ["fr", "en", "el"].includes(lang) ? lang : "fr" });
+        created.push({ token, name });
+      }
+      ls.set("sw:households", extras);
+      return { ok: true, created };
+    }
+    case "removeHousehold":
+      ls.set("sw:households", ls.get("sw:households", []).filter((h) => h.token !== payload.token));
+      return { ok: true };
+    case "publishNews":
+      ls.set("sw:news", [
+        { id: Date.now(), date: new Date().toISOString().slice(0, 10), audience: payload.audience, title: payload.title, body: payload.body, photo: payload.photo || null },
+        ...ls.get("sw:news", SEED_NEWS),
+      ]);
+      return { ok: true };
+    case "removeNews":
+      ls.set("sw:news", ls.get("sw:news", SEED_NEWS).filter((n) => n.id !== payload.id));
+      return { ok: true };
+    case "approvePhoto":
+      ls.set("sw:photos", ls.get("sw:photos", []).map((p) => (p.id === payload.id ? { ...p, approved: true } : p)));
+      return { ok: true };
+    case "removePhoto":
+      ls.set("sw:photos", ls.get("sw:photos", []).filter((p) => p.id !== payload.id));
+      return { ok: true };
+    case "saveList":
+      ls.set({ todos: "sw:todos", suppliers: "sw:suppliers", budget: "sw:budget" }[payload.list], payload.items);
+      return { ok: true };
+    case "setRole":
+      ls.set("sw:role", payload.role);
+      return { ok: true };
+    default:
+      return { ok: false };
+  }
+}
+
+function makeLocalToken() {
+  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+  return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+}
+
+// ---------- Réduction d'image avant envoi ----------
 export function shrinkImage(file, maxSize = 900) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -268,83 +340,35 @@ export function shrinkImage(file, maxSize = 900) {
   });
 }
 
-// ---------- Messages de contact ----------
-export function getMessages() {
-  return ls.get("sw:messages", []);
-}
-export function addMessage(msg) {
-  const all = getMessages();
-  all.unshift({ ...msg, id: Date.now(), date: new Date().toISOString() });
-  ls.set("sw:messages", all);
-}
-
-// ---------- Espace organisateurs : budget / to-dos / fournisseurs ----------
-const SEED_BUDGET = [
-  { id: 1, label: "Lieu de réception", planned: 12000, actual: 0, deposit: 3000, due: "2026-10-01" },
-  { id: 2, label: "Traiteur", planned: 9000, actual: 0, deposit: 0, due: "2026-12-01" },
-  { id: 3, label: "DJ / musique", planned: 2000, actual: 0, deposit: 500, due: "2027-01-15" },
-  { id: 4, label: "Photographe", planned: 2500, actual: 0, deposit: 0, due: "2027-02-01" },
-];
-
-const SEED_TODOS = [
-  { id: 1, label: "Confirmer le lieu de réception", who: "Les mariés", due: "2026-09-15", done: false },
-  { id: 2, label: "Liste d'hôtels à recommander", who: "Témoin 1", due: "2026-09-30", done: false },
-  { id: 3, label: "Envoyer les invitations", who: "Les mariés", due: "2026-10-15", done: false },
-];
-
-const SEED_SUPPLIERS = [
-  { id: 1, name: "Poseidonion Grand Hotel", role: "Lieu / hébergement", phone: "+30 22980 74553", email: "info@example.com", notes: "Devis demandé pour la réception." },
-  { id: 2, name: "Water taxis Spetses", role: "Transport invités", phone: "+30 22980 72072", email: "", notes: "Tarifs de groupe à négocier." },
-];
-
-function makeCrud(key, seed) {
-  return {
-    all: () => ls.get(key, seed),
-    save: (items) => ls.set(key, items),
-  };
-}
-
-export const budgetStore = makeCrud("sw:budget", SEED_BUDGET);
-export const todoStore = makeCrud("sw:todos", SEED_TODOS);
-export const supplierStore = makeCrud("sw:suppliers", SEED_SUPPLIERS);
-
-// ---------- Rôle organisateur (démo) ----------
-export function getRole() {
-  return ls.get("sw:role", "couple"); // 'couple' | 'organisateur'
-}
-export function setRole(role) {
-  ls.set("sw:role", role);
-}
-
-// ---------- Export CSV ----------
-export function rsvpsToCsv() {
-  const rows = [
-    ["Foyer", "Token", "Statut", "Participant", "Type", "Âge", "Alimentation", "Détail allergie", ...EVENT_IDS, "Arrivée", "Départ", "Transport", "Hébergement", "Email", "Notes"],
-  ];
-  for (const h of getAllHouseholds()) {
-    const r = getRsvp(h.token);
-    if (!r) {
-      rows.push([h.name, h.token, "sans réponse", "", "", "", "", "", ...EVENT_IDS.map(() => ""), "", "", "", "", h.email, ""]);
-      continue;
-    }
-    if (r.attending === "no") {
-      rows.push([h.name, h.token, "non", "", "", "", "", "", ...EVENT_IDS.map(() => ""), "", "", "", "", r.email || h.email, r.notes]);
-      continue;
-    }
-    for (const p of r.participants) {
-      rows.push([
-        h.name, h.token, "oui", p.name, p.type === "child" ? "enfant" : "adulte", p.age,
-        p.diet, p.dietNote,
-        ...EVENT_IDS.map((id) => (p.events?.[id] ? "oui" : "non")),
-        r.arrival, r.departure, r.transport, r.accommodation, r.email || h.email, r.notes,
-      ]);
+// ---------- Export CSV des réponses ----------
+export function rsvpsToCsv(households) {
+  const rows = [[
+    "Foyer", "Lien", "Statut", "Participant", "Type", "Âge", "Alimentation", "Détail allergie",
+    ...EVENT_IDS, "Arrivée", "Départ", "Transport", "Hébergement", "Email", "Notes",
+  ]];
+  const blanks = EVENT_IDS.map(() => "");
+  for (const h of households) {
+    const r = h.rsvp;
+    if (!r?.attending) {
+      rows.push([h.name, h.token, "sans réponse", "", "", "", "", "", ...blanks, "", "", "", "", h.email, ""]);
+    } else if (r.attending === "no") {
+      rows.push([h.name, h.token, "non", "", "", "", "", "", ...blanks, "", "", "", "", r.email || h.email, r.notes]);
+    } else {
+      for (const p of r.participants) {
+        rows.push([
+          h.name, h.token, "oui", p.name, p.type === "child" ? "enfant" : "adulte", p.age,
+          p.diet, p.dietNote,
+          ...EVENT_IDS.map((id) => (p.events?.[id] ? "oui" : "non")),
+          r.arrival, r.departure, r.transport, r.accommodation, r.email || h.email, r.notes,
+        ]);
+      }
     }
   }
   return rows.map((row) => row.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
 }
 
-export function downloadCsv() {
-  const blob = new Blob(["﻿" + rsvpsToCsv()], { type: "text/csv;charset=utf-8" });
+export function downloadCsv(households) {
+  const blob = new Blob(["﻿" + rsvpsToCsv(households)], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

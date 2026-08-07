@@ -1,24 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import QRCode from "qrcode";
-import {
-  getAllHouseholds, getRsvp, downloadCsv,
-  addHousehold, importHouseholdsCsv, removeHousehold, SEED_HOUSEHOLDS,
-} from "@/lib/store";
+import { useAdmin } from "@/lib/admin";
+import { downloadCsv } from "@/lib/store";
 
-// Liste des invités, ajout / import de foyers, et envoi des invitations
-// (choix B2a) : messages pré-remplis email / WhatsApp + QR code pour les
-// faire-part papier (choix B4c).
+// Liste des foyers, ajout et import, liens personnels, QR codes et
+// messages d'invitation prêts à envoyer par email ou WhatsApp.
 export default function InvitesPage() {
-  const [rows, setRows] = useState([]);
+  const { data, act } = useAdmin();
+  const households = data?.households || [];
+
   const [copied, setCopied] = useState("");
   const [draft, setDraft] = useState({ name: "", email: "", phone: "", lang: "fr" });
   const [csv, setCsv] = useState("");
   const [qr, setQr] = useState(null);
-
-  const refresh = () => setRows(getAllHouseholds().map((h) => ({ household: h, rsvp: getRsvp(h.token) })));
-  useEffect(refresh, []);
+  const [note, setNote] = useState("");
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const linkFor = (h) => `${origin}/i/${h.token}`;
@@ -38,35 +35,32 @@ export default function InvitesPage() {
     setQr({ household: h, dataUrl });
   };
 
-  const add = (e) => {
+  const add = async (e) => {
     e.preventDefault();
     if (!draft.name.trim()) return;
-    addHousehold(draft);
+    await act({ action: "addHousehold", ...draft });
     setDraft({ name: "", email: "", phone: "", lang: "fr" });
-    refresh();
+    setNote("Foyer ajouté.");
   };
 
-  const doImport = (e) => {
+  const doImport = async (e) => {
     e.preventDefault();
-    const created = importHouseholdsCsv(csv);
+    const { created } = await act({ action: "importHouseholds", csv });
     setCsv("");
-    refresh();
-    if (created.length) alert(`${created.length} foyer(s) importé(s).`);
+    setNote(`${created?.length || 0} foyer(s) importé(s).`);
   };
-
-  const isSeed = (token) => SEED_HOUSEHOLDS.some((h) => h.token === token);
 
   const statusBadge = (rsvp) => {
     if (!rsvp?.attending) return <span className="badge sun">sans réponse</span>;
     if (rsvp.attending === "no") return <span className="badge bougain">non</span>;
-    return <span className="badge olive">oui · {rsvp.participants.length} pers.</span>;
+    return <span className="badge olive">oui · {rsvp.participants?.length || 0} pers.</span>;
   };
 
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
         <h1 style={{ marginBottom: 10 }}>Invités & envois</h1>
-        <button className="btn secondary small" onClick={downloadCsv}>⬇ Export CSV</button>
+        <button className="btn secondary small" onClick={() => downloadCsv(households)}>⬇ Export CSV</button>
       </div>
       <p className="hint" style={{ marginBottom: 18 }}>
         Chaque foyer a son lien personnel unique. Les boutons préparent un message d'invitation
@@ -74,22 +68,22 @@ export default function InvitesPage() {
         imprimé sur les faire-part papier.
       </p>
 
+      {note && <div className="notice ok" role="status">{note}</div>}
+
       <div className="card">
         <div className="table-scroll">
           <table className="data">
             <thead>
-              <tr>
-                <th>Foyer</th><th>Statut</th><th>Contact</th><th>Inviter / relancer</th><th></th>
-              </tr>
+              <tr><th>Foyer</th><th>Statut</th><th>Contact</th><th>Inviter / relancer</th><th></th></tr>
             </thead>
             <tbody>
-              {rows.map(({ household: h, rsvp }) => (
+              {households.map((h) => (
                 <tr key={h.token}>
                   <td>
                     <strong>{h.name}</strong>
-                    <div className="hint">/i/{h.token} · {h.lang.toUpperCase()}</div>
+                    <div className="hint">/i/{h.token} · {(h.lang || "fr").toUpperCase()}</div>
                   </td>
-                  <td>{statusBadge(rsvp)}</td>
+                  <td>{statusBadge(h.rsvp)}</td>
                   <td style={{ fontSize: 13 }}>
                     {h.email && <div>{h.email}</div>}
                     {h.phone && <div>{h.phone}</div>}
@@ -116,10 +110,8 @@ export default function InvitesPage() {
                     )}
                   </td>
                   <td>
-                    {!isSeed(h.token) && (
-                      <button className="icon-btn" aria-label="Supprimer le foyer"
-                        onClick={() => { removeHousehold(h.token); refresh(); }}>✕</button>
-                    )}
+                    <button className="icon-btn" aria-label="Supprimer le foyer"
+                      onClick={() => act({ action: "removeHousehold", token: h.token })}>✕</button>
                   </td>
                 </tr>
               ))}
@@ -131,8 +123,7 @@ export default function InvitesPage() {
       {qr && (
         <div className="card" style={{ textAlign: "center" }}>
           <h3>QR code — {qr.household.name}</h3>
-          <img src={qr.dataUrl} alt={`QR code vers ${linkFor(qr.household)}`}
-            style={{ width: 220, height: 220 }} />
+          <img src={qr.dataUrl} alt={`QR code vers ${linkFor(qr.household)}`} style={{ width: 220, height: 220 }} />
           <p className="hint">{linkFor(qr.household)}</p>
           <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
             <a className="btn small" href={qr.dataUrl} download={`qr-${qr.household.token}.png`}>⬇ Télécharger</a>
@@ -173,7 +164,7 @@ export default function InvitesPage() {
             <textarea rows={4} value={csv} onChange={(e) => setCsv(e.target.value)}
               placeholder={"Famille Dupont, dupont@example.com, +33612345678, fr\nThe Smiths, smiths@example.com, , en"} />
             <div className="hint">
-              Colle directement depuis un tableur. Un lien personnel est généré automatiquement pour chaque foyer.
+              Collez directement depuis un tableur. Un lien personnel est généré automatiquement pour chaque foyer.
             </div>
           </label>
           <button className="btn small" type="submit">Importer</button>
