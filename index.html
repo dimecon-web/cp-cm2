@@ -894,6 +894,7 @@ html, body {
     <option value="charly">🚀 Charly — Seconde</option>
   </select>
   <button class="btn btn-primary" style="font-size:22px;padding:16px 40px;margin-top:24px" onclick="enterProfile()">C'est parti ! ➡️</button>
+  <button class="btn btn-back" style="margin-top:18px;font-size:15px" onclick="openSyncScreen()">🔄 Synchronisation entre appareils</button>
 </div>
 
 <!-- ===== CM2 HOME ===== -->
@@ -1016,6 +1017,35 @@ html, body {
   </div>
   <button class="btn-dash" onclick="openDashboard('sec')">📊 Mon tableau de bord</button>
   <button class="btn btn-back mt16" onclick="showScreen('welcome')" style="margin-top:20px;font-size:18px">🏠 Changer de profil</button>
+</div>
+
+<!-- ===== SYNCHRONISATION ===== -->
+<div id="sync" class="screen hidden" style="justify-content:flex-start">
+  <div class="activity-header w100">
+    <button class="btn btn-back" onclick="showScreen('welcome')">🏠</button>
+    <div class="activity-title" style="color:#0EA5E9">🔄 Synchronisation</div>
+    <div style="width:44px"></div>
+  </div>
+  <div style="width:100%;max-width:560px;display:flex;flex-direction:column;gap:14px">
+    <div class="dash-row" style="font-size:15px;line-height:1.6;color:#555">
+      Avec un <b>code famille</b>, les étoiles, les pièces, les personnages et les statistiques
+      sont partagés entre tous vos appareils (iPad, téléphone, ordinateur…).<br><br>
+      <b>1er appareil :</b> crée un code puis active.<br>
+      <b>Autres appareils :</b> entre le <b>même code</b> et active — la progression
+      de la famille remplace alors celle de l'appareil.
+    </div>
+    <input id="sync-code-input" placeholder="Code famille (ex : FAM-A2B3C4)" autocapitalize="characters" autocomplete="off"
+      style="padding:16px;font-size:20px;font-weight:800;border-radius:16px;border:3px solid #0EA5E9;font-family:inherit;text-align:center;text-transform:uppercase">
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-back" style="flex:1" onclick="generateSyncCode()">🎲 Créer un code</button>
+      <button class="btn btn-primary" style="flex:1" onclick="activateSync()">✅ Activer</button>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-back" style="flex:1" onclick="pullSync()">⬇️ Récupérer la progression</button>
+      <button class="btn btn-back" style="flex:1" onclick="deactivateSync()">✖️ Désactiver</button>
+    </div>
+    <div id="sync-status" style="font-size:14px;font-weight:700;color:#777;text-align:center;min-height:20px"></div>
+  </div>
 </div>
 
 <!-- ===== TABLEAU DE BORD ===== -->
@@ -1475,6 +1505,7 @@ const state = {
 
 function saveStars() {
   localStorage.setItem('cpapp-stars', JSON.stringify(state.stars));
+  schedulePush();
 }
 
 // ===================================================================
@@ -2311,6 +2342,7 @@ function gameOverSnake() {
   if(snakeScore > snakeBest) {
     snakeBest = snakeScore;
     localStorage.setItem('snake-best', snakeBest);
+    schedulePush();
     document.getElementById('snake-best-live').textContent = snakeBest;
     document.getElementById('snake-best').textContent = '🏆 ' + snakeBest;
     const cm2Best = document.getElementById('cm2-snake-best');
@@ -2416,6 +2448,7 @@ const cm2State = {
 
 function cm2SaveStars() {
   localStorage.setItem('cm2app-stars', JSON.stringify(cm2State.stars));
+  schedulePush();
 }
 
 function cm2UpdateHomeUI() {
@@ -2966,6 +2999,7 @@ function cm2PickLectureText() {
   localStorage.setItem('cm2-lecture-read', JSON.stringify(read));
   localStorage.setItem('cm2-lecture-deck', JSON.stringify(deck));
   localStorage.setItem('cm2-lecture-last', String(idx));
+  schedulePush();
   return CM2_TEXTS[idx];
 }
 
@@ -3611,6 +3645,138 @@ document.addEventListener('touchend', e => {
 // ===================================================================
 
 // ===================================================================
+//  SYNCHRONISATION ENTRE APPAREILS (Supabase, code famille)
+// ===================================================================
+const SYNC_URL = 'https://bwedmcyhftxskvkzbyfp.supabase.co/rest/v1/ecole_sync';
+const SYNC_API_KEY = 'sb_publishable_D-xtSZkZwx6LXlYwrbYafg_IBWDFxPL';
+const SYNC_KEYS = [
+  'cpapp-stars','cm2app-stars','cm1app-stars','secapp-stars','snake-best',
+  'reward_cp','reward_cm2','reward_daphne',
+  'stats_cp','stats_cm2','stats_daphne','stats_sec',
+  'cm2-lecture-read','cm2-lecture-deck','cm2-lecture-last',
+];
+let syncTimer = null;
+
+function syncCode() { return localStorage.getItem('sync-code') || ''; }
+function syncHeaders() {
+  return { 'apikey': SYNC_API_KEY, 'Authorization': 'Bearer ' + SYNC_API_KEY, 'Content-Type': 'application/json' };
+}
+
+function collectSyncData() {
+  const data = {};
+  SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if(v !== null) data[k] = v; });
+  return data;
+}
+
+function applySyncData(data) {
+  if(!data || typeof data !== 'object') return;
+  SYNC_KEYS.forEach(k => { if(typeof data[k] === 'string') localStorage.setItem(k, data[k]); });
+  // Recharge les états gardés en mémoire puis rafraîchit les écrans d'accueil
+  try { state.stars = JSON.parse(localStorage.getItem('cpapp-stars') || '{"phono":0,"maths":0,"vocab":0,"english":0}'); } catch(e) {}
+  try { cm2State.stars = JSON.parse(localStorage.getItem('cm2app-stars') || '{"lecture":0,"maths":0,"sciences":0,"ortho":0,"english":0}'); } catch(e) {}
+  try { cm1State.stars = JSON.parse(localStorage.getItem('cm1app-stars') || '{"maths":0,"francais":0,"english":0}'); } catch(e) {}
+  try { secState.stars = JSON.parse(localStorage.getItem('secapp-stars') || '{"maths":0,"francais":0,"english":0}'); } catch(e) {}
+  updateHomeUI(); cm2UpdateHomeUI(); cm1UpdateHomeUI(); secUpdateHomeUI(); updateCoinBadges();
+}
+
+async function pullSync() {
+  const code = syncCode();
+  if(!code) { updateSyncStatus(); return false; }
+  try {
+    const r = await fetch(SYNC_URL + '?code=eq.' + encodeURIComponent(code) + '&select=data,updated_at', { headers: syncHeaders() });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const rows = await r.json();
+    if(rows.length) applySyncData(rows[0].data);
+    localStorage.setItem('sync-last', new Date().toISOString());
+    updateSyncStatus();
+    return true;
+  } catch(e) {
+    updateSyncStatus('⚠️ Hors ligne — les données locales sont utilisées');
+    return false;
+  }
+}
+
+async function pushSync() {
+  const code = syncCode();
+  if(!code) return false;
+  try {
+    const r = await fetch(SYNC_URL + '?on_conflict=code', {
+      method: 'POST',
+      headers: Object.assign(syncHeaders(), { 'Prefer': 'resolution=merge-duplicates' }),
+      body: JSON.stringify({ code: code, data: collectSyncData(), updated_at: new Date().toISOString() }),
+    });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    localStorage.setItem('sync-last', new Date().toISOString());
+    updateSyncStatus();
+    return true;
+  } catch(e) { return false; }
+}
+
+// Envoi différé : regroupe les sauvegardes rapprochées en un seul envoi
+function schedulePush() {
+  if(!syncCode()) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(pushSync, 2000);
+}
+
+function updateSyncStatus(msg) {
+  const el = document.getElementById('sync-status');
+  if(!el) return;
+  if(msg) { el.textContent = msg; return; }
+  const code = syncCode();
+  if(!code) { el.textContent = 'Synchronisation désactivée sur cet appareil.'; return; }
+  const last = localStorage.getItem('sync-last');
+  el.textContent = '✅ Code famille actif : ' + code +
+    (last ? ' — dernière synchro : ' + new Date(last).toLocaleString('fr-FR') : '');
+}
+
+function openSyncScreen() {
+  document.getElementById('sync-code-input').value = syncCode();
+  updateSyncStatus();
+  showScreen('sync');
+}
+
+function generateSyncCode() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // sans 0/O, 1/I/L pour éviter les confusions
+  let c = 'FAM-';
+  for(let i = 0; i < 6; i++) c += chars[Math.floor(Math.random() * chars.length)];
+  document.getElementById('sync-code-input').value = c;
+  updateSyncStatus('Note bien ce code, puis appuie sur Activer !');
+}
+
+async function activateSync() {
+  const code = document.getElementById('sync-code-input').value.trim().toUpperCase();
+  if(code.length < 4) { updateSyncStatus('Le code doit faire au moins 4 caractères.'); return; }
+  localStorage.setItem('sync-code', code);
+  updateSyncStatus('⏳ Connexion…');
+  try {
+    const r = await fetch(SYNC_URL + '?code=eq.' + encodeURIComponent(code) + '&select=data', { headers: syncHeaders() });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const rows = await r.json();
+    if(rows.length) {
+      // Le code existe déjà : cet appareil rejoint la famille
+      applySyncData(rows[0].data);
+      localStorage.setItem('sync-last', new Date().toISOString());
+      updateSyncStatus('✅ Appareil connecté ! La progression de la famille a été récupérée.');
+    } else {
+      // Nouveau code : les données de cet appareil deviennent celles de la famille
+      const ok = await pushSync();
+      if(!ok) throw new Error('push failed');
+      updateSyncStatus('✅ Code créé ! Entre « ' + code + ' » sur les autres appareils.');
+    }
+  } catch(e) {
+    localStorage.removeItem('sync-code');
+    updateSyncStatus('⚠️ Connexion impossible. Vérifie la connexion internet et réessaie.');
+  }
+}
+
+function deactivateSync() {
+  localStorage.removeItem('sync-code');
+  clearTimeout(syncTimer);
+  updateSyncStatus();
+}
+
+// ===================================================================
 //  STATISTIQUES D'UTILISATION (sauvegardées dans localStorage)
 // ===================================================================
 function getStats(profile) {
@@ -3621,6 +3787,7 @@ function getStats(profile) {
 }
 function saveStats(profile, s) {
   localStorage.setItem('stats_'+profile, JSON.stringify(s));
+  schedulePush();
 }
 // Enregistre une session terminée : nombre de parties, questions vues, bonnes réponses
 function recordSession(profile, module, score, total) {
@@ -3711,6 +3878,7 @@ const cm1State = {
 
 function cm1SaveStars() {
   localStorage.setItem('cm1app-stars', JSON.stringify(cm1State.stars));
+  schedulePush();
 }
 
 function cm1UpdateHomeUI() {
@@ -3767,6 +3935,7 @@ const secState = {
 
 function secSaveStars() {
   localStorage.setItem('secapp-stars', JSON.stringify(secState.stars));
+  schedulePush();
 }
 
 function secUpdateHomeUI() {
@@ -4048,6 +4217,7 @@ function getRewardData(profile) {
 }
 function saveRewardData(profile, data) {
   localStorage.setItem('reward_'+profile, JSON.stringify(data));
+  schedulePush();
 }
 
 function awardCoins(profile, amount) {
@@ -4270,6 +4440,9 @@ updateCoinBadges();
   const sel = document.getElementById('profile-select');
   if(last && sel && sel.querySelector(`option[value="${last}"]`)) sel.value = last;
 })();
+
+// Au démarrage : récupère la progression de la famille si la synchro est active
+if(syncCode()) pullSync();
 </script>
 </body>
 </html>
