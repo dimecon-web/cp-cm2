@@ -6,7 +6,7 @@ export const config = {
   coupleNames: "Themis & Thierry",
   initials: "T · T",
   weddingDate: "2027-07-10", // samedi
-  rsvpDeadline: "2027-05-10", // deux mois avant — ajustable
+  rsvpDeadline: "2027-01-31", // fin janvier 2027
   location: { fr: "Spetses, Grèce", en: "Spetses, Greece", el: "Σπέτσες, Ελλάδα" },
   contactEmail: "dimecon@gmail.com", // adresse qui reçoit les messages du formulaire
   whatsappGroupUrl: "", // lien du groupe WhatsApp — affiché sur le site quand renseigné
