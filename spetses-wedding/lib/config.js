@@ -3,7 +3,7 @@
 // d'événements restent à ajuster.
 
 export const config = {
-  coupleNames: "Thierry & Themis",
+  coupleNames: "Themis & Thierry",
   initials: "T · T",
   weddingDate: "2027-07-10", // samedi
   rsvpDeadline: "2027-05-10", // deux mois avant — ajustable

@@ -1,6 +1,6 @@
 # 💍 Site de mariage à Spetses
 
-Site privé du mariage de Thierry & Themis, le samedi 10 juillet 2027.
+Site privé du mariage de Themis & Thierry, le samedi 10 juillet 2027.
 Espace invités trilingue (FR/EN/ΕΛ) avec RSVP et questionnaire logistique,
 et espace organisateurs (tableau de bord, budget, to-dos, fournisseurs).
 Voir [SPEC.md](./SPEC.md) pour la spécification complète.
