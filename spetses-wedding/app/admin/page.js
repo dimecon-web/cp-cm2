@@ -3,6 +3,7 @@
 import { config } from "@/lib/config";
 import { useAdmin } from "@/lib/admin";
 import { downloadCsv } from "@/lib/store";
+import { messageFor } from "@/lib/messages";
 
 // Tableau de bord : compteurs, allergies, arrivées par jour, relances, messages.
 export default function AdminDashboard() {
@@ -25,10 +26,9 @@ export default function AdminDashboard() {
     }
   }
 
+  // La relance part dans la langue du foyer (voir lib/messages.js).
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const relance = (h) =>
-    `Coucou ${h.name} ! Petit rappel en passant : on attend votre réponse pour le mariage à Spetses 💛 ` +
-    `Votre lien personnel : ${origin}/i/${h.token}`;
+  const relance = (h) => messageFor("reminder", h, `${origin}/i/${h.token}`);
 
   return (
     <>
@@ -88,13 +88,13 @@ export default function AdminDashboard() {
                     <td style={{ whiteSpace: "nowrap" }}>
                       {h.email && (
                         <a className="btn ghost small" style={{ marginRight: 6 }}
-                          href={`mailto:${h.email}?subject=${encodeURIComponent("Petit rappel — RSVP mariage Spetses")}&body=${encodeURIComponent(relance(h))}`}>
+                          href={`mailto:${h.email}?subject=${encodeURIComponent(relance(h).subject)}&body=${encodeURIComponent(relance(h).email)}`}>
                           ✉️ Email
                         </a>
                       )}
                       {h.phone && (
                         <a className="btn ghost small" target="_blank" rel="noreferrer"
-                          href={`https://wa.me/${h.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(relance(h))}`}>
+                          href={`https://wa.me/${h.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(relance(h).whatsapp)}`}>
                           💬 WhatsApp
                         </a>
                       )}

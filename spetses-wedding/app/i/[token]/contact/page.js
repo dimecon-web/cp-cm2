@@ -23,7 +23,7 @@ export default function ContactPage() {
       setSent(true);
       setForm({ name: "", email: "", message: "" });
     } catch {
-      setError("L'envoi a échoué. Réessayez dans un instant.");
+      setError(t("errors.message"));
     } finally {
       setBusy(false);
     }

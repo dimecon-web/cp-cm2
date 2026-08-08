@@ -24,11 +24,12 @@ export default function GuestLayout({ children }) {
   if (household === null) {
     return (
       <div className="landing">
-        <h1>Lien inconnu</h1>
-        <p style={{ color: "var(--muted)" }}>
-          Ce lien d'invitation n'est pas valide. Vérifiez le message reçu ou contactez-nous.
-        </p>
-        <Link className="btn" href="/">Retour</Link>
+        <div style={{ position: "absolute", top: 20, right: 20 }}>
+          <LangSwitcher />
+        </div>
+        <h1>{t("landing.unknownTitle")}</h1>
+        <p style={{ color: "var(--muted)", maxWidth: "42ch" }}>{t("landing.unknownBody")}</p>
+        <Link className="btn" href="/">{t("landing.back")}</Link>
       </div>
     );
   }

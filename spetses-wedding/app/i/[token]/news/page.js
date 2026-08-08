@@ -47,7 +47,7 @@ export default function NewsPage() {
       e.target.reset();
       refresh();
     } catch {
-      setError("L'envoi a échoué. Réessayez avec une photo plus légère.");
+      setError(t("errors.photo"));
     } finally {
       setBusy(false);
     }

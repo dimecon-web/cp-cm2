@@ -4,6 +4,7 @@ import { useState } from "react";
 import QRCode from "qrcode";
 import { useAdmin } from "@/lib/admin";
 import { downloadCsv } from "@/lib/store";
+import { messageFor, MESSAGE_KINDS } from "@/lib/messages";
 
 // Liste des foyers, ajout et import, liens personnels, QR codes et
 // messages d'invitation prêts à envoyer par email ou WhatsApp.
@@ -16,13 +17,23 @@ export default function InvitesPage() {
   const [csv, setCsv] = useState("");
   const [qr, setQr] = useState(null);
   const [note, setNote] = useState("");
+  const [kind, setKind] = useState("saveDate");
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const linkFor = (h) => `${origin}/i/${h.token}`;
 
-  const inviteText = (h) =>
-    `✨ Ça y est, c'est officiel : on se marie à Spetses ! ` +
-    `Toutes les infos et votre réponse, c'est par ici : ${linkFor(h)} — on espère tellement vous y voir !`;
+  // Le message part dans la langue du foyer, avec son nom et son lien.
+  const messageOf = (h) => messageFor(kind, h, linkFor(h));
+
+  const mailtoFor = (h) => {
+    const m = messageOf(h);
+    return `mailto:${h.email}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.email)}`;
+  };
+
+  const whatsappFor = (h) => {
+    const m = messageOf(h);
+    return `https://wa.me/${h.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(m.whatsapp)}`;
+  };
 
   const copyLink = async (h) => {
     await navigator.clipboard.writeText(linkFor(h));
@@ -71,6 +82,23 @@ export default function InvitesPage() {
       {note && <div className="notice ok" role="status">{note}</div>}
 
       <div className="card">
+        <h3>Message à envoyer</h3>
+        <div className="choice-row">
+          {MESSAGE_KINDS.map((k) => (
+            <button key={k.id} className={`choice ${kind === k.id ? "sel" : ""}`}
+              onClick={() => setKind(k.id)}>
+              {k.label}
+            </button>
+          ))}
+        </div>
+        <p className="hint" style={{ marginTop: 10, marginBottom: 0 }}>
+          Les boutons ✉️ et 💬 ci-dessous enverront ce message, rédigé dans la langue
+          de chaque foyer et avec son nom et son lien déjà insérés. Les textes se
+          modifient dans <code>lib/messages.js</code>.
+        </p>
+      </div>
+
+      <div className="card">
         <div className="table-scroll">
           <table className="data">
             <thead>
@@ -97,14 +125,12 @@ export default function InvitesPage() {
                       ⬛ QR
                     </button>
                     {h.email && (
-                      <a className="btn ghost small" style={{ marginRight: 6 }}
-                        href={`mailto:${h.email}?subject=${encodeURIComponent("On se marie à Spetses ! 💍")}&body=${encodeURIComponent(inviteText(h))}`}>
+                      <a className="btn ghost small" style={{ marginRight: 6 }} href={mailtoFor(h)}>
                         ✉️
                       </a>
                     )}
                     {h.phone && (
-                      <a className="btn ghost small" target="_blank" rel="noreferrer"
-                        href={`https://wa.me/${h.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(inviteText(h))}`}>
+                      <a className="btn ghost small" target="_blank" rel="noreferrer" href={whatsappFor(h)}>
                         💬
                       </a>
                     )}

@@ -66,7 +66,7 @@ export default function RsvpPage() {
       setSaved(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
-      setError("L'enregistrement a échoué. Vérifiez votre connexion et réessayez.");
+      setError(t("errors.save"));
     } finally {
       setBusy(false);
     }
