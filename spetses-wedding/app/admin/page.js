@@ -26,6 +26,21 @@ export default function AdminDashboard() {
     }
   }
 
+  // Répartition des foyers et des personnes confirmées.
+  const tally = (keyOf) => {
+    const map = new Map();
+    for (const h of households) {
+      const key = keyOf(h);
+      const entry = map.get(key) || { foyers: 0, personnes: 0 };
+      entry.foyers += 1;
+      if (h.rsvp?.attending === "yes") entry.personnes += h.rsvp.participants?.length || 0;
+      map.set(key, entry);
+    }
+    return [...map.entries()].sort((a, b) => b[1].foyers - a[1].foyers);
+  };
+  const byCategory = tally((h) => h.category || "Sans catégorie");
+  const bySide = tally((h) => config.sides.find((s) => s.id === h.side)?.label || "Non précisé");
+
   // La relance part dans la langue du foyer (voir lib/messages.js).
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const relance = (h) => messageFor("reminder", h, `${origin}/i/${h.token}`);
@@ -50,6 +65,20 @@ export default function AdminDashboard() {
           {allergies.map((p) => `${p.name} (${p.dietNote})`).join(" · ")}
         </div>
       )}
+
+      <div className="card">
+        <h3>Répartition</h3>
+        <div className="grid-2">
+          <div>
+            <span className="lbl" style={{ fontSize: 14, fontWeight: 600 }}>Par catégorie</span>
+            <Breakdown rows={byCategory} />
+          </div>
+          <div>
+            <span className="lbl" style={{ fontSize: 14, fontWeight: 600 }}>Par côté</span>
+            <Breakdown rows={bySide} />
+          </div>
+        </div>
+      </div>
 
       <div className="card">
         <h3>Arrivées par jour</h3>
@@ -122,5 +151,22 @@ export default function AdminDashboard() {
         )}
       </div>
     </>
+  );
+}
+
+function Breakdown({ rows }) {
+  if (!rows.length) return <p className="hint">—</p>;
+  return (
+    <table className="data" style={{ marginTop: 6 }}>
+      <tbody>
+        {rows.map(([label, { foyers, personnes }]) => (
+          <tr key={label}>
+            <td>{label}</td>
+            <td className="num">{foyers} foyer{foyers > 1 ? "s" : ""}</td>
+            <td className="num">{personnes} pers.</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }

@@ -43,12 +43,12 @@ export function getMode() {
 
 // ---------- Données d'exemple du mode démo ----------
 export const SEED_HOUSEHOLDS = [
-  { token: "demo", name: "Famille Démo", email: "", phone: "", lang: "fr" },
-  { token: "a7f2k9", name: "Sophie & Marc Durand", email: "sophie.durand@example.com", phone: "+33600000001", lang: "fr" },
-  { token: "b3x8m1", name: "The Wilson family", email: "wilsons@example.com", phone: "+44700000002", lang: "en" },
-  { token: "c9p4t6", name: "Οικογένεια Παπαδόπουλου", email: "", phone: "+30690000003", lang: "el" },
-  { token: "d5r2w8", name: "Léa Martin", email: "lea.martin@example.com", phone: "", lang: "fr" },
-  { token: "g4h9j2", name: "Nikos & Eleni", email: "nikos.eleni@example.com", phone: "+30690000007", lang: "el" },
+  { token: "demo", name: "Famille Démo", email: "", phone: "", lang: "fr", category: "", side: "" },
+  { token: "a7f2k9", name: "Sophie & Marc Durand", email: "sophie.durand@example.com", phone: "+33600000001", lang: "fr", category: "Famille", side: "thierry" },
+  { token: "b3x8m1", name: "The Wilson family", email: "wilsons@example.com", phone: "+44700000002", lang: "en", category: "Amis Bruxelles", side: "thierry" },
+  { token: "c9p4t6", name: "Οικογένεια Παπαδόπουλου", email: "", phone: "+30690000003", lang: "el", category: "Famille", side: "themis" },
+  { token: "d5r2w8", name: "Léa Martin", email: "lea.martin@example.com", phone: "", lang: "fr", category: "Amis Bruxelles", side: "both" },
+  { token: "g4h9j2", name: "Nikos & Eleni", email: "nikos.eleni@example.com", phone: "+30690000007", lang: "el", category: "Amis Athènes", side: "themis" },
 ];
 
 const SEED_RSVPS = {
@@ -229,8 +229,10 @@ export async function adminLoad() {
     return res.json();
   }
 
+  const edits = ls.get("sw:householdEdits", {});
   const households = [...SEED_HOUSEHOLDS, ...ls.get("sw:households", [])].map((h) => ({
     ...h,
+    ...(edits[h.token] || {}),
     rsvp: ls.get(`sw:rsvp:${h.token}`, SEED_RSVPS[h.token] || null),
   }));
   return {
@@ -265,7 +267,15 @@ export async function adminAction(payload) {
       const token = makeLocalToken();
       ls.set("sw:households", [
         ...ls.get("sw:households", []),
-        { token, name: payload.name, email: payload.email || "", phone: payload.phone || "", lang: payload.lang || "fr" },
+        {
+          token,
+          name: payload.name,
+          email: payload.email || "",
+          phone: payload.phone || "",
+          lang: payload.lang || "fr",
+          category: payload.category || "",
+          side: payload.side || "",
+        },
       ]);
       return { ok: true, token };
     }
@@ -283,6 +293,19 @@ export async function adminAction(payload) {
       }
       ls.set("sw:households", extras);
       return { ok: true, created };
+    }
+    case "updateHousehold": {
+      const { action, token, ...fields } = payload;
+      const extras = ls.get("sw:households", []);
+      const found = extras.find((h) => h.token === token);
+      if (found) {
+        ls.set("sw:households", extras.map((h) => (h.token === token ? { ...h, ...fields } : h)));
+      } else {
+        // Foyer d'exemple : on stocke la version modifiée par-dessus.
+        const seed = SEED_HOUSEHOLDS.find((h) => h.token === token);
+        ls.set("sw:householdEdits", { ...ls.get("sw:householdEdits", {}), [token]: { ...seed, ...fields } });
+      }
+      return { ok: true };
     }
     case "removeHousehold":
       ls.set("sw:households", ls.get("sw:households", []).filter((h) => h.token !== payload.token));
@@ -341,22 +364,26 @@ export function shrinkImage(file, maxSize = 900) {
 }
 
 // ---------- Export CSV des réponses ----------
+function sideLabel(side) {
+  return { themis: "Themis", thierry: "Thierry", both: "Les deux" }[side] || "";
+}
+
 export function rsvpsToCsv(households) {
   const rows = [[
-    "Foyer", "Lien", "Statut", "Participant", "Type", "Âge", "Alimentation", "Détail allergie",
+    "Foyer", "Catégorie", "Côté", "Lien", "Statut", "Participant", "Type", "Âge", "Alimentation", "Détail allergie",
     ...EVENT_IDS, "Arrivée", "Départ", "Transport", "Hébergement", "Email", "Notes",
   ]];
   const blanks = EVENT_IDS.map(() => "");
   for (const h of households) {
     const r = h.rsvp;
     if (!r?.attending) {
-      rows.push([h.name, h.token, "sans réponse", "", "", "", "", "", ...blanks, "", "", "", "", h.email, ""]);
+      rows.push([h.name, h.category || "", sideLabel(h.side), h.token, "sans réponse", "", "", "", "", "", ...blanks, "", "", "", "", h.email, ""]);
     } else if (r.attending === "no") {
-      rows.push([h.name, h.token, "non", "", "", "", "", "", ...blanks, "", "", "", "", r.email || h.email, r.notes]);
+      rows.push([h.name, h.category || "", sideLabel(h.side), h.token, "non", "", "", "", "", "", ...blanks, "", "", "", "", r.email || h.email, r.notes]);
     } else {
       for (const p of r.participants) {
         rows.push([
-          h.name, h.token, "oui", p.name, p.type === "child" ? "enfant" : "adulte", p.age,
+          h.name, h.category || "", sideLabel(h.side), h.token, "oui", p.name, p.type === "child" ? "enfant" : "adulte", p.age,
           p.diet, p.dietNote,
           ...EVENT_IDS.map((id) => (p.events?.[id] ? "oui" : "non")),
           r.arrival, r.departure, r.transport, r.accommodation, r.email || h.email, r.notes,

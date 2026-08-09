@@ -20,9 +20,14 @@ create table if not exists wedding_households (
   email text,
   phone text,                       -- numéro WhatsApp, format international
   lang text not null default 'fr' check (lang in ('fr', 'en', 'el')),
+  category text,                    -- libre : Famille, Amis Bruxelles, Amis Athènes…
+  side text check (side is null or side in ('themis', 'thierry', 'both')),
   invited_at timestamptz,           -- date d'envoi de l'invitation
   created_at timestamptz not null default now()
 );
+
+create index if not exists wedding_households_category_idx on wedding_households(category);
+create index if not exists wedding_households_side_idx on wedding_households(side);
 
 -- ---------- Réponse RSVP : une par foyer, modifiable jusqu'à la date limite ----------
 create table if not exists wedding_rsvps (

@@ -11,6 +11,13 @@ export const config = {
   contactEmail: "dimecon@gmail.com", // adresse qui reçoit les messages du formulaire
   whatsappGroupUrl: "", // lien du groupe WhatsApp — affiché sur le site quand renseigné
 
+  // « Côté » de chaque foyer, pour l'espace organisateurs.
+  sides: [
+    { id: "themis", label: "Themis" },
+    { id: "thierry", label: "Thierry" },
+    { id: "both", label: "Les deux" },
+  ],
+
   // Programme — detailsPublic:false = lieu/horaire précis révélés plus tard (choix E3c)
   events: [
     {

@@ -53,6 +53,8 @@ export async function GET() {
         email: h.email || "",
         phone: h.phone || "",
         lang: h.lang,
+        category: h.category || "",
+        side: h.side || "",
         rsvp: rsvpRow || parts.length ? rowToRsvp(rsvpRow, parts) : null,
       };
     }),
@@ -104,7 +106,7 @@ export async function POST(request) {
 
   switch (body.action) {
     case "addHousehold": {
-      const { name, email, phone, lang } = body;
+      const { name, email, phone, lang, category, side } = body;
       if (!name?.trim()) return Response.json({ error: "missing_name" }, { status: 400 });
       const token = await makeToken();
       const { error } = await db.from("wedding_households").insert({
@@ -113,9 +115,31 @@ export async function POST(request) {
         email: email?.trim() || null,
         phone: phone?.trim() || null,
         lang: ["fr", "en", "el"].includes(lang) ? lang : "fr",
+        category: category?.trim() || null,
+        side: ["themis", "thierry", "both"].includes(side) ? side : null,
       });
       if (error) return Response.json({ error: error.message }, { status: 500 });
       return Response.json({ ok: true, token });
+    }
+
+    // Modification d'une fiche depuis la liste des invités.
+    case "updateHousehold": {
+      const { token, name, email, phone, lang, category, side } = body;
+      if (!token) return Response.json({ error: "missing_token" }, { status: 400 });
+      if (!name?.trim()) return Response.json({ error: "missing_name" }, { status: 400 });
+      const { error } = await db
+        .from("wedding_households")
+        .update({
+          name: name.trim(),
+          email: email?.trim() || null,
+          phone: phone?.trim() || null,
+          lang: ["fr", "en", "el"].includes(lang) ? lang : "fr",
+          category: category?.trim() || null,
+          side: ["themis", "thierry", "both"].includes(side) ? side : null,
+        })
+        .eq("token", token);
+      if (error) return Response.json({ error: error.message }, { status: 500 });
+      return Response.json({ ok: true });
     }
 
     case "importHouseholds": {
@@ -123,7 +147,7 @@ export async function POST(request) {
       for (const line of (body.csv || "").split(/\r?\n/)) {
         const trimmed = line.trim();
         if (!trimmed) continue;
-        const [name, email = "", phone = "", lang = "fr"] = trimmed
+        const [name, email = "", phone = "", lang = "fr", category = "", side = ""] = trimmed
           .split(/[,;]/)
           .map((c) => c.trim().replace(/^"|"$/g, ""));
         if (!name || /^(nom|name)$/i.test(name)) continue;
@@ -134,6 +158,8 @@ export async function POST(request) {
           email: email || null,
           phone: phone || null,
           lang: ["fr", "en", "el"].includes(lang) ? lang : "fr",
+          category: category || null,
+          side: ["themis", "thierry", "both"].includes(side.toLowerCase()) ? side.toLowerCase() : null,
         });
         if (!error) created.push({ token, name });
       }
