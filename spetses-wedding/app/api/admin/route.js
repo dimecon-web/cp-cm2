@@ -28,13 +28,14 @@ export async function GET() {
   const role = await currentRole();
   if (!role) return Response.json({ role: null }, { status: 401 });
 
-  const [households, news, photos, messages, todos, suppliers] = await Promise.all([
+  const [households, news, photos, messages, todos, suppliers, sends] = await Promise.all([
     db.from("wedding_households").select("*, wedding_rsvps(*), wedding_participants(*)").order("created_at"),
     db.from("wedding_news").select("*").order("published_at", { ascending: false }),
     db.from("wedding_photos").select("*, wedding_households(name)").order("created_at", { ascending: false }),
     db.from("wedding_messages").select("*, wedding_households(name)").order("created_at", { ascending: false }),
     db.from("wedding_todos").select("*"),
     db.from("wedding_suppliers").select("*"),
+    db.from("wedding_sends").select("kind, channel, sent_at, wedding_households(token)"),
   ]);
 
   // Le budget ne quitte le serveur que pour le rôle « mariés ».
@@ -71,6 +72,14 @@ export async function GET() {
     })),
     todos: todos.data || [],
     suppliers: suppliers.data || [],
+    // { token: { saveDate: "2026-08-07T…", invite: … } } — dernier envoi par type
+    sends: (sends.data || []).reduce((acc, s) => {
+      const token = s.wedding_households?.token;
+      if (!token) return acc;
+      acc[token] = acc[token] || {};
+      if (!acc[token][s.kind] || acc[token][s.kind] < s.sent_at) acc[token][s.kind] = s.sent_at;
+      return acc;
+    }, {}),
     budget,
   });
 }
@@ -164,6 +173,21 @@ export async function POST(request) {
         if (!error) created.push({ token, name });
       }
       return Response.json({ ok: true, created });
+    }
+
+    // Journalise un envoi : sert au suivi « qui a déjà reçu quoi ».
+    case "markSent": {
+      const { data: h } = await db
+        .from("wedding_households")
+        .select("id")
+        .eq("token", body.token)
+        .maybeSingle();
+      if (!h) return Response.json({ error: "unknown_token" }, { status: 404 });
+      const kind = ["saveDate", "invite", "reminder", "custom", "news"].includes(body.kind) ? body.kind : "news";
+      const channel = body.channel === "whatsapp" ? "whatsapp" : "email";
+      const { error } = await db.from("wedding_sends").insert({ household_id: h.id, kind, channel });
+      if (error) return Response.json({ error: error.message }, { status: 500 });
+      return Response.json({ ok: true });
     }
 
     case "removeHousehold": {

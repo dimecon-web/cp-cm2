@@ -27,9 +27,10 @@ const PLACE = {
 };
 
 export const MESSAGE_KINDS = [
-  { id: "saveDate", label: "Save the date" },
-  { id: "invite", label: "Invitation" },
-  { id: "reminder", label: "Relance" },
+  { id: "saveDate", label: "Save the date", personal: true },
+  { id: "invite", label: "Invitation", personal: true },
+  { id: "reminder", label: "Relance", personal: true },
+  { id: "custom", label: "Autre information", personal: false },
 ];
 
 const TEMPLATES = {
@@ -169,13 +170,42 @@ const TEMPLATES = {
 
 // Le texte long sert à l'email, le court à WhatsApp. La relance n'a qu'une
 // version, assez brève pour les deux canaux.
-export function messageFor(kind, household, link) {
+//
+// `custom` est un message libre saisi par les organisateurs : il est fourni
+// en argument plutôt que pris dans les modèles.
+export function messageFor(kind, household, link, custom) {
   const lang = ["fr", "en", "el"].includes(household.lang) ? household.lang : "fr";
-  const tpl = TEMPLATES[kind];
   const name = household.name;
+
+  if (kind === "custom") {
+    const pick = (obj) => (obj?.[lang]?.trim() ? obj[lang] : obj?.fr || "");
+    const body = pick(custom?.body);
+    return {
+      subject: pick(custom?.title) || "Des nouvelles du mariage",
+      email: `${name},\n\n${body}\n\n${config.coupleNames}`,
+      whatsapp: body,
+    };
+  }
+
+  const tpl = TEMPLATES[kind];
   return {
     subject: tpl.subject[lang],
     email: (tpl.long || tpl.short)[lang](name, link),
     whatsapp: tpl.short[lang](name, link),
   };
+}
+
+// Version sans nom ni lien personnel, pour un email unique envoyé en copie
+// cachée à plusieurs foyers d'une même langue.
+export function bulkMessageFor(kind, lang, custom) {
+  const l = ["fr", "en", "el"].includes(lang) ? lang : "fr";
+  if (kind === "custom") {
+    const pick = (obj) => (obj?.[l]?.trim() ? obj[l] : obj?.fr || "");
+    return {
+      subject: pick(custom?.title) || "Des nouvelles du mariage",
+      body: `${pick(custom?.body)}\n\n${config.coupleNames}`,
+    };
+  }
+  const tpl = TEMPLATES[kind];
+  return { subject: tpl.subject[l], body: tpl.short[l]("", "") };
 }

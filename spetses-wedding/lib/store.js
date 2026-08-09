@@ -242,6 +242,7 @@ export async function adminLoad() {
     news: ls.get("sw:news", SEED_NEWS),
     photos: ls.get("sw:photos", []),
     messages: ls.get("sw:messages", []),
+    sends: ls.get("sw:sends", {}),
     todos: ls.get("sw:todos", SEED_TODOS),
     suppliers: ls.get("sw:suppliers", SEED_SUPPLIERS),
     budget: ls.get("sw:budget", SEED_BUDGET),
@@ -305,6 +306,12 @@ export async function adminAction(payload) {
         const seed = SEED_HOUSEHOLDS.find((h) => h.token === token);
         ls.set("sw:householdEdits", { ...ls.get("sw:householdEdits", {}), [token]: { ...seed, ...fields } });
       }
+      return { ok: true };
+    }
+    case "markSent": {
+      const all = ls.get("sw:sends", {});
+      all[payload.token] = { ...(all[payload.token] || {}), [payload.kind]: new Date().toISOString() };
+      ls.set("sw:sends", all);
       return { ok: true };
     }
     case "removeHousehold":

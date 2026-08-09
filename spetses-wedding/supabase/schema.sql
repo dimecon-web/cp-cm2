@@ -124,7 +124,7 @@ create table if not exists wedding_suppliers (
 create table if not exists wedding_sends (
   id uuid primary key default gen_random_uuid(),
   household_id uuid references wedding_households(id) on delete cascade,
-  kind text not null check (kind in ('invite', 'reminder', 'news')),
+  kind text not null check (kind in ('saveDate', 'invite', 'reminder', 'custom', 'news')),
   channel text not null check (channel in ('email', 'whatsapp')),
   sent_at timestamptz not null default now()
 );
