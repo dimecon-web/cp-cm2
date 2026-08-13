@@ -18,54 +18,69 @@ export const config = {
     { id: "both", label: "Les deux" },
   ],
 
-  // Programme — detailsPublic:false = lieu/horaire précis révélés plus tard (choix E3c)
+  // Programme. `status` est le mot affiché en badge sous chaque événement :
+  // il sert à dire franchement ce qui n'est pas encore arrêté.
+  // `dateAlt` permet d'annoncer un événement dont la date hésite entre deux jours.
   events: [
     {
       id: "party",
-      date: "2027-07-08",
-      time: "19:00",
-      detailsPublic: false,
-      name: { fr: "Pré-wedding party", en: "Pre-wedding party", el: "Πάρτι πριν τον γάμο" },
+      date: "2027-07-09",
+      name: { fr: "Rencontre pré-wedding", en: "Pre-wedding get-together", el: "Συνάντηση πριν τον γάμο" },
       desc: {
-        fr: "On se retrouve, on trinque, on danse — l'échauffement officiel.",
-        en: "We meet, we toast, we dance — the official warm-up.",
-        el: "Βρισκόμαστε, τσουγκρίζουμε, χορεύουμε — η επίσημη προθέρμανση.",
+        fr: "La veille du mariage, on se retrouve tous pour un premier verre — les retrouvailles avant la fête.",
+        en: "The day before the wedding, we all gather for a first drink — reunions before the party.",
+        el: "Την παραμονή του γάμου, βρισκόμαστε όλοι για ένα πρώτο ποτό.",
+      },
+      status: {
+        fr: "Heure et lieu à définir",
+        en: "Time and venue to be confirmed",
+        el: "Ώρα και τοποθεσία θα ανακοινωθούν",
       },
     },
     {
       id: "tour",
       date: "2027-07-09",
-      time: "10:30",
-      detailsPublic: false,
+      dateAlt: "2027-07-10",
       name: { fr: "Visite guidée de l'île", en: "Guided island tour", el: "Ξενάγηση στο νησί" },
       desc: {
         fr: "Balade guidée : le vieux port, la maison de Bouboulina et l'école Anargyrios.",
         en: "Guided walk: the old harbour, Bouboulina's house and the Anargyrios school.",
         el: "Ξενάγηση: το παλιό λιμάνι, το σπίτι της Μπουμπουλίνας και η Αναργύρειος Σχολή.",
       },
+      status: {
+        fr: "Date à confirmer : le 9, ou le 10 au matin",
+        en: "Date to be confirmed: the 9th, or the morning of the 10th",
+        el: "Η ημερομηνία θα επιβεβαιωθεί: στις 9, ή το πρωί της 10ης",
+      },
     },
     {
       id: "wedding",
       date: "2027-07-10",
-      time: "17:00",
-      detailsPublic: false,
       name: { fr: "Le mariage", en: "The wedding", el: "Ο γάμος" },
       desc: {
         fr: "Le grand moment — cérémonie, dîner et fête jusqu'au bout de la nuit.",
         en: "The big moment — ceremony, dinner and party until late.",
         el: "Η μεγάλη στιγμή — τελετή, δείπνο και γλέντι μέχρι το πρωί.",
       },
+      status: {
+        fr: "Lieu et horaires bientôt communiqués",
+        en: "Venue and timings coming soon",
+        el: "Τοποθεσία και ώρες σύντομα",
+      },
     },
     {
-      id: "brunch",
+      id: "beach",
       date: "2027-07-11",
-      time: "12:00",
-      detailsPublic: false,
-      name: { fr: "Brunch & debrief", en: "Brunch & debrief", el: "Brunch & απολογισμός" },
+      name: { fr: "Journée à la plage", en: "Beach day", el: "Ημέρα στην παραλία" },
       desc: {
-        fr: "Dernier rassemblement, les pieds dans l'eau, pour refaire la soirée.",
-        en: "One last gathering by the water to relive the night.",
-        el: "Μια τελευταία συνάντηση δίπλα στη θάλασσα.",
+        fr: "Le lendemain, on se retrouve tous à la plage pour passer la journée ensemble — les pieds dans l'eau, en refaisant la soirée.",
+        en: "The day after, we all meet at the beach to spend the day together — feet in the water, reliving the night.",
+        el: "Την επόμενη μέρα, βρισκόμαστε όλοι στην παραλία για να περάσουμε τη μέρα μαζί.",
+      },
+      status: {
+        fr: "Lieu exact et horaires à confirmer",
+        en: "Exact place and timings to be confirmed",
+        el: "Ακριβής τοποθεσία και ώρες θα επιβεβαιωθούν",
       },
     },
   ],

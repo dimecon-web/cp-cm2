@@ -17,7 +17,6 @@ export default function AdminDashboard() {
   const participants = yes.flatMap((h) => h.rsvp.participants || []);
   const adults = participants.filter((p) => p.type === "adult").length;
   const kids = participants.filter((p) => p.type === "child").length;
-  const allergies = participants.filter((p) => p.diet === "allergy");
 
   const arrivals = {};
   for (const h of yes) {
@@ -58,13 +57,6 @@ export default function AdminDashboard() {
         <div className="stat sun"><div className="num">{pending.length}</div><div className="lbl">sans réponse</div></div>
         <div className="stat sea"><div className="num">{adults} + {kids}</div><div className="lbl">adultes + enfants</div></div>
       </div>
-
-      {allergies.length > 0 && (
-        <div className="notice">
-          ⚠️ <strong>Allergies graves signalées :</strong>{" "}
-          {allergies.map((p) => `${p.name} (${p.dietNote})`).join(" · ")}
-        </div>
-      )}
 
       <div className="card">
         <h3>Répartition</h3>

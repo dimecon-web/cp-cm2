@@ -58,10 +58,9 @@ export async function POST(request, { params }) {
       household_id: household.id,
       attending: rsvp.attending,
       email: rsvp.email || null,
+      phone: rsvp.phone || null,
       arrival: rsvp.arrival || null,
       departure: rsvp.departure || null,
-      transport: rsvp.transport || null,
-      accommodation: rsvp.accommodation || null,
       notes: rsvp.notes || null,
       updated_at: new Date().toISOString(),
     },
@@ -75,17 +74,21 @@ export async function POST(request, { params }) {
 
   const participants = rsvp.attending === "yes" ? rsvp.participants || [] : [];
   const rows = participants
-    .filter((p) => p.name?.trim())
-    .map((p, i) => ({
-      household_id: household.id,
-      position: i,
-      name: p.name.trim(),
-      type: p.type === "child" ? "child" : "adult",
-      age: p.type === "child" && p.age !== "" ? Number(p.age) : null,
-      diet: ["none", "veg", "allergy"].includes(p.diet) ? p.diet : "none",
-      diet_note: p.diet === "allergy" ? p.dietNote || null : null,
-      events: p.events || {},
-    }));
+    .filter((p) => (p.firstName || "").trim() || (p.lastName || "").trim())
+    .map((p, i) => {
+      const first = (p.firstName || "").trim();
+      const last = (p.lastName || "").trim();
+      return {
+        household_id: household.id,
+        position: i,
+        first_name: first,
+        last_name: last,
+        name: [first, last].filter(Boolean).join(" "),   // pratique pour les exports
+        type: p.type === "child" ? "child" : "adult",
+        age: p.type === "child" && p.age !== "" ? Number(p.age) : null,
+        events: p.events || {},
+      };
+    });
 
   if (rows.length) {
     const { error } = await db.from("wedding_participants").insert(rows);

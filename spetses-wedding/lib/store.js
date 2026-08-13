@@ -56,26 +56,28 @@ const SEED_RSVPS = {
     attending: "yes",
     email: "sophie.durand@example.com",
     participants: [
-      { name: "Sophie Durand", type: "adult", age: "", diet: "none", dietNote: "", events: { party: true, tour: true, wedding: true, brunch: true } },
-      { name: "Marc Durand", type: "adult", age: "", diet: "none", dietNote: "", events: { party: true, tour: false, wedding: true, brunch: true } },
-      { name: "Jules Durand", type: "child", age: "7", diet: "allergy", dietNote: "Arachides (grave)", events: { party: false, tour: false, wedding: true, brunch: true } },
+      { firstName: "Sophie", lastName: "Durand", type: "adult", age: "", events: { party: true, tour: true, wedding: true, beach: true } },
+      { firstName: "Marc", lastName: "Durand", type: "adult", age: "", events: { party: true, tour: false, wedding: true, beach: true } },
+      { firstName: "Jules", lastName: "Durand", type: "child", age: "7", events: { party: false, tour: false, wedding: true, beach: true } },
     ],
-    arrival: "2027-07-07", departure: "2027-07-12", transport: "plane",
-    accommodation: "booked", notes: "On a trop hâte !", updatedAt: "2026-07-20T10:00:00Z",
+    phone: "+33600000001",
+    arrival: "2027-07-07", departure: "2027-07-12",
+    notes: "On a trop hâte !", updatedAt: "2026-07-20T10:00:00Z",
   },
   b3x8m1: {
     attending: "yes",
     email: "wilsons@example.com",
     participants: [
-      { name: "Emma Wilson", type: "adult", age: "", diet: "veg", dietNote: "", events: { party: true, tour: true, wedding: true, brunch: false } },
-      { name: "James Wilson", type: "adult", age: "", diet: "none", dietNote: "", events: { party: true, tour: true, wedding: true, brunch: false } },
+      { firstName: "Emma", lastName: "Wilson", type: "adult", age: "", events: { party: true, tour: true, wedding: true, beach: false } },
+      { firstName: "James", lastName: "Wilson", type: "adult", age: "", events: { party: true, tour: true, wedding: true, beach: false } },
     ],
-    arrival: "2027-07-08", departure: "2027-07-11", transport: "plane",
-    accommodation: "searching", notes: "", updatedAt: "2026-07-25T09:00:00Z",
+    phone: "+44700000002",
+    arrival: "2027-07-08", departure: "2027-07-11",
+    notes: "", updatedAt: "2026-07-25T09:00:00Z",
   },
   d5r2w8: {
-    attending: "no", email: "lea.martin@example.com", participants: [],
-    arrival: "", departure: "", transport: "", accommodation: "",
+    attending: "no", email: "lea.martin@example.com", phone: "", participants: [],
+    arrival: "", departure: "",
     notes: "Je serai à l'étranger, pardon…", updatedAt: "2026-07-22T18:30:00Z",
   },
 };
@@ -113,9 +115,8 @@ export function emptyRsvp() {
   const events = Object.fromEntries(EVENT_IDS.map((id) => [id, id === "wedding"]));
   return {
     attending: null,
-    email: "",
-    participants: [{ name: "", type: "adult", age: "", diet: "none", dietNote: "", events: { ...events } }],
-    arrival: "", departure: "", transport: "", accommodation: "", notes: "", updatedAt: null,
+    participants: [{ firstName: "", lastName: "", type: "adult", age: "", events: { ...events } }],
+    email: "", phone: "", arrival: "", departure: "", notes: "", updatedAt: null,
   };
 }
 
@@ -377,23 +378,23 @@ function sideLabel(side) {
 
 export function rsvpsToCsv(households) {
   const rows = [[
-    "Foyer", "Catégorie", "Côté", "Lien", "Statut", "Participant", "Type", "Âge", "Alimentation", "Détail allergie",
-    ...EVENT_IDS, "Arrivée", "Départ", "Transport", "Hébergement", "Email", "Notes",
+    "Foyer", "Catégorie", "Côté", "Lien", "Statut", "Prénom", "Nom", "Type", "Âge",
+    ...EVENT_IDS, "Arrivée", "Départ", "Email", "Téléphone", "Notes",
   ]];
   const blanks = EVENT_IDS.map(() => "");
   for (const h of households) {
     const r = h.rsvp;
     if (!r?.attending) {
-      rows.push([h.name, h.category || "", sideLabel(h.side), h.token, "sans réponse", "", "", "", "", "", ...blanks, "", "", "", "", h.email, ""]);
+      rows.push([h.name, h.category || "", sideLabel(h.side), h.token, "sans réponse", "", "", "", "", ...blanks, "", "", h.email, h.phone, ""]);
     } else if (r.attending === "no") {
-      rows.push([h.name, h.category || "", sideLabel(h.side), h.token, "non", "", "", "", "", "", ...blanks, "", "", "", "", r.email || h.email, r.notes]);
+      rows.push([h.name, h.category || "", sideLabel(h.side), h.token, "non", "", "", "", "", ...blanks, "", "", r.email || h.email, r.phone || h.phone, r.notes]);
     } else {
       for (const p of r.participants) {
         rows.push([
-          h.name, h.category || "", sideLabel(h.side), h.token, "oui", p.name, p.type === "child" ? "enfant" : "adulte", p.age,
-          p.diet, p.dietNote,
+          h.name, h.category || "", sideLabel(h.side), h.token, "oui",
+          p.firstName ?? p.name, p.lastName ?? "", p.type === "child" ? "enfant" : "adulte", p.age,
           ...EVENT_IDS.map((id) => (p.events?.[id] ? "oui" : "non")),
-          r.arrival, r.departure, r.transport, r.accommodation, r.email || h.email, r.notes,
+          r.arrival, r.departure, r.email || h.email, r.phone || h.phone, r.notes,
         ]);
       }
     }

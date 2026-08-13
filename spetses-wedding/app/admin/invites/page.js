@@ -12,9 +12,6 @@ const EMPTY_CUSTOM = { title: { fr: "", en: "", el: "" }, body: { fr: "", en: ""
 const LANGS = [["fr", "Français"], ["en", "English"], ["el", "Ελληνικά"]];
 
 const sideLabel = (side) => config.sides.find((s) => s.id === side)?.label || "";
-const TRANSPORT = { plane: "Avion (via Athènes)", ferry: "Ferry", car: "Voiture + bateau-taxi", other: "Autre / pas encore décidé" };
-const ACCOMMODATION = { booked: "Hébergement réservé", searching: "En recherche", hosted: "Logé·e par les mariés / la famille", unknown: "Pas encore décidé" };
-const DIET = { none: "—", veg: "Végétarien / végétalien", allergy: "Allergie grave" };
 const SEND_LABEL = { saveDate: "Save the date", invite: "Invitation", reminder: "Relance", custom: "Information", news: "Actualité" };
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "—");
 const statusOf = (h) =>
@@ -526,21 +523,17 @@ function HouseholdDetails({ household, link, sends }) {
           <table className="data">
             <thead>
               <tr>
-                <th>Participant</th><th>Type</th><th>Âge</th><th>Alimentation</th>
+                <th>Prénom</th><th>Nom</th><th>Type</th><th>Âge</th>
                 {config.events.map((ev) => <th key={ev.id}>{ev.name.fr}</th>)}
               </tr>
             </thead>
             <tbody>
               {participants.map((p, i) => (
                 <tr key={i}>
-                  <td>{p.name}</td>
+                  <td>{p.firstName || p.name}</td>
+                  <td>{p.lastName || ""}</td>
                   <td>{p.type === "child" ? "Enfant" : "Adulte"}</td>
                   <td>{p.age || "—"}</td>
-                  <td>
-                    {p.diet === "allergy"
-                      ? <span className="badge bougain">{p.dietNote || "Allergie grave"}</span>
-                      : DIET[p.diet] || "—"}
-                  </td>
                   {config.events.map((ev) => (
                     <td key={ev.id}>{p.events?.[ev.id] ? "✓" : "—"}</td>
                   ))}
@@ -555,8 +548,6 @@ function HouseholdDetails({ household, link, sends }) {
         <dl className="facts">
           <div><dt>Arrivée</dt><dd>{fmtDate(r.arrival)}</dd></div>
           <div><dt>Départ</dt><dd>{fmtDate(r.departure)}</dd></div>
-          <div><dt>Transport</dt><dd>{TRANSPORT[r.transport] || "—"}</dd></div>
-          <div><dt>Hébergement</dt><dd>{ACCOMMODATION[r.accommodation] || "—"}</dd></div>
         </dl>
       )}
 
@@ -568,7 +559,8 @@ function HouseholdDetails({ household, link, sends }) {
 
       <dl className="facts" style={{ marginTop: 14 }}>
         <div><dt>Lien personnel</dt><dd><a href={link} target="_blank" rel="noreferrer">{link}</a></dd></div>
-        <div><dt>Email de réponse</dt><dd>{r?.email || household.email || "—"}</dd></div>
+        <div><dt>Email</dt><dd>{r?.email || household.email || "—"}</dd></div>
+        <div><dt>Téléphone</dt><dd>{r?.phone || household.phone || "—"}</dd></div>
         <div><dt>Envois</dt>
           <dd>
             {sends && Object.keys(sends).length > 0

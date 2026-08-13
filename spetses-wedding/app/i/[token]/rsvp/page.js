@@ -11,7 +11,6 @@ export default function RsvpPage() {
   const t = useT();
   const pick = usePick();
   const { lang } = useLang();
-  const [household, setHousehold] = useState(null);
   const [rsvp, setRsvp] = useState(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -20,10 +19,16 @@ export default function RsvpPage() {
   useEffect(() => {
     let cancelled = false;
     loadGuest(token)
-      .then((data) => {
+      .then(({ household, rsvp }) => {
         if (cancelled) return;
-        setHousehold(data.household);
-        setRsvp(data.rsvp || emptyRsvp());
+        const base = rsvp || emptyRsvp();
+        // Le carnet d'adresses connaît déjà l'un des deux contacts : on le
+        // pré-remplit pour que le foyer n'ait qu'à compléter ce qui manque.
+        setRsvp({
+          ...base,
+          email: base.email || household?.email || "",
+          phone: base.phone || household?.phone || "",
+        });
       })
       .catch(() => { if (!cancelled) setRsvp(emptyRsvp()); });
     return () => { cancelled = true; };
@@ -33,11 +38,10 @@ export default function RsvpPage() {
 
   const deadline = new Date(config.rsvpDeadline);
   const closed = new Date() > deadline;
-  const deadlineStr = deadline.toLocaleDateString(lang === "en" ? "en-GB" : lang === "el" ? "el-GR" : "fr-FR", {
-    day: "numeric", month: "long", year: "numeric",
-  });
+  const locale = lang === "en" ? "en-GB" : lang === "el" ? "el-GR" : "fr-FR";
+  const deadlineStr = deadline.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
 
-  const set = (patch) => { setRsvp((r) => ({ ...r, ...patch })); setSaved(false); };
+  const set = (patch) => { setRsvp((r) => ({ ...r, ...patch })); setSaved(false); setError(""); };
   const setParticipant = (i, patch) => {
     setRsvp((r) => ({ ...r, participants: r.participants.map((p, j) => (j === i ? { ...p, ...patch } : p)) }));
     setSaved(false);
@@ -59,6 +63,10 @@ export default function RsvpPage() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (!rsvp.email.trim() && !rsvp.phone.trim()) {
+      setError(t("rsvp.contactRequired"));
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -106,15 +114,22 @@ export default function RsvpPage() {
           </div>
         </div>
 
-        {/* Demande d'email quand le carnet d'adresses ne l'a pas déjà */}
-        {rsvp.attending && (!household || !household.email || rsvp.email) && (
+        {rsvp.attending && (
           <div className="card">
-            <label className="field">
-              <span className="lbl">{t("rsvp.emailLabel")}</span>
-              <input type="email" value={rsvp.email}
-                onChange={(e) => set({ email: e.target.value })} disabled={closed} />
-              <div className="hint">{t("rsvp.emailHint")}</div>
-            </label>
+            <h3>{t("rsvp.contact")}</h3>
+            <p className="hint" style={{ marginBottom: 14 }}>{t("rsvp.contactHint")}</p>
+            <div className="grid-2">
+              <label className="field">
+                <span className="lbl">{t("rsvp.emailLabel")}</span>
+                <input type="email" value={rsvp.email}
+                  onChange={(e) => set({ email: e.target.value })} disabled={closed} />
+              </label>
+              <label className="field">
+                <span className="lbl">{t("rsvp.phoneLabel")}</span>
+                <input type="tel" placeholder="+33…" value={rsvp.phone}
+                  onChange={(e) => set({ phone: e.target.value })} disabled={closed} />
+              </label>
+            </div>
           </div>
         )}
 
@@ -127,16 +142,23 @@ export default function RsvpPage() {
                   <div className="participant-head">
                     <strong>#{i + 1}</strong>
                     {rsvp.participants.length > 1 && !closed && (
-                      <button type="button" className="icon-btn" aria-label="Retirer"
+                      <button type="button" className="icon-btn" aria-label="✕"
                         onClick={() => removeParticipant(i)}>✕</button>
                     )}
                   </div>
                   <div className="grid-2">
                     <label className="field">
-                      <span className="lbl">{t("rsvp.name")}</span>
-                      <input type="text" value={p.name} required
-                        onChange={(e) => setParticipant(i, { name: e.target.value })} disabled={closed} />
+                      <span className="lbl">{t("rsvp.firstName")}</span>
+                      <input type="text" value={p.firstName} required
+                        onChange={(e) => setParticipant(i, { firstName: e.target.value })} disabled={closed} />
                     </label>
+                    <label className="field">
+                      <span className="lbl">{t("rsvp.lastName")}</span>
+                      <input type="text" value={p.lastName} required
+                        onChange={(e) => setParticipant(i, { lastName: e.target.value })} disabled={closed} />
+                    </label>
+                  </div>
+                  <div className="grid-2">
                     <div>
                       <span className="lbl" style={{ display: "block", fontSize: 14, fontWeight: 600, marginBottom: 5 }}>
                         {t("rsvp.adult")} / {t("rsvp.child")}
@@ -152,30 +174,15 @@ export default function RsvpPage() {
                         </button>
                       </div>
                     </div>
+                    {p.type === "child" && (
+                      <label className="field" style={{ maxWidth: 140 }}>
+                        <span className="lbl">{t("rsvp.age")}</span>
+                        <input type="number" min="0" max="17" value={p.age}
+                          onChange={(e) => setParticipant(i, { age: e.target.value })} disabled={closed} />
+                      </label>
+                    )}
                   </div>
-                  {p.type === "child" && (
-                    <label className="field" style={{ maxWidth: 140 }}>
-                      <span className="lbl">{t("rsvp.age")}</span>
-                      <input type="number" min="0" max="17" value={p.age}
-                        onChange={(e) => setParticipant(i, { age: e.target.value })} disabled={closed} />
-                    </label>
-                  )}
-                  <label className="field">
-                    <span className="lbl">{t("rsvp.diet")}</span>
-                    <select value={p.diet} onChange={(e) => setParticipant(i, { diet: e.target.value })} disabled={closed}>
-                      <option value="none">{t("rsvp.dietNone")}</option>
-                      <option value="veg">{t("rsvp.dietVeg")}</option>
-                      <option value="allergy">{t("rsvp.dietAllergy")}</option>
-                    </select>
-                  </label>
-                  {p.diet === "allergy" && (
-                    <label className="field">
-                      <span className="lbl">{t("rsvp.dietNote")}</span>
-                      <input type="text" value={p.dietNote} required
-                        onChange={(e) => setParticipant(i, { dietNote: e.target.value })} disabled={closed} />
-                    </label>
-                  )}
-                  <div>
+                  <div style={{ marginTop: 10 }}>
                     <span style={{ display: "block", fontSize: 14, fontWeight: 600, marginBottom: 6 }}>
                       {t("rsvp.events")}
                     </span>
@@ -211,26 +218,6 @@ export default function RsvpPage() {
                   <span className="lbl">{t("rsvp.departure")}</span>
                   <input type="date" value={rsvp.departure}
                     onChange={(e) => set({ departure: e.target.value })} disabled={closed} />
-                </label>
-                <label className="field">
-                  <span className="lbl">{t("rsvp.transport")}</span>
-                  <select value={rsvp.transport} onChange={(e) => set({ transport: e.target.value })} disabled={closed}>
-                    <option value=""></option>
-                    <option value="plane">{t("rsvp.tPlane")}</option>
-                    <option value="ferry">{t("rsvp.tFerry")}</option>
-                    <option value="car">{t("rsvp.tCar")}</option>
-                    <option value="other">{t("rsvp.tOther")}</option>
-                  </select>
-                </label>
-                <label className="field">
-                  <span className="lbl">{t("rsvp.accommodation")}</span>
-                  <select value={rsvp.accommodation} onChange={(e) => set({ accommodation: e.target.value })} disabled={closed}>
-                    <option value=""></option>
-                    <option value="booked">{t("rsvp.aBooked")}</option>
-                    <option value="searching">{t("rsvp.aSearching")}</option>
-                    <option value="hosted">{t("rsvp.aHosted")}</option>
-                    <option value="unknown">{t("rsvp.aUnknown")}</option>
-                  </select>
                 </label>
               </div>
             </div>

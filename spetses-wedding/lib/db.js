@@ -34,6 +34,7 @@ export function rowToRsvp(rsvp, participants) {
   return {
     attending: rsvp?.attending ?? null,
     email: rsvp?.email ?? "",
+    phone: rsvp?.phone ?? "",
     arrival: rsvp?.arrival ?? "",
     departure: rsvp?.departure ?? "",
     transport: rsvp?.transport ?? "",
@@ -43,11 +44,11 @@ export function rowToRsvp(rsvp, participants) {
     participants: (participants || [])
       .sort((a, b) => a.position - b.position)
       .map((p) => ({
+        firstName: p.first_name ?? "",
+        lastName: p.last_name ?? "",
         name: p.name,
         type: p.type,
         age: p.age == null ? "" : String(p.age),
-        diet: p.diet,
-        dietNote: p.diet_note ?? "",
         events: p.events || {},
       })),
   };
