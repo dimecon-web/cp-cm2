@@ -44,6 +44,21 @@ export default function ContactPage() {
         <div className="notice info">💬 {t("contact.whatsappSoon")}</div>
       )}
 
+      <div className="card">
+        <h3>{t("contact.reachUs")}</h3>
+        <ul className="contact-list">
+          {config.couple.map((c) => (
+            <li key={c.email}>
+              <strong>{c.name}</strong>
+              <a href={`mailto:${c.email}`}>{c.email}</a>
+              <a href={`https://wa.me/${c.phone.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer">
+                💬 {c.phone}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       {sent && <div className="notice ok" role="status">{t("contact.sent")}</div>}
       {error && <div className="notice" role="alert">{error}</div>}
 

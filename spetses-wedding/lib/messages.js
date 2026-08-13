@@ -26,6 +26,26 @@ const PLACE = {
   el: "τις Σπέτσες",
 };
 
+// Signature commune : les invités doivent toujours savoir à qui répondre,
+// quelle que soit la personne qui a matériellement envoyé le message.
+const REACH_US = {
+  fr: "Pour nous joindre",
+  en: "To reach us",
+  el: "Για να επικοινωνήσετε μαζί μας",
+};
+
+function signature(lang) {
+  const lines = config.couple.map((c) => `${c.name} — ${c.phone} — ${c.email}`);
+  return `${REACH_US[lang] || REACH_US.fr} :\n${lines.join("\n")}`;
+}
+
+// Le site continuera de s'étoffer : autant le dire dès le premier message.
+const LIVING_SITE = {
+  fr: "Le site s'enrichira au fil de l'eau : programme détaillé, conseils pour venir, adresses où dormir… Passez y jeter un œil de temps en temps.",
+  en: "The website will keep growing: detailed programme, travel tips, places to stay… Do drop by from time to time.",
+  el: "Η ιστοσελίδα θα εμπλουτίζεται συνεχώς: αναλυτικό πρόγραμμα, συμβουλές για το ταξίδι, καταλύματα… Περνάτε πού και πού.",
+};
+
 export const MESSAGE_KINDS = [
   { id: "saveDate", label: "Save the date", personal: true },
   { id: "invite", label: "Invitation", personal: true },
@@ -46,17 +66,20 @@ const TEMPLATES = {
         `☀️ Save the date ! On se marie le ${DATE_TEXT.fr}, à ${PLACE.fr} 🇬🇷\n` +
         `Entourez la date en gros et posez vos congés avant les collègues 😄\n` +
         `Et si vous le savez déjà, dites-nous si vous venez et combien vous serez : ${link}\n` +
-        `Tout restera modifiable jusqu'à ${DEADLINE_TEXT.fr} — nombre de personnes, dates d'arrivée et de départ. Rien n'est gravé dans le marbre !`,
+        `Tout restera modifiable jusqu'à ${DEADLINE_TEXT.fr} — nombre de personnes, dates d'arrivée et de départ. Rien n'est gravé dans le marbre !\n` +
+        `${LIVING_SITE.fr}`,
       en: (n, link) =>
         `☀️ Save the date! We're getting married on ${DATE_TEXT.en}, in ${PLACE.en} 🇬🇷\n` +
         `Circle the date and book those days off before your colleagues get there first 😄\n` +
         `And if you already know, tell us whether you're coming and how many of you: ${link}\n` +
-        `Everything stays editable until ${DEADLINE_TEXT.en} — number of people, arrival and departure dates. Nothing is set in stone!`,
+        `Everything stays editable until ${DEADLINE_TEXT.en} — number of people, arrival and departure dates. Nothing is set in stone!\n` +
+        `${LIVING_SITE.en}`,
       el: (n, link) =>
         `☀️ Κρατήστε την ημερομηνία! Παντρευόμαστε το ${DATE_TEXT.el}, στις Σπέτσες 🇬🇷\n` +
         `Κυκλώστε την ημερομηνία και κλείστε την άδειά σας πριν προλάβουν οι συνάδελφοι 😄\n` +
         `Κι αν το ξέρετε ήδη, πείτε μας αν έρχεστε και πόσοι θα είστε: ${link}\n` +
-        `Όλα μπορούν να αλλάξουν μέχρι ${DEADLINE_TEXT.el} — αριθμός ατόμων, ημερομηνίες άφιξης και αναχώρησης. Τίποτα δεν είναι οριστικό!`,
+        `Όλα μπορούν να αλλάξουν μέχρι ${DEADLINE_TEXT.el} — αριθμός ατόμων, ημερομηνίες άφιξης και αναχώρησης. Τίποτα δεν είναι οριστικό!\n` +
+        `${LIVING_SITE.el}`,
     },
     long: {
       fr: (n, link) =>
@@ -66,7 +89,7 @@ const TEMPLATES = {
         `Deuxième mission, si le cœur vous en dit : on vous a préparé un petit site rien que pour vous, où vous pouvez déjà nous dire si vous venez et combien vous serez.\n\n` +
         `👉 ${link}\n\n` +
         `Il vous reconnaît tout seul, pas de mot de passe à retenir. Et surtout : rien n'est définitif. Le nombre de personnes, vos dates d'arrivée et de départ, tout restera modifiable jusqu'à ${DEADLINE_TEXT.fr}. Répondez au feeling, on ajustera ensemble.\n\n` +
-        `Le programme complet et les détails pratiques arrivent dans les prochaines semaines. D'ici là, sachez seulement qu'on a hâte — vraiment hâte — de fêter et de partager ce moment avec vous. Et que les pastèques sont déjà commandées. Enfin, presque : le débat sur la quantité fait rage.\n\n` +
+        `${LIVING_SITE.fr} Le programme complet et les détails pratiques arrivent dans les prochaines semaines. D'ici là, sachez seulement qu'on a hâte — vraiment hâte — de fêter et de partager ce moment avec vous. Et que les pastèques sont déjà commandées. Enfin, presque : le débat sur la quantité fait rage.\n\n` +
         `À très vite ! ☀️\n${config.coupleNames}\n\n` +
         `P.-S. — Un conseil d'ami : en juillet, les vols vers la Grèce partent vite. Rien à réserver dans l'immédiat, mais gardez un œil dessus.`,
       en: (n, link) =>
@@ -76,7 +99,7 @@ const TEMPLATES = {
         `Second mission, if you feel like it: we've prepared a little website just for you, where you can already tell us whether you're coming and how many of you there will be.\n\n` +
         `👉 ${link}\n\n` +
         `It recognises you on its own, no password to remember. And above all: nothing is final. The number of people, your arrival and departure dates — everything stays editable until ${DEADLINE_TEXT.en}. Answer with your gut, we'll adjust together.\n\n` +
-        `The full programme and practical details are coming in the next few weeks. Until then, just know that we can't wait — truly — to celebrate and share this moment with you. And that the watermelons are already on order. Almost: the debate about how many rages on.\n\n` +
+        `${LIVING_SITE.en} The full programme and practical details are coming in the next few weeks. Until then, just know that we can't wait — truly — to celebrate and share this moment with you. And that the watermelons are already on order. Almost: the debate about how many rages on.\n\n` +
         `See you very soon! ☀️\n${config.coupleNames}\n\n` +
         `P.S. — A friendly tip: July flights to Greece fill up fast. Nothing to book yet, but keep an eye out.`,
       el: (n, link) =>
@@ -86,7 +109,7 @@ const TEMPLATES = {
         `Δεύτερη αποστολή, αν θέλετε: σας ετοιμάσαμε μια μικρή ιστοσελίδα μόνο για εσάς, όπου μπορείτε ήδη να μας πείτε αν έρχεστε και πόσοι θα είστε.\n\n` +
         `👉 ${link}\n\n` +
         `Σας αναγνωρίζει μόνη της, χωρίς κωδικό. Και κυρίως: τίποτα δεν είναι οριστικό. Ο αριθμός των ατόμων, οι ημερομηνίες άφιξης και αναχώρησης — όλα μπορούν να αλλάξουν μέχρι ${DEADLINE_TEXT.el}.\n\n` +
-        `Το πλήρες πρόγραμμα και οι πρακτικές λεπτομέρειες έρχονται τις επόμενες εβδομάδες. Μέχρι τότε, να ξέρετε μόνο ότι ανυπομονούμε — πραγματικά — να γιορτάσουμε αυτή τη στιγμή μαζί σας. Και ότι τα καρπούζια έχουν ήδη παραγγελθεί. Σχεδόν: η συζήτηση για την ποσότητα συνεχίζεται.\n\n` +
+        `${LIVING_SITE.el} Το πλήρες πρόγραμμα και οι πρακτικές λεπτομέρειες έρχονται τις επόμενες εβδομάδες. Μέχρι τότε, να ξέρετε μόνο ότι ανυπομονούμε — πραγματικά — να γιορτάσουμε αυτή τη στιγμή μαζί σας. Και ότι τα καρπούζια έχουν ήδη παραγγελθεί. Σχεδόν: η συζήτηση για την ποσότητα συνεχίζεται.\n\n` +
         `Τα λέμε σύντομα! ☀️\n${config.coupleNames}\n\n` +
         `Υ.Γ. — Μια φιλική συμβουλή: τον Ιούλιο οι πτήσεις για Ελλάδα γεμίζουν γρήγορα.`,
     },
@@ -182,7 +205,7 @@ export function messageFor(kind, household, link, custom) {
     const body = pick(custom?.body);
     return {
       subject: pick(custom?.title) || "Des nouvelles du mariage",
-      email: `${name},\n\n${body}\n\n${config.coupleNames}`,
+      email: `${name},\n\n${body}\n\n${config.coupleNames}\n\n${signature(lang)}`,
       whatsapp: body,
     };
   }
@@ -190,7 +213,7 @@ export function messageFor(kind, household, link, custom) {
   const tpl = TEMPLATES[kind];
   return {
     subject: tpl.subject[lang],
-    email: (tpl.long || tpl.short)[lang](name, link),
+    email: `${(tpl.long || tpl.short)[lang](name, link)}\n\n${signature(lang)}`,
     whatsapp: tpl.short[lang](name, link),
   };
 }
@@ -203,9 +226,9 @@ export function bulkMessageFor(kind, lang, custom) {
     const pick = (obj) => (obj?.[l]?.trim() ? obj[l] : obj?.fr || "");
     return {
       subject: pick(custom?.title) || "Des nouvelles du mariage",
-      body: `${pick(custom?.body)}\n\n${config.coupleNames}`,
+      body: `${pick(custom?.body)}\n\n${config.coupleNames}\n\n${signature(l)}`,
     };
   }
   const tpl = TEMPLATES[kind];
-  return { subject: tpl.subject[l], body: tpl.short[l]("", "") };
+  return { subject: tpl.subject[l], body: `${tpl.short[l]("", "")}\n\n${signature(l)}` };
 }

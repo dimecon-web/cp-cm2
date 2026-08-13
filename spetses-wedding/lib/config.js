@@ -8,7 +8,12 @@ export const config = {
   weddingDate: "2027-07-10", // samedi
   rsvpDeadline: "2027-01-31", // fin janvier 2027
   location: { fr: "Spetses, Grèce", en: "Spetses, Greece", el: "Σπέτσες, Ελλάδα" },
-  contactEmail: "dimecon@gmail.com", // adresse qui reçoit les messages du formulaire
+  // Coordonnées des mariés — utilisées dans la signature des messages
+  // envoyés aux invités et sur la page Contact du site.
+  couple: [
+    { name: "Themis Oikonomidi", email: "themis.econ@gmail.com", phone: "+32 472 99 92 81" },
+    { name: "Thierry Vandensteen", email: "vandensteenthierry@hotmail.com", phone: "+32 495 30 86 06" },
+  ],
   whatsappGroupUrl: "", // lien du groupe WhatsApp — affiché sur le site quand renseigné
 
   // « Côté » de chaque foyer, pour l'espace organisateurs.
