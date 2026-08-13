@@ -376,6 +376,57 @@ table.data td.num, table.data th.num { text-align: right; font-variant-numeric: 
 .th-sort:hover { color: var(--sea-deep); }
 .th-sort:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
 
+/* Bouton de regroupement, dans l'en-tête de colonne */
+.th-cell { display: inline-flex; align-items: center; gap: 6px; }
+.th-group {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--line);
+  cursor: pointer;
+}
+.th-group:hover { color: var(--sea); border-color: var(--line); }
+.th-group.on { color: #fff; background: var(--sea); border-color: var(--sea); }
+.th-group:focus-visible { outline: 2px solid var(--sea); outline-offset: 2px; }
+.th-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+
+/* Ligne de titre d'un groupe, à l'intérieur du tableau */
+table.data tr.group-row td {
+  background: var(--sea-soft);
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+table.data tr.group-row td strong { color: var(--sea-deep); }
+table.data.guests td { vertical-align: middle; }
+
+/* Fiche détaillée d'un foyer */
+.details {
+  border-top: 1px solid var(--line);
+  margin-top: 6px;
+  padding-top: 16px;
+  margin-bottom: 16px;
+}
+.details h4 {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+}
+.details-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+dl.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px 18px;
+  margin: 12px 0 0;
+}
+dl.facts dt { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+dl.facts dd { margin: 2px 0 0; font-size: 14px; word-break: break-word; }
+
 /* Rangée de filtres par colonne */
 .filter-row {
   display: grid;

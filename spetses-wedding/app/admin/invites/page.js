@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import QRCode from "qrcode";
 import { config } from "@/lib/config";
 import { useAdmin } from "@/lib/admin";
@@ -12,6 +12,11 @@ const EMPTY_CUSTOM = { title: { fr: "", en: "", el: "" }, body: { fr: "", en: ""
 const LANGS = [["fr", "Français"], ["en", "English"], ["el", "Ελληνικά"]];
 
 const sideLabel = (side) => config.sides.find((s) => s.id === side)?.label || "";
+const TRANSPORT = { plane: "Avion (via Athènes)", ferry: "Ferry", car: "Voiture + bateau-taxi", other: "Autre / pas encore décidé" };
+const ACCOMMODATION = { booked: "Hébergement réservé", searching: "En recherche", hosted: "Logé·e par les mariés / la famille", unknown: "Pas encore décidé" };
+const DIET = { none: "—", veg: "Végétarien / végétalien", allergy: "Allergie grave" };
+const SEND_LABEL = { saveDate: "Save the date", invite: "Invitation", reminder: "Relance", custom: "Information", news: "Actualité" };
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "—");
 const statusOf = (h) =>
   !h.rsvp?.attending ? "Sans réponse" : h.rsvp.attending === "no" ? "Non" : "Oui";
 const peopleOf = (h) => (h.rsvp?.attending === "yes" ? h.rsvp.participants?.length || 0 : 0);
@@ -170,22 +175,11 @@ export default function InvitesPage() {
 
       {/* ---------- Filtres, recherche, regroupement ---------- */}
       <div className="card">
-        <div className="grid-2">
-          <label className="field">
-            <span className="lbl">Rechercher</span>
-            <input type="text" value={search} placeholder="Nom, email, téléphone…"
-              onChange={(e) => setSearch(e.target.value)} />
-          </label>
-          <label className="field">
-            <span className="lbl">Regrouper par</span>
-            <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)}>
-              <option value="">Aucun regroupement</option>
-              {COLUMNS.filter((c) => c.groupable !== false).map((c) => (
-                <option key={c.id} value={c.id}>{c.label}</option>
-              ))}
-            </select>
-          </label>
-        </div>
+        <label className="field">
+          <span className="lbl">Rechercher</span>
+          <input type="text" value={search} placeholder="Nom, email, téléphone…"
+            onChange={(e) => setSearch(e.target.value)} />
+        </label>
 
         <div className="filter-row">
           {COLUMNS.filter((c) => c.groupable !== false).map((c) => (
@@ -202,8 +196,9 @@ export default function InvitesPage() {
 
         <p className="hint" style={{ marginTop: 12, marginBottom: 0 }}>
           {rows.length} foyer{rows.length > 1 ? "s" : ""} · {rows.reduce((n, h) => n + peopleOf(h), 0)} personne(s) confirmée(s)
-          {Object.values(filters).some(Boolean) && (
-            <> · <button className="link-name" onClick={() => setFilters({})}>tout afficher</button></>
+          {groupBy && <> · regroupé par <strong>{COLUMNS.find((c) => c.id === groupBy)?.label}</strong></>}
+          {(Object.values(filters).some(Boolean) || groupBy) && (
+            <> · <button className="link-name" onClick={() => { setFilters({}); setGroupBy(""); }}>tout afficher</button></>
           )}
         </p>
       </div>
@@ -327,8 +322,13 @@ export default function InvitesPage() {
       {/* ---------- Fiche en cours de modification ---------- */}
       {editing && (
         <form className="card" onSubmit={saveEdit} style={{ borderColor: "var(--bougain)" }}>
-          <h3>Modifier — {editing.name}</h3>
+          <h3>Fiche — {editing.name}</h3>
           <HouseholdFields values={editing} onChange={(p) => setEditing({ ...editing, ...p })} categories={categories} />
+          <HouseholdDetails
+            household={households.find((h) => h.token === editing.token)}
+            link={`${origin}/i/${editing.token}`}
+            sends={sends[editing.token]}
+          />
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button className="btn small" type="submit">Enregistrer</button>
             <button className="btn ghost small" type="button" onClick={() => setEditing(null)}>Annuler</button>
@@ -345,85 +345,118 @@ export default function InvitesPage() {
         </form>
       )}
 
-      {/* ---------- Tableau ---------- */}
-      {groups.map(([groupName, groupRows]) => (
-        <div className="card" key={groupName ?? "all"}>
-          {groupName && (
-            <h3 style={{ marginBottom: 4 }}>
-              {groupName}{" "}
-              <span className="badge grey" style={{ verticalAlign: 3 }}>
-                {groupRows.length} foyer{groupRows.length > 1 ? "s" : ""} · {groupRows.reduce((n, h) => n + peopleOf(h), 0)} pers.
-              </span>
-            </h3>
-          )}
-          <div className="table-scroll">
-            <table className="data">
-              <thead>
-                <tr>
-                  <th style={{ width: 28 }}>
-                    <input type="checkbox" aria-label="Tout sélectionner dans ce groupe"
-                      checked={groupRows.every((h) => selected.has(h.token))}
-                      onChange={(e) => {
-                        const next = new Set(selected);
-                        groupRows.forEach((h) => (e.target.checked ? next.add(h.token) : next.delete(h.token)));
-                        setSelected(next);
-                      }} />
-                  </th>
-                  {COLUMNS.map((c) => (
-                    <th key={c.id} className={c.numeric ? "num" : ""}>
-                      {c.sortable === false ? c.label : (
-                        <button className="th-sort"
+      {/* ---------- Tableau unique ---------- */}
+      <div className="card">
+        <div className="table-scroll">
+          <table className="data guests">
+            <thead>
+              <tr>
+                <th style={{ width: 30 }}>
+                  <input type="checkbox" aria-label="Tout sélectionner"
+                    checked={rows.length > 0 && rows.every((h) => selected.has(h.token))}
+                    onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((h) => h.token)) : new Set())} />
+                </th>
+                {COLUMNS.map((c) => (
+                  <th key={c.id} className={c.numeric ? "num" : ""}>
+                    <span className="th-cell">
+                      {c.sortable === false ? (
+                        <span className="th-label">{c.label}</span>
+                      ) : (
+                        <button className="th-sort" title={`Trier par ${c.label}`}
                           onClick={() => setSort({ col: c.id, dir: sort.col === c.id ? -sort.dir : 1 })}>
                           {c.label}{sort.col === c.id ? (sort.dir === 1 ? " ▲" : " ▼") : ""}
                         </button>
                       )}
-                    </th>
-                  ))}
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {groupRows.map((h) => (
-                  <tr key={h.token}>
-                    <td>
-                      <input type="checkbox" checked={selected.has(h.token)}
-                        onChange={() => toggle(h.token)} aria-label={`Sélectionner ${h.name}`} />
-                    </td>
-                    <td>
-                      <button className="link-name" onClick={() => setEditing({
-                        token: h.token, name: h.name, email: h.email || "", phone: h.phone || "",
-                        lang: h.lang || "fr", category: h.category || "", side: h.side || "",
-                      })}>{h.name}</button>
-                      <div className="hint">/i/{h.token}</div>
-                    </td>
-                    <td>{h.category || <span className="hint">—</span>}</td>
-                    <td>{h.side ? <span className="badge sea">{sideLabel(h.side)}</span> : <span className="hint">—</span>}</td>
-                    <td>{(h.lang || "fr").toUpperCase()}</td>
-                    <td>
-                      {statusOf(h) === "Oui" && <span className="badge olive">Oui</span>}
-                      {statusOf(h) === "Non" && <span className="badge bougain">Non</span>}
-                      {statusOf(h) === "Sans réponse" && <span className="badge sun">Sans réponse</span>}
-                    </td>
-                    <td className="num">{peopleOf(h) || ""}</td>
-                    <td style={{ fontSize: 13 }}>
-                      {h.email && <div>{h.email}</div>}
-                      {h.phone && <div>{h.phone}</div>}
-                      {!h.email && !h.phone && <span className="badge grey">à compléter</span>}
-                    </td>
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      <button className="btn ghost small" style={{ marginRight: 6 }}
-                        onClick={() => copy(h.token, linkFor(h))}>
-                        {copied === h.token ? "✓" : "🔗"}
-                      </button>
-                      <button className="btn ghost small" onClick={() => showQr(h)}>⬛</button>
-                    </td>
-                  </tr>
+                      {c.groupable !== false && (
+                        <button className={`th-group ${groupBy === c.id ? "on" : ""}`}
+                          title={groupBy === c.id ? `Ne plus regrouper par ${c.label}` : `Regrouper par ${c.label}`}
+                          aria-pressed={groupBy === c.id}
+                          onClick={() => setGroupBy(groupBy === c.id ? "" : c.id)}>
+                          ⊞
+                        </button>
+                      )}
+                    </span>
+                  </th>
                 ))}
-              </tbody>
-            </table>
-          </div>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.length === 0 && (
+                <tr><td colSpan={COLUMNS.length + 2}>
+                  <p className="hint" style={{ margin: 0 }}>Aucun foyer ne correspond à ces critères.</p>
+                </td></tr>
+              )}
+
+              {groups.map(([groupName, groupRows]) => (
+                <Fragment key={groupName ?? "all"}>
+                  {groupName !== null && (
+                    <tr className="group-row">
+                      <td>
+                        <input type="checkbox" aria-label={`Sélectionner le groupe ${groupName}`}
+                          checked={groupRows.every((h) => selected.has(h.token))}
+                          onChange={(e) => {
+                            const next = new Set(selected);
+                            groupRows.forEach((h) => (e.target.checked ? next.add(h.token) : next.delete(h.token)));
+                            setSelected(next);
+                          }} />
+                      </td>
+                      <td colSpan={COLUMNS.length + 1}>
+                        <strong>{groupName}</strong>{" "}
+                        <span className="hint">
+                          {groupRows.length} foyer{groupRows.length > 1 ? "s" : ""} ·{" "}
+                          {groupRows.reduce((n, h) => n + peopleOf(h), 0)} pers.
+                        </span>
+                      </td>
+                    </tr>
+                  )}
+
+                  {groupRows.map((h) => (
+                    <tr key={h.token}>
+                      <td>
+                        <input type="checkbox" checked={selected.has(h.token)}
+                          onChange={() => toggle(h.token)} aria-label={`Sélectionner ${h.name}`} />
+                      </td>
+                      <td>
+                        <button className="link-name" onClick={() => setEditing({
+                          token: h.token, name: h.name, email: h.email || "", phone: h.phone || "",
+                          lang: h.lang || "fr", category: h.category || "", side: h.side || "",
+                        })}>{h.name}</button>
+                        <div className="hint">/i/{h.token}</div>
+                      </td>
+                      <td>{h.category || <span className="hint">—</span>}</td>
+                      <td>{h.side ? <span className="badge sea">{sideLabel(h.side)}</span> : <span className="hint">—</span>}</td>
+                      <td>{(h.lang || "fr").toUpperCase()}</td>
+                      <td>
+                        {statusOf(h) === "Oui" && <span className="badge olive">Oui</span>}
+                        {statusOf(h) === "Non" && <span className="badge bougain">Non</span>}
+                        {statusOf(h) === "Sans réponse" && <span className="badge sun">Sans réponse</span>}
+                      </td>
+                      <td className="num">{peopleOf(h) || ""}</td>
+                      <td style={{ fontSize: 13 }}>
+                        {h.email && <div>{h.email}</div>}
+                        {h.phone && <div>{h.phone}</div>}
+                        {!h.email && !h.phone && <span className="badge grey">à compléter</span>}
+                      </td>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        <button className="btn ghost small" style={{ marginRight: 6 }}
+                          onClick={() => copy(h.token, linkFor(h))}>
+                          {copied === h.token ? "✓" : "🔗"}
+                        </button>
+                        <button className="btn ghost small" onClick={() => showQr(h)}>⬛</button>
+                      </td>
+                    </tr>
+                  ))}
+                </Fragment>
+              ))}
+            </tbody>
+          </table>
         </div>
-      ))}
+        <p className="hint" style={{ marginTop: 10, marginBottom: 0 }}>
+          Cliquez sur un intitulé de colonne pour trier, sur le ⊞ à côté pour regrouper,
+          et sur le nom d'un foyer pour modifier sa fiche.
+        </p>
+      </div>
 
       {qr && (
         <div className="card" style={{ textAlign: "center" }}>
@@ -461,6 +494,90 @@ export default function InvitesPage() {
         </form>
       </div>
     </>
+  );
+}
+
+// Tout ce que le foyer a répondu, en lecture seule : composition, logistique,
+// mot laissé aux mariés, et historique des envois qui lui ont été faits.
+function HouseholdDetails({ household, link, sends }) {
+  if (!household) return null;
+  const r = household.rsvp;
+  const participants = r?.participants || [];
+  const adults = participants.filter((p) => p.type === "adult").length;
+  const kids = participants.filter((p) => p.type === "child").length;
+
+  return (
+    <div className="details">
+      <div className="details-head">
+        <h4>Réponse du foyer</h4>
+        {!r?.attending && <span className="badge sun">Sans réponse</span>}
+        {r?.attending === "no" && <span className="badge bougain">Ne vient pas</span>}
+        {r?.attending === "yes" && (
+          <span className="badge olive">
+            {participants.length} personne{participants.length > 1 ? "s" : ""} · {adults} adulte{adults > 1 ? "s" : ""}
+            {kids > 0 ? ` + ${kids} enfant${kids > 1 ? "s" : ""}` : ""}
+          </span>
+        )}
+        {r?.updatedAt && <span className="hint">mise à jour le {fmtDate(r.updatedAt)}</span>}
+      </div>
+
+      {r?.attending === "yes" && participants.length > 0 && (
+        <div className="table-scroll">
+          <table className="data">
+            <thead>
+              <tr>
+                <th>Participant</th><th>Type</th><th>Âge</th><th>Alimentation</th>
+                {config.events.map((ev) => <th key={ev.id}>{ev.name.fr}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {participants.map((p, i) => (
+                <tr key={i}>
+                  <td>{p.name}</td>
+                  <td>{p.type === "child" ? "Enfant" : "Adulte"}</td>
+                  <td>{p.age || "—"}</td>
+                  <td>
+                    {p.diet === "allergy"
+                      ? <span className="badge bougain">{p.dietNote || "Allergie grave"}</span>
+                      : DIET[p.diet] || "—"}
+                  </td>
+                  {config.events.map((ev) => (
+                    <td key={ev.id}>{p.events?.[ev.id] ? "✓" : "—"}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {r?.attending === "yes" && (
+        <dl className="facts">
+          <div><dt>Arrivée</dt><dd>{fmtDate(r.arrival)}</dd></div>
+          <div><dt>Départ</dt><dd>{fmtDate(r.departure)}</dd></div>
+          <div><dt>Transport</dt><dd>{TRANSPORT[r.transport] || "—"}</dd></div>
+          <div><dt>Hébergement</dt><dd>{ACCOMMODATION[r.accommodation] || "—"}</dd></div>
+        </dl>
+      )}
+
+      {r?.notes && (
+        <p style={{ marginTop: 12, marginBottom: 0 }}>
+          <strong>Mot du foyer :</strong> « {r.notes} »
+        </p>
+      )}
+
+      <dl className="facts" style={{ marginTop: 14 }}>
+        <div><dt>Lien personnel</dt><dd><a href={link} target="_blank" rel="noreferrer">{link}</a></dd></div>
+        <div><dt>Email de réponse</dt><dd>{r?.email || household.email || "—"}</dd></div>
+        <div><dt>Envois</dt>
+          <dd>
+            {sends && Object.keys(sends).length > 0
+              ? Object.entries(sends).map(([k, d]) => `${SEND_LABEL[k] || k} le ${fmtDate(d)}`).join(" · ")
+              : "aucun envoi enregistré"}
+          </dd>
+        </div>
+      </dl>
+    </div>
   );
 }
 
