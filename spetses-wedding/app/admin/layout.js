@@ -27,7 +27,7 @@ function AdminShell({ children }) {
   }
 
   if (!session?.configured) return <NotConfigured />;
-  if (!user) return <LoginScreen onSuccess={reload} />;
+  if (!user) return <LoginScreen onSuccess={reload} setupReady={session.setupReady} />;
 
   const links = [
     ["/admin", "Tableau de bord"],
@@ -83,7 +83,7 @@ function NotConfigured() {
 // Connexion en deux temps : on saisit d'abord son adresse, puis soit le mot
 // de passe, soit — à la première connexion — le code d'installation et le
 // mot de passe que l'on choisit.
-function LoginScreen({ onSuccess }) {
+function LoginScreen({ onSuccess, setupReady }) {
   const [email, setEmail] = useState("");
   const [step, setStep] = useState("email");   // email | password | create
   const [account, setAccount] = useState(null);
@@ -160,7 +160,15 @@ function LoginScreen({ onSuccess }) {
         </>
       )}
 
-      {step === "create" && (
+      {step === "create" && !setupReady && (
+        <p style={{ color: "var(--danger)", maxWidth: "44ch" }}>
+          Aucun code d'installation n'est défini sur le serveur. Ajoutez la variable
+          <code> ADMIN_SETUP_CODE</code> dans les réglages Vercel, redéployez, puis
+          revenez créer votre mot de passe.
+        </p>
+      )}
+
+      {step === "create" && setupReady && (
         <>
           <p style={{ color: "var(--muted)", maxWidth: "42ch" }}>
             Bonjour {account?.name} ! Première connexion : choisissez votre mot de passe.
