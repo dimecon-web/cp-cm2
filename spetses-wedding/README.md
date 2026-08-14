@@ -28,6 +28,9 @@ dans **Vercel → Project Settings → Environment Variables** :
 | `SUPABASE_URL` | adresse du projet Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | clé de service, **secrète**, jamais exposée au navigateur |
 | `ADMIN_SETUP_CODE` | code demandé une seule fois à chacun, pour créer son mot de passe |
+| `RESEND_API_KEY` | facultatif — clé Resend, pour l'envoi du lien « mot de passe oublié » |
+| `MAIL_FROM` | facultatif — adresse d'expédition de ces emails |
+| `SITE_URL` | facultatif — adresse publique du site, sinon déduite de la requête |
 
 La clé de service se trouve dans Supabase → Project Settings → API Keys →
 `service_role`. Après ajout des variables, redéployer pour qu'elles soient
@@ -45,6 +48,28 @@ personne connectée.
 et choisit son mot de passe. Ensuite, adresse et mot de passe suffisent.
 Chacun peut modifier ses coordonnées et son mot de passe depuis « Mon
 compte ».
+
+### Mot de passe oublié
+
+Sur l'écran de connexion, « Mot de passe oublié ? » envoie un lien de
+réinitialisation à l'adresse du compte. Le lien vaut une heure, ne sert
+qu'une fois, et referme au passage toutes les sessions ouvertes ailleurs. La
+base ne conserve que l'empreinte du jeton, jamais le lien lui-même. La
+réponse affichée est la même que l'adresse existe ou non : un curieux ne peut
+pas s'en servir pour deviner qui a un accès.
+
+Cet envoi demande `RESEND_API_KEY` et `MAIL_FROM`. Sans elles, l'application
+le dit franchement plutôt que de faire attendre un email qui n'arriverait
+jamais. Attention : tant qu'aucun domaine n'est vérifié chez Resend, seule
+`onboarding@resend.dev` fonctionne, et uniquement vers l'adresse du compte
+Resend — il faut vérifier un domaine pour que Themis et Thierry reçoivent
+leur lien.
+
+**Voie de secours, disponible sans email** : dans « Mon compte », chacun peut
+remettre le compte d'un autre à sa première connexion. Le mot de passe est
+effacé, les sessions fermées ; la personne rechoisit son mot de passe avec le
+code d'installation. Comme les trois comptes ont les mêmes droits, cela ne
+donne à personne un pouvoir qu'il n'avait pas déjà.
 
 ## Sécurité
 

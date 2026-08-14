@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AdminProvider, useAdmin } from "@/lib/admin";
-import { probeAccount, login, setPassword, logout } from "@/lib/store";
+import { probeAccount, login, setPassword, logout, requestReset } from "@/lib/store";
 
 export default function AdminLayout({ children }) {
   return (
@@ -27,7 +27,9 @@ function AdminShell({ children }) {
   }
 
   if (!session?.configured) return <NotConfigured />;
-  if (!user) return <LoginScreen onSuccess={reload} setupReady={session.setupReady} />;
+  if (!user) {
+    return <LoginScreen onSuccess={reload} setupReady={session.setupReady} mailReady={session.mailReady} />;
+  }
 
   const links = [
     ["/admin", "Tableau de bord"],
@@ -83,9 +85,9 @@ function NotConfigured() {
 // Connexion en deux temps : on saisit d'abord son adresse, puis soit le mot
 // de passe, soit — à la première connexion — le code d'installation et le
 // mot de passe que l'on choisit.
-function LoginScreen({ onSuccess, setupReady }) {
+function LoginScreen({ onSuccess, setupReady, mailReady }) {
   const [email, setEmail] = useState("");
-  const [step, setStep] = useState("email");   // email | password | create
+  const [step, setStep] = useState("email");   // email | password | create | sent
   const [account, setAccount] = useState(null);
   const [password, setPwd] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -115,6 +117,18 @@ function LoginScreen({ onSuccess, setupReady }) {
     setBusy(false);
     if (res.ok) onSuccess();
     else setError("Mot de passe incorrect.");
+  };
+
+  // Mot de passe oublié : le serveur envoie un lien à l'adresse du compte.
+  const askReset = async () => {
+    setBusy(true);
+    setError("");
+    const res = await requestReset(email);
+    setBusy(false);
+    if (res.ok) setStep("sent");
+    else if (res.error === "mail_not_configured") {
+      setError("L'envoi d'emails n'est pas encore configuré sur le serveur. Demandez à Dimitri, Themis ou Thierry de réinitialiser votre accès depuis « Mon compte » : vous pourrez alors rechoisir un mot de passe avec le code d'installation.");
+    } else setError("L'envoi du lien a échoué. Réessayez dans un instant.");
   };
 
   const submitCreate = async (e) => {
@@ -157,6 +171,27 @@ function LoginScreen({ onSuccess, setupReady }) {
               placeholder="Mot de passe" aria-label="Mot de passe" autoFocus required />
             <button className="btn" type="submit" disabled={busy}>{busy ? "…" : "Entrer"}</button>
           </form>
+          <p style={{ marginTop: 14, fontSize: 13 }}>
+            <button className="link-name" onClick={askReset} disabled={busy}>
+              Mot de passe oublié ?
+            </button>
+            {mailReady === false && (
+              <span className="hint"> — l'envoi d'emails n'est pas encore configuré.</span>
+            )}
+          </p>
+        </>
+      )}
+
+      {step === "sent" && (
+        <>
+          <p style={{ maxWidth: "44ch" }}>
+            Si un compte existe pour <strong>{email}</strong>, un lien de réinitialisation
+            vient d'y être envoyé.
+          </p>
+          <p style={{ color: "var(--muted)", maxWidth: "44ch" }}>
+            Le lien est valable une heure et ne sert qu'une fois. Pensez à regarder
+            dans les indésirables.
+          </p>
         </>
       )}
 

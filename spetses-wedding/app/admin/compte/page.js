@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useAdmin } from "@/lib/admin";
-import { updateProfile, localHouseholds, localHouseholdsAsCsv, clearLocalHouseholds } from "@/lib/store";
+import {
+  updateProfile, listUsers, clearAccess,
+  localHouseholds, localHouseholdsAsCsv, clearLocalHouseholds,
+} from "@/lib/store";
 
 // Chacun gère ses propres coordonnées et son mot de passe. Les trois comptes
 // ont les mêmes droits : il n'y a rien à administrer pour les autres.
@@ -19,12 +22,35 @@ export default function AccountPage() {
 
   const [pending, setPending] = useState([]);
   const [recovering, setRecovering] = useState(false);
+  const [others, setOthers] = useState([]);
+
+  const refreshUsers = () => listUsers().then((r) => setOthers(r.users || []));
 
   useEffect(() => {
     setPhone(user?.phone || "");
     setEmail(user?.email || "");
     setPending(localHouseholds());
+    refreshUsers();
   }, [user]);
+
+  // Voie de secours quand quelqu'un n'arrive plus à se connecter et que le
+  // lien par email ne lui parvient pas : on remet son compte à zéro, il
+  // rechoisit son mot de passe avec le code d'installation.
+  const resetOther = async (target) => {
+    const ok = window.confirm(
+      `Réinitialiser l'accès de ${target.name} ?\n\n` +
+      `Son mot de passe actuel sera effacé et ses sessions fermées. ` +
+      `${target.name} devra se reconnecter avec ${target.email} et le code d'installation ` +
+      `pour choisir un nouveau mot de passe.`
+    );
+    if (!ok) return;
+    setError(""); setNote("");
+    const res = await clearAccess(target.id);
+    if (res.ok) {
+      setNote(`L'accès de ${target.name} a été réinitialisé. Communiquez-lui le code d'installation.`);
+      refreshUsers();
+    } else setError("La réinitialisation a échoué.");
+  };
 
   const saveContact = async (e) => {
     e.preventDefault();
@@ -128,7 +154,43 @@ export default function AccountPage() {
           </label>
         </div>
         <button className="btn small" type="submit" disabled={busy}>Modifier</button>
+        <p className="hint" style={{ marginTop: 8 }}>
+          Mot de passe oublié ? Sur l'écran de connexion, « Mot de passe oublié ? » envoie
+          un lien à votre adresse. Le lien vaut une heure et ne sert qu'une fois.
+        </p>
       </form>
+
+      {others.length > 1 && (
+        <div className="card">
+          <h3>Accès des organisateurs</h3>
+          <p className="hint">
+            Si l'un de nous ne parvient plus à se connecter et que le lien par email ne lui
+            arrive pas, n'importe lequel des deux autres peut remettre son compte à sa
+            première connexion.
+          </p>
+          <table className="data" style={{ marginTop: 10 }}>
+            <thead>
+              <tr><th>Nom</th><th>Email</th><th>Accès</th><th /></tr>
+            </thead>
+            <tbody>
+              {others.map((u) => (
+                <tr key={u.id}>
+                  <td>{u.name}{u.isSelf && " (vous)"}</td>
+                  <td>{u.email}</td>
+                  <td>{u.hasPassword ? "mot de passe défini" : "en attente de première connexion"}</td>
+                  <td>
+                    {!u.isSelf && u.hasPassword && (
+                      <button className="btn small ghost" onClick={() => resetOther(u)}>
+                        Réinitialiser
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </>
   );
 }

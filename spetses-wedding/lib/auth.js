@@ -1,5 +1,5 @@
 import "server-only";
-import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 import { cookies } from "next/headers";
 import { db, isConfigured } from "./db";
@@ -16,6 +16,7 @@ const scryptAsync = promisify(scrypt);
 export const SESSION_COOKIE = "sw_session";
 const SESSION_DAYS = 30;
 const KEY_LENGTH = 64;
+const RESET_MINUTES = 60;
 
 export const MIN_PASSWORD_LENGTH = 10;
 
@@ -99,4 +100,51 @@ export async function currentUser() {
     return null;
   }
   return data.wedding_users || null;
+}
+
+// Ferme toutes les sessions d'un compte, partout. Utilisé après une
+// réinitialisation : si quelqu'un s'était introduit, il est éjecté.
+export async function revokeSessions(userId) {
+  await db.from("wedding_sessions").delete().eq("user_id", userId);
+}
+
+// ---------- Mot de passe oublié ----------
+//
+// Le lien envoyé par email contient un jeton aléatoire de 32 octets. La base
+// n'en garde que l'empreinte : même en cas de fuite du contenu de la table,
+// on ne peut pas reconstituer un lien valable. Un jeton vaut une heure et ne
+// sert qu'une fois.
+
+const digest = (token) => createHash("sha256").update(String(token)).digest("hex");
+
+export async function createResetToken(userId) {
+  // Une seule demande valable à la fois : redemander annule la précédente.
+  await db.from("wedding_password_resets").delete().eq("user_id", userId).is("used_at", null);
+
+  const token = randomBytes(32).toString("hex");
+  const expires = new Date(Date.now() + RESET_MINUTES * 60000);
+  await db.from("wedding_password_resets").insert({
+    user_id: userId,
+    token_hash: digest(token),
+    expires_at: expires.toISOString(),
+  });
+  return { token, expires, minutes: RESET_MINUTES };
+}
+
+export async function readResetToken(token) {
+  if (!token) return null;
+  const { data } = await db
+    .from("wedding_password_resets")
+    .select("id, expires_at, used_at, wedding_users(id, name, email, phone)")
+    .eq("token_hash", digest(token))
+    .maybeSingle();
+
+  if (!data || data.used_at) return null;
+  if (new Date(data.expires_at) < new Date()) return null;
+  if (!data.wedding_users) return null;
+  return { id: data.id, user: data.wedding_users };
+}
+
+export async function consumeResetToken(id) {
+  await db.from("wedding_password_resets").update({ used_at: new Date().toISOString() }).eq("id", id);
 }

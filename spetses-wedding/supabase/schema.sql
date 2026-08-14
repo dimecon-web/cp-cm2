@@ -145,6 +145,19 @@ create table if not exists wedding_sessions (
 create index if not exists wedding_sessions_user_idx on wedding_sessions(user_id);
 create index if not exists wedding_sessions_expiry_idx on wedding_sessions(expires_at);
 
+-- Mot de passe oublié : seule l'empreinte du jeton est conservée, jamais le
+-- jeton lui-même. Un lien vaut une heure et ne sert qu'une fois.
+create table if not exists wedding_password_resets (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references wedding_users(id) on delete cascade,
+  token_hash text unique not null,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null,
+  used_at timestamptz
+);
+
+create index if not exists wedding_password_resets_user_idx on wedding_password_resets(user_id);
+
 -- ---------- Journal des envois (invitations, relances, actualités) ----------
 create table if not exists wedding_sends (
   id uuid primary key default gen_random_uuid(),
@@ -171,3 +184,4 @@ alter table wedding_suppliers    enable row level security;
 alter table wedding_sends        enable row level security;
 alter table wedding_users        enable row level security;
 alter table wedding_sessions     enable row level security;
+alter table wedding_password_resets enable row level security;

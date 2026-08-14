@@ -83,6 +83,17 @@ export const setPassword = (email, password, setupCode) =>
 export const logout = () => authPost({ action: "logout" });
 export const updateProfile = (patch) => authPost({ action: "updateProfile", ...patch });
 
+// Mot de passe oublié : demande du lien, vérification du lien reçu, puis
+// choix du nouveau mot de passe.
+export const requestReset = (email) => authPost({ action: "requestReset", email });
+export const checkReset = (token) => authPost({ action: "checkReset", token });
+export const resetPassword = (token, password) => authPost({ action: "resetPassword", token, password });
+
+// Voie de secours : un organisateur connecté remet le compte d'un autre à sa
+// première connexion.
+export const listUsers = () => authPost({ action: "listUsers" });
+export const clearAccess = (targetId) => authPost({ action: "clearAccess", targetId });
+
 export async function loadSession() {
   const res = await fetch("/api/auth");
   if (!res.ok) return { configured: false, user: null };
