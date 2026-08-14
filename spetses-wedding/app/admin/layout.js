@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AdminProvider, useAdmin } from "@/lib/admin";
-import { adminLogin, adminLogout, adminAction } from "@/lib/store";
+import { probeAccount, login, setPassword, logout } from "@/lib/store";
 
 export default function AdminLayout({ children }) {
   return (
@@ -16,7 +16,7 @@ export default function AdminLayout({ children }) {
 
 function AdminShell({ children }) {
   const pathname = usePathname();
-  const { data, mode, loading, reload } = useAdmin();
+  const { session, user, loading, reload } = useAdmin();
 
   if (loading) {
     return (
@@ -26,10 +26,8 @@ function AdminShell({ children }) {
     );
   }
 
-  // Mode serveur sans session valide : on demande le mot de passe.
-  if (mode?.configured && !data?.role) {
-    return <LoginScreen adminEnabled={mode.adminEnabled} onSuccess={reload} />;
-  }
+  if (!session?.configured) return <NotConfigured />;
+  if (!user) return <LoginScreen onSuccess={reload} />;
 
   const links = [
     ["/admin", "Tableau de bord"],
@@ -38,6 +36,7 @@ function AdminShell({ children }) {
     ["/admin/budget", "Budget"],
     ["/admin/todos", "To-dos"],
     ["/admin/fournisseurs", "Fournisseurs"],
+    ["/admin/compte", "Mon compte"],
   ];
 
   return (
@@ -54,90 +53,141 @@ function AdminShell({ children }) {
               </Link>
             ))}
           </nav>
-          <RoleControls />
+          <div className="role-switch">
+            <span>{user.name}</span>
+            <button onClick={async () => { await logout(); reload(); }}>Se déconnecter</button>
+          </div>
         </div>
       </header>
       <main className="page">
-        <div className="wrap">
-          {data?.demo && (
-            <div className="notice">
-              🔧 <strong>Mode démo</strong> — la base n'est pas configurée : ces données
-              d'exemple restent dans ce navigateur. Ajoutez les variables d'environnement
-              sur Vercel pour basculer sur la base partagée.
-            </div>
-          )}
-          {children}
-        </div>
+        <div className="wrap">{children}</div>
       </main>
     </>
   );
 }
 
-function RoleControls() {
-  const { data, mode, reload, act } = useAdmin();
-
-  // En mode démo, on garde la bascule de rôle pour pouvoir tout essayer.
-  if (!mode?.configured) {
-    return (
-      <div className="role-switch">
-        <span>Rôle :</span>
-        <button className={data?.role === "couple" ? "active" : ""}
-          onClick={() => act({ action: "setRole", role: "couple" })}>
-          Mariés
-        </button>
-        <button className={data?.role === "organisateur" ? "active" : ""}
-          onClick={() => act({ action: "setRole", role: "organisateur" })}>
-          Organisateur
-        </button>
-      </div>
-    );
-  }
-
+function NotConfigured() {
   return (
-    <div className="role-switch">
-      <span>{data?.role === "couple" ? "Mariés" : "Organisateur"}</span>
-      <button onClick={async () => { await adminLogout(); reload(); }}>Se déconnecter</button>
+    <div className="landing">
+      <h1>Configuration incomplète</h1>
+      <p style={{ color: "var(--muted)", maxWidth: "48ch" }}>
+        L'application n'est pas reliée à sa base de données. Ajoutez les variables
+        d'environnement <code>SUPABASE_URL</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code> et
+        <code> ADMIN_SETUP_CODE</code> dans les réglages Vercel, puis redéployez.
+      </p>
+      <p style={{ marginTop: 24, fontSize: 13 }}><Link href="/">Retour à l'accueil</Link></p>
     </div>
   );
 }
 
-function LoginScreen({ adminEnabled, onSuccess }) {
-  const [password, setPassword] = useState("");
+// Connexion en deux temps : on saisit d'abord son adresse, puis soit le mot
+// de passe, soit — à la première connexion — le code d'installation et le
+// mot de passe que l'on choisit.
+function LoginScreen({ onSuccess }) {
+  const [email, setEmail] = useState("");
+  const [step, setStep] = useState("email");   // email | password | create
+  const [account, setAccount] = useState(null);
+  const [password, setPwd] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [setupCode, setSetupCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const submit = async (e) => {
+  const submitEmail = async (e) => {
     e.preventDefault();
     setBusy(true);
     setError("");
-    const role = await adminLogin(password);
+    const res = await probeAccount(email);
     setBusy(false);
-    if (role) onSuccess();
+    if (!res.known) {
+      setError("Cette adresse ne correspond à aucun compte.");
+      return;
+    }
+    setAccount(res);
+    setStep(res.hasPassword ? "password" : "create");
+  };
+
+  const submitPassword = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    const res = await login(email, password);
+    setBusy(false);
+    if (res.ok) onSuccess();
     else setError("Mot de passe incorrect.");
+  };
+
+  const submitCreate = async (e) => {
+    e.preventDefault();
+    if (password !== confirm) {
+      setError("Les deux mots de passe ne correspondent pas.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    const res = await setPassword(email, password, setupCode);
+    setBusy(false);
+    if (res.ok) onSuccess();
+    else if (res.error === "bad_setup_code") setError("Code d'installation incorrect.");
+    else setError(res.message || "Impossible de définir le mot de passe.");
   };
 
   return (
     <div className="landing">
       <h1>Espace organisateurs</h1>
-      {adminEnabled ? (
+
+      {step === "email" && (
         <>
           <p style={{ color: "var(--muted)", maxWidth: "40ch" }}>
-            Cet espace est réservé aux mariés et à leurs témoins.
+            Connectez-vous avec votre adresse email.
           </p>
-          <form onSubmit={submit} style={{ display: "flex", gap: 10, width: "min(360px, 100%)" }}>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mot de passe" aria-label="Mot de passe" autoFocus />
+          <form onSubmit={submitEmail} style={{ display: "flex", gap: 10, width: "min(380px, 100%)" }}>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+              placeholder="votre@email" aria-label="Adresse email" autoFocus required />
+            <button className="btn" type="submit" disabled={busy}>{busy ? "…" : "Continuer"}</button>
+          </form>
+        </>
+      )}
+
+      {step === "password" && (
+        <>
+          <p style={{ color: "var(--muted)" }}>Bonjour {account?.name} 👋</p>
+          <form onSubmit={submitPassword} style={{ display: "flex", gap: 10, width: "min(380px, 100%)" }}>
+            <input type="password" value={password} onChange={(e) => setPwd(e.target.value)}
+              placeholder="Mot de passe" aria-label="Mot de passe" autoFocus required />
             <button className="btn" type="submit" disabled={busy}>{busy ? "…" : "Entrer"}</button>
           </form>
-          {error && <p style={{ color: "var(--danger)", fontSize: 14, marginTop: 10 }}>{error}</p>}
         </>
-      ) : (
-        <p style={{ color: "var(--muted)", maxWidth: "44ch" }}>
-          Aucun mot de passe n'est défini pour l'espace organisateurs. Ajoutez la variable
-          d'environnement <code>ADMIN_PASSWORD</code> (et éventuellement <code>COUPLE_PASSWORD</code>
-          pour l'accès au budget) dans les réglages Vercel, puis rechargez cette page.
+      )}
+
+      {step === "create" && (
+        <>
+          <p style={{ color: "var(--muted)", maxWidth: "42ch" }}>
+            Bonjour {account?.name} ! Première connexion : choisissez votre mot de passe.
+            Le code d'installation vous a été communiqué par Dimitri.
+          </p>
+          <form onSubmit={submitCreate} style={{ display: "grid", gap: 10, width: "min(380px, 100%)" }}>
+            <input type="text" value={setupCode} onChange={(e) => setSetupCode(e.target.value)}
+              placeholder="Code d'installation" aria-label="Code d'installation" autoFocus required />
+            <input type="password" value={password} onChange={(e) => setPwd(e.target.value)}
+              placeholder="Mot de passe (10 caractères minimum)" aria-label="Mot de passe" required />
+            <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)}
+              placeholder="Confirmez le mot de passe" aria-label="Confirmation" required />
+            <button className="btn" type="submit" disabled={busy}>{busy ? "…" : "Créer mon accès"}</button>
+          </form>
+        </>
+      )}
+
+      {error && <p style={{ color: "var(--danger)", fontSize: 14, marginTop: 12 }}>{error}</p>}
+
+      {step !== "email" && (
+        <p style={{ marginTop: 16, fontSize: 13 }}>
+          <button className="link-name" onClick={() => { setStep("email"); setError(""); setPwd(""); }}>
+            ← Changer d'adresse
+          </button>
         </p>
       )}
+
       <p style={{ marginTop: 30, fontSize: 13 }}><Link href="/">Retour à l'accueil</Link></p>
     </div>
   );

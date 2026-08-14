@@ -1,15 +1,9 @@
-import { cookies } from "next/headers";
-import { db, isConfigured, checkPassword, adminEnabled, rowToRsvp, rowToNews, rowToPhoto } from "@/lib/db";
+import { db, isConfigured, rowToRsvp, rowToNews, rowToPhoto } from "@/lib/db";
+import { currentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-const COOKIE = "sw_admin";
 const TOKEN_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"; // sans caractères ambigus
-
-async function currentRole() {
-  const jar = await cookies();
-  return checkPassword(jar.get(COOKIE)?.value);
-}
 
 async function makeToken() {
   for (let attempt = 0; attempt < 20; attempt++) {
@@ -25,8 +19,8 @@ async function makeToken() {
 // Lecture de l'ensemble du tableau de bord.
 export async function GET() {
   if (!isConfigured) return Response.json({ error: "not_configured" }, { status: 503 });
-  const role = await currentRole();
-  if (!role) return Response.json({ role: null }, { status: 401 });
+  const user = await currentUser();
+  if (!user) return Response.json({ user: null }, { status: 401 });
 
   const [households, news, photos, messages, todos, suppliers, sends] = await Promise.all([
     db.from("wedding_households").select("*, wedding_rsvps(*), wedding_participants(*)").order("created_at"),
@@ -38,13 +32,10 @@ export async function GET() {
     db.from("wedding_sends").select("kind, channel, sent_at, wedding_households(token)"),
   ]);
 
-  // Le budget ne quitte le serveur que pour le rôle « mariés ».
-  const budget = role === "couple"
-    ? (await db.from("wedding_budget_items").select("*")).data || []
-    : null;
+  const budget = (await db.from("wedding_budget_items").select("*")).data || [];
 
   return Response.json({
-    role,
+    user,
     households: (households.data || []).map((h) => {
       const rsvpRow = Array.isArray(h.wedding_rsvps) ? h.wedding_rsvps[0] : h.wedding_rsvps;
       const parts = h.wedding_participants || [];
@@ -86,32 +77,10 @@ export async function GET() {
 
 export async function POST(request) {
   if (!isConfigured) return Response.json({ error: "not_configured" }, { status: 503 });
+  const user = await currentUser();
+  if (!user) return Response.json({ error: "unauthorized" }, { status: 401 });
+
   const body = await request.json();
-
-  // --- Connexion / déconnexion ---
-  if (body.action === "login") {
-    if (!adminEnabled) return Response.json({ error: "no_password_set" }, { status: 503 });
-    const role = checkPassword(body.password);
-    if (!role) return Response.json({ error: "bad_password" }, { status: 401 });
-    const jar = await cookies();
-    jar.set(COOKIE, body.password, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 30,
-      path: "/",
-    });
-    return Response.json({ role });
-  }
-
-  if (body.action === "logout") {
-    const jar = await cookies();
-    jar.delete(COOKIE);
-    return Response.json({ ok: true });
-  }
-
-  const role = await currentRole();
-  if (!role) return Response.json({ error: "unauthorized" }, { status: 401 });
 
   switch (body.action) {
     case "addHousehold": {
@@ -234,9 +203,6 @@ export async function POST(request) {
       };
       const table = tables[body.list];
       if (!table) return Response.json({ error: "unknown_list" }, { status: 400 });
-      if (body.list === "budget" && role !== "couple") {
-        return Response.json({ error: "forbidden" }, { status: 403 });
-      }
       await db.from(table).delete().neq("id", "00000000-0000-0000-0000-000000000000");
       // Les champs vides deviennent NULL : une date vide ferait échouer l'insertion.
       const rows = (body.items || []).map(({ id, ...rest }) =>

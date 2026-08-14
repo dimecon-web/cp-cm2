@@ -15,20 +15,6 @@ export const db = isConfigured
   ? createClient(url, serviceKey, { auth: { persistSession: false } })
   : null;
 
-// Mots de passe de l'espace organisateurs. Deux rôles : « couple » voit le
-// budget, « organisateur » non. Si COUPLE_PASSWORD n'est pas défini, seul le
-// rôle organisateur existe.
-export function checkPassword(password) {
-  if (!password) return null;
-  const couple = process.env.COUPLE_PASSWORD;
-  const organiser = process.env.ADMIN_PASSWORD;
-  if (couple && password === couple) return "couple";
-  if (organiser && password === organiser) return "organisateur";
-  return null;
-}
-
-export const adminEnabled = Boolean(process.env.ADMIN_PASSWORD || process.env.COUPLE_PASSWORD);
-
 // Conversions entre le format de la base (colonnes) et celui de l'application.
 export function rowToRsvp(rsvp, participants) {
   return {

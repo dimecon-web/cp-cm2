@@ -120,6 +120,31 @@ create table if not exists wedding_suppliers (
   notes text
 );
 
+-- ---------- Comptes de l'espace organisateurs ----------
+-- Trois comptes aux droits identiques. Le mot de passe est stocké haché
+-- (scrypt) avec un sel propre à chaque compte : jamais en clair.
+create table if not exists wedding_users (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text unique not null,
+  phone text,
+  password_hash text,
+  password_salt text,
+  created_at timestamptz not null default now(),
+  last_login_at timestamptz
+);
+
+-- Le navigateur ne détient qu'un jeton aléatoire, jamais le mot de passe.
+create table if not exists wedding_sessions (
+  token text primary key,
+  user_id uuid not null references wedding_users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null
+);
+
+create index if not exists wedding_sessions_user_idx on wedding_sessions(user_id);
+create index if not exists wedding_sessions_expiry_idx on wedding_sessions(expires_at);
+
 -- ---------- Journal des envois (invitations, relances, actualités) ----------
 create table if not exists wedding_sends (
   id uuid primary key default gen_random_uuid(),
@@ -144,3 +169,5 @@ alter table wedding_budget_items enable row level security;
 alter table wedding_todos        enable row level security;
 alter table wedding_suppliers    enable row level security;
 alter table wedding_sends        enable row level security;
+alter table wedding_users        enable row level security;
+alter table wedding_sessions     enable row level security;

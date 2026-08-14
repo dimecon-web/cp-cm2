@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAdmin } from "@/lib/admin";
 
-// Budget — réservé au rôle « mariés ». En mode serveur, le budget ne quitte
-// même pas la base pour les autres organisateurs.
+// Budget : postes prévus, dépenses réelles, acomptes et échéances.
 export default function BudgetPage() {
   const { data, act } = useAdmin();
   const [items, setItems] = useState([]);
@@ -14,17 +13,6 @@ export default function BudgetPage() {
   useEffect(() => {
     if (data?.budget) setItems(data.budget.map((it) => ({ ...it })));
   }, [data?.budget]);
-
-  if (data && data.role !== "couple") {
-    return (
-      <div className="card" style={{ textAlign: "center", padding: 40 }}>
-        <h2>🔒 Réservé aux mariés</h2>
-        <p className="hint" style={{ marginBottom: 0 }}>
-          Le budget n'est visible que par les mariés.
-        </p>
-      </div>
-    );
-  }
 
   const update = (i, patch) => {
     setItems(items.map((it, j) => (j === i ? { ...it, ...patch } : it)));

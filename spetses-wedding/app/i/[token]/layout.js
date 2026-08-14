@@ -5,21 +5,39 @@ import { useParams, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { config } from "@/lib/config";
 import { useT, LangSwitcher } from "@/lib/i18n";
-import { loadGuest } from "@/lib/store";
+import { loadGuest, getMode } from "@/lib/store";
 
 export default function GuestLayout({ children }) {
   const { token } = useParams();
   const pathname = usePathname();
   const t = useT();
   const [household, setHousehold] = useState(undefined);
+  const [configured, setConfigured] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    loadGuest(token)
-      .then((data) => { if (!cancelled) setHousehold(data.household); })
-      .catch(() => { if (!cancelled) setHousehold(undefined); });
+    getMode().then(({ configured }) => {
+      if (cancelled) return;
+      setConfigured(configured);
+      if (!configured) return;
+      loadGuest(token)
+        .then((data) => { if (!cancelled) setHousehold(data.household); })
+        .catch(() => { if (!cancelled) setHousehold(undefined); });
+    });
     return () => { cancelled = true; };
   }, [token]);
+
+  // Sans base configurée, mieux vaut le dire que d'afficher un site vide.
+  if (!configured) {
+    return (
+      <div className="landing">
+        <h1>Site momentanément indisponible</h1>
+        <p style={{ color: "var(--muted)", maxWidth: "42ch" }}>
+          Nous rencontrons un souci technique. Merci de réessayer dans quelques minutes.
+        </p>
+      </div>
+    );
+  }
 
   if (household === null) {
     return (

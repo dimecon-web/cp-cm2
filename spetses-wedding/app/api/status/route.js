@@ -1,9 +1,9 @@
-import { isConfigured, adminEnabled } from "@/lib/db";
+import { isConfigured } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-// Permet au navigateur de savoir s'il doit parler à la base (mode serveur)
-// ou rester sur ses données locales (mode démo). Aucune donnée sensible.
+// Indique simplement si l'application est reliée à sa base. Aucune donnée
+// sensible : sert à afficher un message clair plutôt qu'une page cassée.
 export function GET() {
-  return Response.json({ configured: isConfigured, adminEnabled });
+  return Response.json({ configured: isConfigured });
 }
