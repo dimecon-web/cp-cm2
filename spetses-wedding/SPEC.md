@@ -75,6 +75,14 @@ passe sont hachés avec scrypt et un sel par compte ; le navigateur ne détient
 qu'un jeton de session. Sans variables d'environnement, l'application affiche
 un message de configuration incomplète.
 
+En cas d'oubli, « Mot de passe oublié ? » envoie un lien de réinitialisation à
+l'adresse du compte : valable une heure, utilisable une seule fois, et la base
+n'en garde que l'empreinte. L'envoi demande `RESEND_API_KEY` et `MAIL_FROM` ;
+sans elles, l'application le dit et renvoie vers la voie de secours — depuis
+« Mon compte », chacun peut remettre le compte d'un autre à sa première
+connexion, celui-ci rechoisissant son mot de passe avec le code
+d'installation.
+
 Couvert en v1 : parcours RSVP complet, actualités publiées depuis l'espace
 organisateurs (trilingue, segment « tous » / « oui », email pré-rempli en copie
 cachée, texte prêt pour WhatsApp), mur de photos des invités avec file de
@@ -87,7 +95,8 @@ l'envoi d'emails passe encore par votre messagerie.
 
 ## Feuille de route
 
-- **v3 — Emails** : service d'envoi (Resend), invitation groupée, relances
+- **v3 — Emails** : domaine vérifié chez Resend (le socle d'envoi est en
+  place depuis la réinitialisation de mot de passe), invitation groupée, relances
   automatiques J-30/J-14/J-7, envoi d'actualités segmenté (tous / les « oui »).
 - **v4 — Contenu & finitions** : vraie histoire + photos, traductions finales
   relues, liste d'hôtels recommandés, monogramme définitif, lien du groupe
