@@ -11,9 +11,11 @@ export const dynamic = "force-dynamic";
 // droits : rien ici ne dépend de qui est connecté.
 
 export async function GET() {
-  if (!isConfigured) return Response.json({ configured: false, user: null });
+  // setupReady : booléen seulement, jamais la valeur du code d'installation.
+  const setupReady = Boolean(process.env.ADMIN_SETUP_CODE);
+  if (!isConfigured) return Response.json({ configured: false, setupReady, user: null });
   const user = await currentUser();
-  return Response.json({ configured: true, user });
+  return Response.json({ configured: true, setupReady, user });
 }
 
 export async function POST(request) {
