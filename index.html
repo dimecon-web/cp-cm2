@@ -960,6 +960,11 @@ html, body {
       <div class="mod-name" style="color:#0EA5E9">Calcul Mental</div>
       <div class="mod-stars" id="cm1-stars-maths">⭐ 0</div>
     </div>
+    <div class="module-card" style="border-color:#EC4899" onclick="cm1StartModule('tables')">
+      <div class="mod-icon">✖️</div>
+      <div class="mod-name" style="color:#EC4899">Les Tables</div>
+      <div class="mod-stars" id="cm1-stars-tables">⭐ 0</div>
+    </div>
     <div class="module-card" style="border-color:#F59E0B" onclick="cm1StartModule('francais')">
       <div class="mod-icon">✏️</div>
       <div class="mod-name" style="color:#F59E0B">Français</div>
@@ -1092,7 +1097,7 @@ html, body {
 <div id="cm2-maths" class="screen hidden">
   <div class="activity-header w100">
     <button class="btn btn-back" onclick="showScreen('welcome')">🏠</button>
-    <div class="activity-title" style="color:#0EA5E9">🔢 Calcul Mental</div>
+    <div class="activity-title" style="color:#0EA5E9" id="cm2-maths-title">🔢 Calcul Mental</div>
     <div style="font-size:20px;font-weight:800;color:#0EA5E9" id="cm2-maths-score-live">⭐ 0</div>
   </div>
   <div class="progress-bar-wrap w100">
@@ -3142,6 +3147,20 @@ function cm1GenerateMathsQuestions() {
   return shuffle(qs);
 }
 
+// Mode « Les Tables » (CM1) : 10 multiplications à enchaîner rapidement
+function cm1GenerateTablesQuestions() {
+  const qs = [];
+  let lastKey = '';
+  while(qs.length < 10) {
+    const a = randInt(2,10), b = randInt(2,10);
+    const key = a + 'x' + b;
+    if(key === lastKey) continue; // pas deux fois la même à la suite
+    lastKey = key;
+    qs.push({ expr:`${a} × ${b}`, answer: a*b, explain: cm2ExplainMul(a,b) });
+  }
+  return qs;
+}
+
 let cm2NumpadValue = '';
 
 function cm2BuildNumpad() {
@@ -3177,23 +3196,32 @@ function cm2SetNumpadDisabled(disabled) {
   });
 }
 
-// 'cm2' = Alexia, 'cm1' = Daphné — même écran, questions et résultats différents
+// 'cm2' = Alexia, 'cm1' = Daphné, 'tables' = sprint tables CM1
+// — même écran, questions, chrono et résultats différents
 let mentalLevel = 'cm2';
 let cm2NoChrono = false;
 
 function cm2StartMaths() {
-  cm2MathsQuestions = mentalLevel === 'cm1' ? cm1GenerateMathsQuestions() : cm2GenerateMathsQuestions();
+  cm2MathsQuestions = mentalLevel === 'tables' ? cm1GenerateTablesQuestions()
+    : mentalLevel === 'cm1' ? cm1GenerateMathsQuestions() : cm2GenerateMathsQuestions();
   cm2MathsIdx = 0;
   cm2State.sessionScore = 0;
-  cm2ChronoMax = mentalLevel === 'cm1' ? 35 : 30;
+  cm2ChronoMax = mentalLevel === 'tables' ? 8 : mentalLevel === 'cm1' ? 35 : 30;
+  document.getElementById('cm2-maths-title').textContent = mentalLevel === 'tables' ? '✖️ Les Tables' : '🔢 Calcul Mental';
   document.getElementById('cm2-maths-score-live').textContent = '⭐ 0';
   cm2BuildNumpad();
   cm2RenderMathsQuestion();
 }
 
+// Ralentit le chrono après une erreur ou un temps écoulé (plafond : 8 s en mode tables)
+function mentalSlowChrono() {
+  cm2ChronoMax = mentalLevel === 'tables' ? Math.min(8, cm2ChronoMax + 1) : Math.min(45, cm2ChronoMax + 3);
+}
+
 function mentalShowResult(score) {
   clearInterval(cm2ChronoInterval);
-  if(mentalLevel === 'cm1') cm1ShowResult('maths', score, 10);
+  if(mentalLevel === 'tables') cm1ShowResult('tables', score, 10);
+  else if(mentalLevel === 'cm1') cm1ShowResult('maths', score, 10);
   else cm2ShowResult('maths', score, 10);
 }
 
@@ -3244,7 +3272,7 @@ function cm2TimeExpired() {
 function cm2TakeMyTime() {
   document.getElementById('cm2-timeup').classList.add('hidden');
   cm2NoChrono = true;
-  cm2ChronoMax = Math.min(45, cm2ChronoMax + 3);
+  mentalSlowChrono();
   document.getElementById('cm2-chrono-wrap').style.display = 'none';
   cm2SetNumpadDisabled(false);
 }
@@ -3255,7 +3283,7 @@ function cm2GiveMeAnswer() {
   document.getElementById('cm2-timeup').classList.add('hidden');
   document.getElementById('cm2-wrong').classList.add('hidden');
   const q = cm2MathsQuestions[cm2MathsIdx];
-  cm2ChronoMax = Math.min(45, cm2ChronoMax + 3);
+  mentalSlowChrono();
   document.getElementById('cm2-explain-answer').textContent = q.expr + ' = ' + q.answer;
   document.getElementById('cm2-explain-text').textContent = q.explain || '';
   document.getElementById('cm2-explain').classList.remove('hidden');
@@ -3277,18 +3305,33 @@ function cm2ValidateMaths() {
   cm2SetNumpadDisabled(true);
   if(correct) {
     cm2State.sessionScore++;
-    if(!cm2NoChrono) cm2ChronoMax = Math.max(10, cm2ChronoMax - 2);
+    if(!cm2NoChrono) {
+      // Bonne réponse : le chrono accélère (mode tables : −0,5 s, minimum 3 s)
+      cm2ChronoMax = mentalLevel === 'tables' ? Math.max(3, cm2ChronoMax - 0.5) : Math.max(10, cm2ChronoMax - 2);
+    }
     document.getElementById('cm2-maths-score-live').textContent = '⭐ ' + cm2State.sessionScore;
-    setTimeout(() => {
-      showFeedback(true, null, () => {
+    if(mentalLevel === 'tables') {
+      // Enchaînement rapide : pas de popup, on file à la question suivante
+      playCorrect();
+      awardCoins(currentProfile, 1);
+      document.getElementById('cm2-maths-display').textContent = '✅';
+      setTimeout(() => {
         cm2MathsIdx++;
         if(cm2MathsIdx < 10) cm2RenderMathsQuestion();
         else mentalShowResult(cm2State.sessionScore);
-      });
-    }, 300);
+      }, 400);
+    } else {
+      setTimeout(() => {
+        showFeedback(true, null, () => {
+          cm2MathsIdx++;
+          if(cm2MathsIdx < 10) cm2RenderMathsQuestion();
+          else mentalShowResult(cm2State.sessionScore);
+        });
+      }, 300);
+    }
   } else {
-    // Mauvaise réponse : proposer de réessayer ou de voir la réponse expliquée
-    cm2ChronoMax = Math.min(45, cm2ChronoMax + 3);
+    // Mauvaise réponse : le chrono ralentit, puis choix réessayer / voir la réponse
+    mentalSlowChrono();
     playWrong();
     setTimeout(() => document.getElementById('cm2-wrong').classList.remove('hidden'), 300);
   }
@@ -3649,7 +3692,7 @@ function applyProfileData(p, data) {
   try {
     if(p === 'cp') { state.stars = JSON.parse(localStorage.getItem('cpapp-stars') || '{"phono":0,"maths":0,"vocab":0,"english":0}'); updateHomeUI(); }
     else if(p === 'cm2') { cm2State.stars = JSON.parse(localStorage.getItem('cm2app-stars') || '{"lecture":0,"maths":0,"sciences":0,"ortho":0,"english":0}'); cm2UpdateHomeUI(); }
-    else if(p === 'daphne') { cm1State.stars = JSON.parse(localStorage.getItem('cm1app-stars') || '{"maths":0,"francais":0,"english":0}'); cm1UpdateHomeUI(); }
+    else if(p === 'daphne') { cm1State.stars = JSON.parse(localStorage.getItem('cm1app-stars') || '{"maths":0,"tables":0,"francais":0,"english":0}'); cm1UpdateHomeUI(); }
     else if(p === 'sec') { secState.stars = JSON.parse(localStorage.getItem('secapp-stars') || '{"maths":0,"francais":0,"english":0}'); secUpdateHomeUI(); }
   } catch(e) {}
   updateCoinBadges();
@@ -3728,7 +3771,7 @@ const DASH_PROFILES = {
   cm2:    { name:'Alexia', home:'cm2-home', coins:'cm2',    stars:()=>cm2State.stars,
             modules:[['lecture','📖','Lecture'],['maths','🔢','Calcul Mental'],['sciences','🔬','Sciences'],['ortho','✏️','Orthographe'],['english','🌍','Anglais']] },
   daphne: { name:'Daphné', home:'cm1-home', coins:'daphne', stars:()=>cm1State.stars,
-            modules:[['maths','🔢','Calcul Mental'],['francais','✏️','Français'],['english','🌍','Anglais']] },
+            modules:[['maths','🔢','Calcul Mental'],['tables','✖️','Les Tables'],['francais','✏️','Français'],['english','🌍','Anglais']] },
   sec:    { name:'Charly', home:'sec-home', coins:null,     stars:()=>secState.stars,
             modules:[['maths','🔢','Maths'],['francais','📚','Français'],['english','🌍','Anglais']] },
 };
@@ -3792,7 +3835,7 @@ function enterProfile() {
 //  CM1 (Daphné) — état, accueil, modules
 // ===================================================================
 const cm1State = {
-  stars: JSON.parse(localStorage.getItem('cm1app-stars') || '{"maths":0,"francais":0,"english":0}'),
+  stars: JSON.parse(localStorage.getItem('cm1app-stars') || '{"maths":0,"tables":0,"francais":0,"english":0}'),
 };
 
 function cm1SaveStars() {
@@ -3803,7 +3846,7 @@ function cm1SaveStars() {
 function cm1UpdateHomeUI() {
   const total = Object.values(cm1State.stars).reduce((a,b)=>a+b,0);
   document.getElementById('cm1-total-stars').textContent = total;
-  ['maths','francais','english'].forEach(m => {
+  ['maths','tables','francais','english'].forEach(m => {
     const el = document.getElementById('cm1-stars-'+m);
     if(el) el.textContent = '⭐ ' + (cm1State.stars[m]||0);
   });
@@ -3816,6 +3859,7 @@ function cm1StartModule(mod) {
   clearInterval(cm2ChronoInterval);
   currentProfile = 'daphne';
   if(mod === 'maths') { mentalLevel = 'cm1'; showScreen('cm2-maths'); cm2StartMaths(); }
+  else if(mod === 'tables') { mentalLevel = 'tables'; showScreen('cm2-maths'); cm2StartMaths(); }
   else if(mod === 'francais') gqStart('cm1-francais');
   else if(mod === 'english') gqStart('cm1-english');
 }
