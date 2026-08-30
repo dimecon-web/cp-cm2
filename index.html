@@ -925,6 +925,11 @@ html, body {
       <div class="mod-name">Calcul Mental</div>
       <div class="mod-stars" id="cm2-stars-maths">⭐ 0</div>
     </div>
+    <div class="module-card" style="border-color:#EC4899" onclick="cm2StartModule('tables')">
+      <div class="mod-icon">✖️</div>
+      <div class="mod-name" style="color:#EC4899">Les Tables</div>
+      <div class="mod-stars" id="cm2-stars-tables">⭐ 0</div>
+    </div>
     <div class="module-card mod-cm2-sciences" onclick="cm2StartModule('sciences')">
       <div class="mod-icon">🔬</div>
       <div class="mod-name">Sciences</div>
@@ -2418,7 +2423,7 @@ function snakeGoHome() {
 //  CM2 STATE & NAV
 // ===================================================================
 const cm2State = {
-  stars: JSON.parse(localStorage.getItem('cm2app-stars') || '{"lecture":0,"maths":0,"sciences":0,"ortho":0,"english":0}'),
+  stars: JSON.parse(localStorage.getItem('cm2app-stars') || '{"lecture":0,"maths":0,"tables":0,"sciences":0,"ortho":0,"english":0}'),
   sessionScore: 0,
   questionIndex: 0,
   currentModule: null,
@@ -2432,7 +2437,7 @@ function cm2SaveStars() {
 function cm2UpdateHomeUI() {
   const total = Object.values(cm2State.stars).reduce((a,b)=>a+b,0);
   document.getElementById('cm2-total-stars').textContent = total;
-  ['lecture','maths','sciences','ortho','english'].forEach(m => {
+  ['lecture','maths','tables','sciences','ortho','english'].forEach(m => {
     const el = document.getElementById('cm2-stars-'+m);
     if(el) el.textContent = '⭐ ' + (cm2State.stars[m]||0);
   });
@@ -2449,6 +2454,11 @@ function cm2StartModule(mod) {
   cm2State.currentModule = mod;
   cm2State.sessionScore = 0;
   cm2State.questionIndex = 0;
+  if(mod === 'tables') {
+    mentalLevel = 'tables'; tablesProfile = 'cm2';
+    showScreen('cm2-maths'); cm2StartMaths();
+    return;
+  }
   showScreen('cm2-'+mod);
   if(mod === 'lecture') cm2StartLecture();
   else if(mod === 'maths') cm2StartMaths();
@@ -3199,9 +3209,10 @@ function cm2SetNumpadDisabled(disabled) {
   });
 }
 
-// 'cm2' = Alexia, 'cm1' = Daphné, 'tables' = sprint tables CM1
+// 'cm2' = Alexia, 'cm1' = Daphné, 'tables' = sprint tables
 // — même écran, questions, chrono et résultats différents
 let mentalLevel = 'cm2';
+let tablesProfile = 'cm1'; // qui joue au sprint tables : 'cm1' (Daphné) ou 'cm2' (Alexia)
 let cm2NoChrono = false;
 
 function cm2StartMaths() {
@@ -3223,7 +3234,10 @@ function mentalSlowChrono() {
 
 function mentalShowResult(score) {
   clearInterval(cm2ChronoInterval);
-  if(mentalLevel === 'tables') cm1ShowResult('tables', score, 10);
+  if(mentalLevel === 'tables') {
+    if(tablesProfile === 'cm2') cm2ShowResult('tables', score, 10);
+    else cm1ShowResult('tables', score, 10);
+  }
   else if(mentalLevel === 'cm1') cm1ShowResult('maths', score, 10);
   else cm2ShowResult('maths', score, 10);
 }
@@ -3694,7 +3708,7 @@ function applyProfileData(p, data) {
   // Recharge l'état en mémoire du profil concerné et rafraîchit son accueil
   try {
     if(p === 'cp') { state.stars = JSON.parse(localStorage.getItem('cpapp-stars') || '{"phono":0,"maths":0,"vocab":0,"english":0}'); updateHomeUI(); }
-    else if(p === 'cm2') { cm2State.stars = JSON.parse(localStorage.getItem('cm2app-stars') || '{"lecture":0,"maths":0,"sciences":0,"ortho":0,"english":0}'); cm2UpdateHomeUI(); }
+    else if(p === 'cm2') { cm2State.stars = JSON.parse(localStorage.getItem('cm2app-stars') || '{"lecture":0,"maths":0,"tables":0,"sciences":0,"ortho":0,"english":0}'); cm2UpdateHomeUI(); }
     else if(p === 'daphne') { cm1State.stars = JSON.parse(localStorage.getItem('cm1app-stars') || '{"maths":0,"tables":0,"francais":0,"english":0}'); cm1UpdateHomeUI(); }
     else if(p === 'sec') { secState.stars = JSON.parse(localStorage.getItem('secapp-stars') || '{"maths":0,"francais":0,"english":0}'); secUpdateHomeUI(); }
   } catch(e) {}
@@ -3772,7 +3786,7 @@ const DASH_PROFILES = {
   cp:     { name:'Olivia', home:'home',     coins:'cp',     stars:()=>state.stars,
             modules:[['phono','🔤','Phonologie'],['maths','🔢','Maths'],['vocab','📚','Vocabulaire'],['english','🌍','Anglais']] },
   cm2:    { name:'Alexia', home:'cm2-home', coins:'cm2',    stars:()=>cm2State.stars,
-            modules:[['lecture','📖','Lecture'],['maths','🔢','Calcul Mental'],['sciences','🔬','Sciences'],['ortho','✏️','Orthographe'],['english','🌍','Anglais']] },
+            modules:[['lecture','📖','Lecture'],['maths','🔢','Calcul Mental'],['tables','✖️','Les Tables'],['sciences','🔬','Sciences'],['ortho','✏️','Orthographe'],['english','🌍','Anglais']] },
   daphne: { name:'Daphné', home:'cm1-home', coins:'daphne', stars:()=>cm1State.stars,
             modules:[['maths','🔢','Calcul Mental'],['tables','✖️','Les Tables'],['francais','✏️','Français'],['english','🌍','Anglais']] },
   sec:    { name:'Charly', home:'sec-home', coins:null,     stars:()=>secState.stars,
@@ -3862,7 +3876,7 @@ function cm1StartModule(mod) {
   clearInterval(cm2ChronoInterval);
   currentProfile = 'daphne';
   if(mod === 'maths') { mentalLevel = 'cm1'; showScreen('cm2-maths'); cm2StartMaths(); }
-  else if(mod === 'tables') { mentalLevel = 'tables'; showScreen('cm2-maths'); cm2StartMaths(); }
+  else if(mod === 'tables') { mentalLevel = 'tables'; tablesProfile = 'cm1'; showScreen('cm2-maths'); cm2StartMaths(); }
   else if(mod === 'francais') gqStart('cm1-francais');
   else if(mod === 'english') gqStart('cm1-english');
 }
