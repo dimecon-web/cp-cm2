@@ -167,19 +167,20 @@ html, body {
 .choices-grid {
   display: grid; gap: 14px; width: 100%;
 }
-.choices-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
-.choices-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+/* minmax(0,1fr) : les cartes rétrécissent au lieu de faire déborder la grille (iPhone) */
+.choices-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.choices-grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .choice-btn {
   background: #F8F9FA; border: 3px solid #E0E0E0;
   border-radius: 20px; padding: 16px 8px;
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   font-size: 18px; font-weight: 700; cursor: pointer;
   transition: transform 0.12s, border-color 0.12s, background 0.12s;
-  min-height: 100px; justify-content: center;
+  min-height: 100px; min-width: 0; justify-content: center;
   -webkit-user-select: none; user-select: none;
 }
 .choice-btn .choice-emoji { font-size: 44px; line-height: 1; }
-.choice-btn .choice-img { width: 110px; height: 110px; object-fit: contain; display: block; margin: 0 auto; }
+.choice-btn .choice-img { width: 100%; max-width: 110px; aspect-ratio: 1 / 1; height: auto; object-fit: contain; display: block; margin: 0 auto; }
 .choice-btn .choice-label { font-size: 16px; font-weight: 700; color: var(--text); }
 .choice-btn:active:not(.disabled) { transform: scale(0.93); }
 .choice-btn.correct { border-color: var(--green); background: #EAFAF1; }
@@ -655,6 +656,13 @@ html, body {
   .char-preview-col { flex-direction: row; align-items: center; gap: 12px; }
   .char-svg-wrap { width: 110px; height: 165px; }
   .shop-grid { grid-template-columns: 1fr 1fr 1fr; }
+  /* Écrans étroits (iPhone) : cartes de réponse plus compactes */
+  .choices-grid { gap: 8px; }
+  .choice-btn { padding: 12px 4px; min-height: 84px; }
+  .choice-btn .choice-img { max-width: 78px; }
+  .choice-btn .choice-emoji { font-size: 36px; }
+  .choice-btn .choice-label { font-size: 14px; }
+  .question-card { padding: 20px 12px; }
 }
 </style>
 </head>
@@ -2001,60 +2009,55 @@ function renderSort(q, container) {
   catHtml += '</div><div class="word-bank" id="sort-bank" style="margin-top:14px"></div>';
   container.innerHTML = catHtml;
 
-  const remaining = new Set(q.items.map((_,i)=>i));
-
-  shuffle([...q.items]).forEach((item, idx) => {
+  // Les jetons portent leur catégorie ; on tape un mot puis sa boîte
+  shuffle([...q.items]).forEach(item => {
     const chip = document.createElement('div');
     chip.className = 'word-chip';
     chip.textContent = item.word;
-    chip.addEventListener('click', () => handleSortChoice(chip, item, q, remaining));
+    chip.dataset.cat = item.cat;
+    chip.addEventListener('click', () => handleSortChoice(chip));
     document.getElementById('sort-bank').appendChild(chip);
+  });
+
+  // Un gestionnaire par boîte, recréé à chaque question : il vérifie toujours
+  // la catégorie du mot actuellement sélectionné (et non celle du premier mot)
+  q.categories.forEach(cat => {
+    document.getElementById('cat-'+sanitizeId(cat)).onclick = () => {
+      const selected = document.querySelector('#sort-bank .word-chip.selected');
+      if(!selected) return;
+      const correct = selected.dataset.cat === cat;
+      selected.classList.remove('selected');
+      selected.classList.add(correct ? 'correct' : 'wrong');
+      if(!correct) {
+        playWrong();
+        setTimeout(() => { selected.classList.remove('wrong'); }, 700);
+        return;
+      }
+      selected.style.pointerEvents = 'none';
+      document.getElementById('cat-'+sanitizeId(cat)).appendChild(selected);
+      // Tous les mots sont placés ?
+      if(document.querySelectorAll('#sort-bank .word-chip').length === 0) {
+        state.sessionScore++;
+        document.getElementById('vocab-score-live').textContent = '⭐ ' + state.sessionScore;
+        setTimeout(() => {
+          showFeedback(true, null, () => {
+            vocabCurrent++;
+            if(vocabCurrent < vocabQuestions.length) renderVocabQuestion();
+            else showResult('vocab', state.sessionScore, vocabQuestions.length);
+          });
+        }, 600);
+      }
+    };
   });
 }
 
-function handleSortChoice(chip, item, q, remaining) {
-  // Show category selection
-  // Simple approach: tap item, then tap category box
+function handleSortChoice(chip) {
   if(chip.classList.contains('selected')) {
     chip.classList.remove('selected');
     return;
   }
   document.querySelectorAll('#sort-bank .word-chip').forEach(c => c.classList.remove('selected'));
   chip.classList.add('selected');
-
-  // Attach tap handlers to category boxes
-  q.categories.forEach(cat => {
-    const box = document.getElementById('cat-'+sanitizeId(cat));
-    if(!box._handler) {
-      box._handler = function() {
-        const selected = document.querySelector('#sort-bank .word-chip.selected');
-        if(!selected) return;
-        const correct = item.cat === cat;
-        selected.classList.remove('selected');
-        selected.classList.add(correct ? 'correct' : 'wrong');
-        if(!correct) {
-          setTimeout(() => { selected.classList.remove('wrong'); }, 700);
-          return;
-        }
-        selected.style.pointerEvents = 'none';
-        box.appendChild(selected);
-        // Check if all placed correctly
-        const allPlaced = document.querySelectorAll('#sort-bank .word-chip').length === 0;
-        if(allPlaced) {
-          state.sessionScore++;
-          document.getElementById('vocab-score-live').textContent = '⭐ ' + state.sessionScore;
-          setTimeout(() => {
-            showFeedback(true, null, () => {
-              vocabCurrent++;
-              if(vocabCurrent < vocabQuestions.length) renderVocabQuestion();
-              else showResult('vocab', state.sessionScore, vocabQuestions.length);
-            });
-          }, 600);
-        }
-      };
-      box.addEventListener('click', box._handler);
-    }
-  });
 }
 
 function sanitizeId(s) { return s.replace(/[^a-zA-Z0-9]/g,'_'); }
