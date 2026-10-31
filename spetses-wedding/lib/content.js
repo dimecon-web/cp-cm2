@@ -437,9 +437,9 @@ export const PRACTICAL = {
           items: [
             {
               text: {
-                fr: "Une carte simplifiée de l'île sera affichée ici : un plan volontairement fantaisiste, dont le contour suit les données cartographiques réelles mais dont les emplacements sont approximatifs.",
-                en: "A simplified map of the island will appear here: a deliberately playful plan whose outline follows real map data but whose locations are approximate.",
-                el: "Εδώ θα εμφανιστεί ένας απλοποιημένος χάρτης του νησιού: ένας ευχάριστος, χιουμοριστικός χάρτης, του οποίου το περίγραμμα βασίζεται σε χαρτογραφικά δεδομένα, με τις θέσεις κατά προσέγγιση.",
+                fr: "Plan volontairement simplifié : le contour suit la forme réelle de l'île, mais les emplacements sont approximatifs. De quoi se repérer entre le port, les plages et le lieu du mariage — pas de quoi naviguer.",
+                en: "A deliberately simplified plan: the outline follows the real shape of the island, but the locations are approximate. Enough to find your bearings between the port, the beaches and the wedding venue — not enough to navigate by.",
+                el: "Σκόπιμα απλοποιημένος χάρτης: το περίγραμμα ακολουθεί το πραγματικό σχήμα του νησιού, αλλά οι θέσεις είναι κατά προσέγγιση. Αρκεί για να προσανατολιστείτε ανάμεσα στο λιμάνι, τις παραλίες και τον χώρο του γάμου — όχι για πλοήγηση.",
               },
             },
           ],

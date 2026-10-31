@@ -62,16 +62,48 @@ export async function POST(request, { params }) {
       const n = Number(v);
       return Number.isInteger(n) && n >= 0 && n <= 50 ? n : null;
     };
+    const clean = (s) => (typeof s === "string" ? s.trim() : "");
+    const nAdults = count(rsvp.adults);
+    const nChildren = count(rsvp.children);
+
+    // Chaque adulte porte ses propres coordonnées. Le premier de la liste est
+    // la personne qui répond : c'est son contact qui sert au foyer, pour les
+    // relances et les exports, afin que les deux ne puissent pas diverger.
+    const adultNames = (Array.isArray(rsvp.adultNames) ? rsvp.adultNames : [])
+      .slice(0, Math.max(1, nAdults || 1))
+      .map((a) => ({
+        first: clean(a?.first),
+        last: clean(a?.last),
+        email: clean(a?.email).toLowerCase(),
+        phone: clean(a?.phone),
+      }));
+    const lead = adultNames[0] || { first: "", last: "", email: "", phone: "" };
+
+    const childNames = (Array.isArray(rsvp.childNames) ? rsvp.childNames : [])
+      .slice(0, nChildren || 0)
+      .map((c) => {
+        const age = Number(c?.age);
+        return {
+          first: clean(c?.first),
+          last: clean(c?.last),
+          age: Number.isInteger(age) && age >= 0 && age < 18 ? age : null,
+        };
+      });
+
+    const coming = rsvp.intent !== "no";
+
     const { error } = await db.from("wedding_rsvps").upsert(
       {
         household_id: household.id,
         intent: rsvp.intent,
-        respondent_first_name: (rsvp.firstName || "").trim() || null,
-        respondent_last_name: (rsvp.lastName || "").trim() || null,
-        adults: count(rsvp.adults),
-        children: count(rsvp.children),
-        email: rsvp.email || null,
-        phone: rsvp.phone || null,
+        respondent_first_name: lead.first || null,
+        respondent_last_name: lead.last || null,
+        adults: nAdults,
+        children: nChildren,
+        adult_names: coming ? adultNames : null,
+        child_names: coming ? childNames : null,
+        email: lead.email || null,
+        phone: lead.phone || null,
         arrival: rsvp.arrival || null,
         departure: rsvp.departure || null,
         notes: rsvp.notes || null,

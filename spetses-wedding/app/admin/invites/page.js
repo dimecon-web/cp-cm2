@@ -532,15 +532,41 @@ function HouseholdDetails({ household, link, sends }) {
             {r.intentAt && <span className="hint">répondu le {fmtDate(r.intentAt)}</span>}
           </div>
           <dl className="facts">
-            {(r.respondentFirstName || r.respondentLastName) && (
-              <>
-                <dt>Répondant</dt>
-                <dd>{[r.respondentFirstName, r.respondentLastName].filter(Boolean).join(" ")}</dd>
-              </>
-            )}
             {r.arrival && (<><dt>Arrivée estimée</dt><dd>{r.arrival}</dd></>)}
             {r.departure && (<><dt>Départ estimé</dt><dd>{r.departure}</dd></>)}
           </dl>
+
+          {(r.adultNames?.length > 0 || r.childNames?.length > 0) && (
+            <div className="table-scroll">
+              <table className="data">
+                <thead>
+                  <tr><th>Prénom</th><th>Nom</th><th>Type</th><th>Âge</th><th>Email</th><th>Téléphone</th></tr>
+                </thead>
+                <tbody>
+                  {(r.adultNames || []).map((a, i) => (
+                    <tr key={`a${i}`}>
+                      <td>{a.first || "—"}</td>
+                      <td>{a.last || "—"}</td>
+                      <td>Adulte{i === 0 ? " (répondant)" : ""}</td>
+                      <td>—</td>
+                      <td>{a.email || "—"}</td>
+                      <td>{a.phone || "—"}</td>
+                    </tr>
+                  ))}
+                  {(r.childNames || []).map((c, i) => (
+                    <tr key={`c${i}`}>
+                      <td>{c.first || "—"}</td>
+                      <td>{c.last || "—"}</td>
+                      <td>Enfant</td>
+                      <td>{c.age ?? "—"}</td>
+                      <td>—</td>
+                      <td>—</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
 

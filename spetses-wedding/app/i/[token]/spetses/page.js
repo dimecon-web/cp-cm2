@@ -3,6 +3,7 @@
 import { usePick } from "@/lib/i18n";
 import { Rich } from "@/lib/rich";
 import { ISLAND, PRACTICAL } from "@/lib/content";
+import { IslandMap } from "@/components/IslandMap";
 
 const PAGE = {
   title: { fr: "Spetses, mode d'emploi", en: "Spetses, a user's guide", el: "Σπέτσες: οδηγός χρήσης" },
@@ -50,6 +51,8 @@ export default function SpetsesPage() {
           </h3>
 
           {s.lead && <p><Rich text={pick(s.lead)} /></p>}
+
+          {s.id === "carte" && <IslandMap />}
 
           {s.groups.map((g, gi) => (
             <div className="guide-group" key={gi}>

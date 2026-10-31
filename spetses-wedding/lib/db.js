@@ -25,6 +25,8 @@ export function rowToRsvp(rsvp, participants) {
     respondentLastName: rsvp?.respondent_last_name ?? "",
     adults: rsvp?.adults == null ? "" : String(rsvp.adults),
     children: rsvp?.children == null ? "" : String(rsvp.children),
+    adultNames: Array.isArray(rsvp?.adult_names) ? rsvp.adult_names : [],
+    childNames: Array.isArray(rsvp?.child_names) ? rsvp.child_names : [],
     intentAt: rsvp?.intent_at ?? null,
     email: rsvp?.email ?? "",
     phone: rsvp?.phone ?? "",

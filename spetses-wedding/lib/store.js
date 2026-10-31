@@ -51,7 +51,8 @@ export async function saveRsvp(token, rsvp) {
 export function emptySaveDate() {
   return {
     firstName: "", lastName: "", intent: null,
-    adults: "", children: "", arrival: "", departure: "",
+    adults: "", children: "", adultNames: [], childNames: [],
+    arrival: "", departure: "",
     email: "", phone: "", notes: "", intentAt: null,
   };
 }

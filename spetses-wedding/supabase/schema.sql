@@ -44,6 +44,8 @@ create table if not exists wedding_rsvps (
   respondent_last_name text,
   adults int check (adults is null or adults >= 0),
   children int check (children is null or children >= 0),
+  adult_names jsonb,                -- [{ first, last, email, phone }] ; l'indice 0 est la personne qui répond
+  child_names jsonb,                -- [{ first, last, age }]
   intent_at timestamptz,
   transport text check (transport in ('plane', 'ferry', 'car', 'other')),
   accommodation text check (accommodation in ('booked', 'searching', 'hosted', 'unknown')),

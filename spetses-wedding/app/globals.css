@@ -532,3 +532,44 @@ footer.site-footer .waves { color: var(--sea); letter-spacing: 0.4em; margin-bot
   flex-wrap: wrap;
 }
 .organiser-bar a { color: var(--sun); font-weight: 600; }
+
+/* ---------- Carte de l'île ---------- */
+.map-scroll { overflow-x: auto; margin: 4px 0 10px; }
+.island-map { display: block; width: 100%; min-width: 580px; height: auto; border-radius: 12px; }
+.map-label {
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+  fill: var(--ink);
+  paint-order: stroke;          /* halo blanc : lisible sur la terre comme sur la mer */
+  stroke: #fff;
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+.map-label-venue { fill: var(--bougain); font-size: 24px; }
+.map-route-label { fill: var(--sea-deep); font-size: 19px; }
+.map-sub {
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  fill: var(--muted);
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.map-island-name {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 46px;
+  letter-spacing: 0.18em;
+  fill: #c9b79a;
+}
+
+/* Sous-titre d'une liste de personnes dans le questionnaire. */
+.people-head {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 17px;
+  color: var(--sea-deep);
+  margin: 18px 0 8px;
+}
+.people-head:first-of-type { margin-top: 4px; }
