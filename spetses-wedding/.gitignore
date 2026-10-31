@@ -3,3 +3,7 @@ node_modules/
 out/
 .env*
 !.env.example
+
+# Captures de relecture, jamais versionnées
+*.png
+!public/**/*.png
