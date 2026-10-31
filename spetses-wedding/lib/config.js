@@ -1,13 +1,29 @@
 // Configuration centrale du site — TOUT ce qui est personnel se change ici.
-// Noms et dates confirmés ; les horaires, la frise et les descriptions
-// d'événements restent à ajuster.
+// Noms, date et lieu de la cérémonie sont confirmés ; les deux moments qui
+// l'entourent restent à préciser.
 
 export const config = {
   coupleNames: "Themis & Thierry",
   initials: "T · T",
   weddingDate: "2027-07-10", // samedi
+  weddingTime: "19:00",
   rsvpDeadline: "2027-01-31", // fin janvier 2027
   location: { fr: "Spetses, Grèce", en: "Spetses, Greece", el: "Σπέτσες, Ελλάδα" },
+
+  // Lieux de la journée du mariage.
+  venues: {
+    ceremony: {
+      fr: "Église Anastasis, quartier des Scholes",
+      en: "Chapel of Anastasis, in the Scholes grounds",
+      el: "Ιερός Ναός Αναστάσεως, στην περιοχή των Σχολών",
+    },
+    reception: {
+      fr: "Magus Art Cafe, dans les Scholes",
+      en: "Magus Art Cafe, in the Scholes",
+      el: "Magus Art Cafe, στις Σχολές",
+    },
+  },
+
   // Coordonnées des mariés — utilisées dans la signature des messages
   // envoyés aux invités et sur la page Contact du site.
   couple: [
@@ -24,22 +40,23 @@ export const config = {
   ],
 
   // Programme. `status` est le mot affiché en badge sous chaque événement :
-  // il sert à dire franchement ce qui n'est pas encore arrêté.
-  // `dateAlt` permet d'annoncer un événement dont la date hésite entre deux jours.
+  // il sert à dire franchement ce qui est arrêté et ce qui ne l'est pas.
+  // `dateAlt` annonce un événement dont la date hésite entre deux jours.
+  // `details` ajoute les précisions confirmées, une ligne par précision.
   events: [
     {
       id: "party",
       date: "2027-07-09",
-      name: { fr: "Rencontre pré-wedding", en: "Pre-wedding get-together", el: "Συνάντηση πριν τον γάμο" },
+      name: { fr: "La veille du mariage", en: "The evening before", el: "Η παραμονή του γάμου" },
       desc: {
-        fr: "La veille du mariage, on se retrouve tous pour un premier verre — les retrouvailles avant la fête.",
-        en: "The day before the wedding, we all gather for a first drink — reunions before the party.",
-        el: "Την παραμονή του γάμου, βρισκόμαστε όλοι για ένα πρώτο ποτό.",
+        fr: "Une soirée informelle ou une croisière est envisagée, pour se retrouver avant la fête.",
+        en: "A casual get-together or a boat cruise is being considered, to catch up before the party.",
+        el: "Εξετάζεται η διοργάνωση μιας ανεπίσημης βραδιάς ή κρουαζιέρας, για να βρεθούμε πριν τη γιορτή.",
       },
       status: {
-        fr: "Heure et lieu à définir",
-        en: "Time and venue to be confirmed",
-        el: "Ώρα και τοποθεσία θα ανακοινωθούν",
+        fr: "Plus de détails suivront prochainement",
+        en: "More details to follow soon",
+        el: "Περισσότερες πληροφορίες θα ακολουθήσουν σύντομα",
       },
     },
     {
@@ -53,39 +70,53 @@ export const config = {
         el: "Ξενάγηση: το παλιό λιμάνι, το σπίτι της Μπουμπουλίνας και η Αναργύρειος Σχολή.",
       },
       status: {
-        fr: "Date à confirmer : le 9, ou le 10 au matin",
-        en: "Date to be confirmed: the 9th, or the morning of the 10th",
-        el: "Η ημερομηνία θα επιβεβαιωθεί: στις 9, ή το πρωί της 10ης",
+        fr: "À confirmer : le 9, ou le 10 au matin",
+        en: "To be confirmed: the 9th, or the morning of the 10th",
+        el: "Να επιβεβαιωθεί: στις 9, ή το πρωί της 10ης",
       },
     },
     {
       id: "wedding",
       date: "2027-07-10",
+      time: "19:00",
+      tone: "olive",
       name: { fr: "Le mariage", en: "The wedding", el: "Ο γάμος" },
       desc: {
-        fr: "Le grand moment — cérémonie, dîner et fête jusqu'au bout de la nuit.",
-        en: "The big moment — ceremony, dinner and party until late.",
-        el: "Η μεγάλη στιγμή — τελετή, δείπνο και γλέντι μέχρι το πρωί.",
+        fr: "Le grand moment. La cérémonie a lieu à l'église Anastasis, dans le quartier des Scholes, et la réception suit au Magus Art Cafe.",
+        en: "The big moment. The ceremony takes place at the chapel of Anastasis, in the Scholes grounds, and the reception follows at the Magus Art Cafe.",
+        el: "Η μεγάλη στιγμή. Η τελετή γίνεται στον Ιερό Ναό Αναστάσεως, στην περιοχή των Σχολών, και ακολουθεί δεξίωση στο Magus Art Cafe.",
       },
+      details: [
+        {
+          fr: "🕖 Cérémonie à 19h00 — église Anastasis, quartier des Scholes",
+          en: "🕖 Ceremony at 7:00 pm — chapel of Anastasis, Scholes grounds",
+          el: "🕖 Τελετή στις 19:00 — Ιερός Ναός Αναστάσεως, περιοχή των Σχολών",
+        },
+        {
+          fr: "🥂 Réception au Magus Art Cafe, dans les Scholes",
+          en: "🥂 Reception at the Magus Art Cafe, in the Scholes",
+          el: "🥂 Δεξίωση στο Magus Art Cafe, στις Σχολές",
+        },
+      ],
       status: {
-        fr: "Lieu et horaires bientôt communiqués",
-        en: "Venue and timings coming soon",
-        el: "Τοποθεσία και ώρες σύντομα",
+        fr: "Date, heure et lieux confirmés ✓",
+        en: "Date, time and venues confirmed ✓",
+        el: "Ημερομηνία, ώρα και τοποθεσίες επιβεβαιωμένες ✓",
       },
     },
     {
       id: "beach",
       date: "2027-07-11",
-      name: { fr: "Journée à la plage", en: "Beach day", el: "Ημέρα στην παραλία" },
+      name: { fr: "Le lendemain, à la plage", en: "The day after, at the beach", el: "Η επόμενη μέρα, στην παραλία" },
       desc: {
-        fr: "Le lendemain, on se retrouve tous à la plage pour passer la journée ensemble — les pieds dans l'eau, en refaisant la soirée.",
-        en: "The day after, we all meet at the beach to spend the day together — feet in the water, reliving the night.",
-        el: "Την επόμενη μέρα, βρισκόμαστε όλοι στην παραλία για να περάσουμε τη μέρα μαζί.",
+        fr: "Un moment de retrouvailles décontracté sur une plage de l'île, pour refaire la soirée les pieds dans l'eau.",
+        en: "A relaxed debrief on one of the island's beaches, reliving the night with our feet in the water.",
+        el: "Ένα χαλαρό «debrief» σε κάποια παραλία του νησιού, με τα πόδια στο νερό.",
       },
       status: {
-        fr: "Lieu exact et horaires à confirmer",
-        en: "Exact place and timings to be confirmed",
-        el: "Ακριβής τοποθεσία και ώρες θα επιβεβαιωθούν",
+        fr: "Lieu et horaires à communiquer en temps voulu",
+        en: "Place and timings to be announced in due course",
+        el: "Τοποθεσία και ώρες θα ανακοινωθούν εν καιρώ",
       },
     },
   ],

@@ -475,3 +475,46 @@ footer.site-footer {
   padding: 26px 20px 40px;
 }
 footer.site-footer .waves { color: var(--sea); letter-spacing: 0.4em; margin-bottom: 6px; }
+
+/* ---------- Pages de contenu (guide de l'île, programme) ---------- */
+
+/* Raccourcis vers les sections d'une page longue. */
+.toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 22px; }
+.toc a {
+  display: inline-block;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: var(--sea-soft);
+  border: 1px solid #bcd8ee;
+  color: var(--sea-deep);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.toc a:hover { background: #fff; border-color: var(--sea); }
+.toc a:focus-visible { outline: 2px solid var(--sun); outline-offset: 2px; }
+
+/* Les liens d'ancrage ne doivent pas coller le titre au bord de l'écran. */
+.card[id] { scroll-margin-top: 16px; }
+
+.guide-group + .guide-group { margin-top: 16px; }
+.guide-label {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 17px;
+  color: var(--sea-deep);
+  margin-bottom: 6px;
+}
+.guide-list { margin: 0; padding-left: 20px; }
+.guide-list > li { margin-bottom: 9px; }
+.guide-list > li:last-child { margin-bottom: 0; }
+.guide-list ul { margin: 6px 0 0; padding-left: 20px; list-style: circle; }
+.guide-list ul li { margin-bottom: 3px; font-size: 15px; }
+
+/* Précisions confirmées sous un événement du programme. */
+.event-details { list-style: none; margin: 0 0 10px; padding: 0; }
+.event-details li {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sea-deep);
+  margin-bottom: 3px;
+}

@@ -65,7 +65,7 @@ export const dict = {
     },
     programme: {
       title: "Le programme",
-      intro: "Quatre jours de fête. Les lieux et horaires précis seront révélés ici quelques semaines avant — gardez l'œil ouvert.",
+      intro: "Le mariage est fixé : samedi 10 juillet 2027 à 19h00, à l'église Anastasis, suivi de la réception au Magus Art Cafe. Autour, deux moments se préparent — la veille et le lendemain ; les détails arriveront ici au fil de l'eau.",
       detailsSoon: "Lieu & détails bientôt",
     },
     news: {
@@ -177,7 +177,7 @@ export const dict = {
     },
     programme: {
       title: "The programme",
-      intro: "Four days of celebration. Exact venues and times will be revealed here a few weeks before — stay tuned.",
+      intro: "The wedding is set: Saturday 10 July 2027 at 7 pm, at the chapel of Anastasis, followed by the reception at the Magus Art Cafe. Around it, two more moments are in the works — the evening before and the day after; details will appear here as they firm up.",
       detailsSoon: "Venue & details soon",
     },
     news: {
@@ -289,7 +289,7 @@ export const dict = {
     },
     programme: {
       title: "Το πρόγραμμα",
-      intro: "Τέσσερις ημέρες γιορτής. Οι ακριβείς τοποθεσίες και ώρες θα ανακοινωθούν εδώ λίγες εβδομάδες πριν.",
+      intro: "Ο γάμος είναι ορισμένος: Σάββατο 10 Ιουλίου 2027, στις 19:00, στον Ιερό Ναό Αναστάσεως, και ακολουθεί δεξίωση στο Magus Art Cafe. Γύρω από αυτόν ετοιμάζονται δύο ακόμη στιγμές — την παραμονή και την επόμενη μέρα· οι λεπτομέρειες θα ανακοινώνονται εδώ.",
       detailsSoon: "Τοποθεσία & λεπτομέρειες σύντομα",
     },
     news: {

@@ -26,6 +26,13 @@ const PLACE = {
   el: "τις Σπέτσες",
 };
 
+// Détails confirmés de la journée du mariage : l'invitation doit les porter.
+const CEREMONY_LINE = {
+  fr: "Cérémonie à 19h00 à l'église Anastasis, dans le quartier des Scholes, puis réception au Magus Art Cafe.",
+  en: "Ceremony at 7 pm at the chapel of Anastasis, in the Scholes grounds, then reception at the Magus Art Cafe.",
+  el: "Τελετή στις 19:00 στον Ιερό Ναό Αναστάσεως, στην περιοχή των Σχολών, και μετά δεξίωση στο Magus Art Cafe.",
+};
+
 // Signature commune : les invités doivent toujours savoir à qui répondre,
 // quelle que soit la personne qui a matériellement envoyé le message.
 const REACH_US = {
@@ -126,16 +133,19 @@ const TEMPLATES = {
       fr: (n, link) =>
         `🎉 C'est officiel : on se marie !\n` +
         `${DATE_TEXT.fr.charAt(0).toUpperCase() + DATE_TEXT.fr.slice(1)}, à ${PLACE.fr}. Soleil, mer, musique — et vous, surtout vous.\n` +
+        `${CEREMONY_LINE.fr}\n` +
         `On a tellement hâte de fêter ça avec vous ! Tout est là, avec votre réponse à nous donner : ${link}\n` +
         `Le lien est rien qu'à vous, il vous reconnaît tout seul 🪄 Réponse d'ici ${DEADLINE_TEXT.fr}… et après, on danse !`,
       en: (n, link) =>
         `🎉 It's official — we're getting married!\n` +
         `${DATE_TEXT.en}, in ${PLACE.en}. Sunshine, sea, music — and you, most of all.\n` +
+        `${CEREMONY_LINE.en}\n` +
         `We can't wait to celebrate with you! Everything's here, along with your RSVP: ${link}\n` +
         `The link is yours alone, no password needed 🪄 Just let us know by ${DEADLINE_TEXT.en}… and then, we dance!`,
       el: (n, link) =>
         `🎉 Επίσημα: παντρευόμαστε!\n` +
         `Το ${DATE_TEXT.el}, στις Σπέτσες. Ήλιος, θάλασσα, μουσική — και πάνω απ' όλα, εσείς.\n` +
+        `${CEREMONY_LINE.el}\n` +
         `Ανυπομονούμε να το γιορτάσουμε μαζί σας! Όλα εδώ, μαζί με την απάντησή σας: ${link}\n` +
         `Ο σύνδεσμος είναι μόνο δικός σας, χωρίς κωδικό 🪄 Απαντήστε μέχρι ${DEADLINE_TEXT.el} — και μετά, χορός!`,
     },
@@ -143,6 +153,7 @@ const TEMPLATES = {
       fr: (n, link) =>
         `${n}, tenez-vous bien : on se marie ! 🎉\n\n` +
         `Le ${DATE_TEXT.fr}, à ${PLACE.fr}. Du soleil, la mer, des bougainvilliers partout — et vous, surtout vous.\n\n` +
+        `${CEREMONY_LINE.fr}\n\n` +
         `Nous avons hâte de fêter et de partager ce moment avec vous. Tellement hâte, en fait, qu'on a déjà commencé la playlist et débattu du nombre de pastèques à prévoir. (Le débat est encore ouvert.)\n\n` +
         `Pour tout savoir — le programme des festivités, l'île, où poser vos valises — on vous a préparé un petit site rien que pour vous :\n\n` +
         `👉 ${link}\n\n` +
@@ -152,6 +163,7 @@ const TEMPLATES = {
       en: (n, link) =>
         `${n}, brace yourselves: we're getting married! 🎉\n\n` +
         `On ${DATE_TEXT.en}, in ${PLACE.en}. Sunshine, the sea, bougainvillea everywhere — and you, most of all.\n\n` +
+        `${CEREMONY_LINE.en}\n\n` +
         `We can't wait to celebrate and share this moment with you. So much so that we've already started the playlist and argued about how many watermelons to order. (The debate is ongoing.)\n\n` +
         `To find out everything — the programme, the island, where to drop your bags — we've prepared a little website just for you:\n\n` +
         `👉 ${link}\n\n` +
@@ -161,6 +173,7 @@ const TEMPLATES = {
       el: (n, link) =>
         `${n}, κρατηθείτε: παντρευόμαστε! 🎉\n\n` +
         `Το ${DATE_TEXT.el}, στις Σπέτσες. Ήλιος, θάλασσα, βουκαμβίλιες παντού — και πάνω απ' όλα, εσείς.\n\n` +
+        `${CEREMONY_LINE.el}\n\n` +
         `Ανυπομονούμε να γιορτάσουμε και να μοιραστούμε αυτή τη στιγμή μαζί σας. Τόσο πολύ, που έχουμε ήδη ξεκινήσει την playlist και μαλώνουμε για το πόσα καρπούζια θα παραγγείλουμε. (Η συζήτηση συνεχίζεται.)\n\n` +
         `Για να τα μάθετε όλα — το πρόγραμμα, το νησί, πού θα μείνετε — σας ετοιμάσαμε μια μικρή ιστοσελίδα μόνο για εσάς:\n\n` +
         `👉 ${link}\n\n` +

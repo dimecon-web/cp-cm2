@@ -17,7 +17,8 @@ Spécification consolidée à partir du QCM (réponses du 07/08/2026).
 | Communication | Fil d'actualités sur le site + emails segmentés + messages WhatsApp pré-rédigés + mur de photos d'invités **avec modération** (D1) ; un seul groupe WhatsApp, lien affiché sur le site quelques semaines avant (D2a) |
 | Contact | Formulaire web → espace organisateurs + email (E1a) |
 | Spetses | Page essentielle au lancement, enrichie au fil du temps (E2c) |
-| Programme | Public ; chaque événement porte son propre statut (heure, lieu ou date encore à confirmer) |
+| Programme | Public. Cérémonie confirmée : samedi 10 juillet 2027 à 19h00, église Anastasis (quartier des Scholes), réception au Magus Art Cafe. La veille et le lendemain restent à préciser ; chaque événement porte son propre statut |
+| Contenu | Textes fournis par Themis, intégrés en trois langues dans `lib/content.js` : l'île, les « Scholes » et Anargyros, le mariage orthodoxe, et les informations pratiques (venir, se déplacer, plages, incontournables, excursions) |
 | About us | Histoire + frise chronologique + galerie + « pourquoi Spetses » (E4 complet) |
 | Organisateurs | Trois comptes aux droits identiques (Dimitri, Themis, Thierry) ; tableau de bord RSVP, budget, to-dos, fournisseurs ; export CSV |
 | Technique | Next.js + Supabase + Vercel (G1a), adresse `*.vercel.app` (G2b) |
@@ -46,7 +47,9 @@ Spécification consolidée à partir du QCM (réponses du 07/08/2026).
 │       ├── fournisseurs/    Annuaire fournisseurs
 │       └── compte/          Coordonnées et mot de passe de l'utilisateur
 ├── lib/
-│   ├── config.js            Noms, dates, événements, liens — tout le personnalisable
+│   ├── config.js            Noms, dates, événements, lieux — tout le personnalisable
+│   ├── content.js           Textes longs trilingues (île, lieu, cérémonie, pratique)
+│   ├── rich.js              Rendu du balisage minimal **gras** et [lien](url)
 │   ├── dict.js              Dictionnaire FR/EN/ΕΛ
 │   ├── i18n.js              Contexte de langue + sélecteur
 │   ├── store.js             Appels aux routes API depuis le navigateur
@@ -108,6 +111,10 @@ l'envoi d'emails passe encore par votre messagerie.
   activer le mode base en production.
 - Saisir la vraie liste des foyers dans `/admin/invites`.
 - Remplacer les textes et photos par les vôtres.
+- Fournir la carte simplifiée de l'île (`Carte_Spetses.svg` / `.png`) : la
+  section « Carte de l'île » l'attend.
+- Écrire la section « Quelques mots sur le couple » (page Notre histoire),
+  laissée à compléter dans les textes fournis.
 
 ## À fournir par les mariés
 
