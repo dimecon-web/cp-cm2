@@ -35,7 +35,7 @@ export default function SpetsesPage() {
           </h3>
           <IslandMap />
           {map.groups[0].items.map((item, i) => (
-            <p key={i} className={i ? "hint" : undefined} style={{ marginBottom: i ? 0 : 8 }}>
+            <p key={i} className="hint" style={{ marginBottom: 0 }}>
               <Rich text={pick(item.text)} />
             </p>
           ))}

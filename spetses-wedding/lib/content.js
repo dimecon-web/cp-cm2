@@ -154,16 +154,9 @@ export const PRACTICAL = {
           items: [
             {
               text: {
-                fr: "Plan volontairement simplifié : le contour suit la forme réelle de l'île, mais les emplacements sont approximatifs. De quoi se repérer entre le port, les plages et le lieu du mariage — pas de quoi naviguer.",
-                en: "A deliberately simplified plan: the outline follows the real shape of the island, but the locations are approximate. Enough to find your bearings between the port, the beaches and the wedding venue — not enough to navigate by.",
-                el: "Σκόπιμα απλοποιημένος χάρτης: το περίγραμμα ακολουθεί το πραγματικό σχήμα του νησιού, αλλά οι θέσεις είναι κατά προσέγγιση. Αρκεί για να προσανατολιστείτε ανάμεσα στο λιμάνι, τις παραλίες και τον χώρο του γάμου — όχι για πλοήγηση.",
-              },
-            },
-            {
-              text: {
-                fr: "Pour naviguer pour de vrai : [l'île sur Google Maps](https://www.google.com/maps/search/?api=1&query=Spetses%2C+Greece) · [le lieu du mariage, les Scholes](https://www.google.com/maps/search/?api=1&query=Anargyrios+and+Korgialenios+School+of+Spetses)",
-                en: "For real navigation: [the island on Google Maps](https://www.google.com/maps/search/?api=1&query=Spetses%2C+Greece) · [the wedding venue, the Scholes](https://www.google.com/maps/search/?api=1&query=Anargyrios+and+Korgialenios+School+of+Spetses)",
-                el: "Για πραγματική πλοήγηση: [το νησί στους Χάρτες Google](https://www.google.com/maps/search/?api=1&query=Spetses%2C+Greece) · [ο χώρος του γάμου, οι Σχολές](https://www.google.com/maps/search/?api=1&query=Anargyrios+and+Korgialenios+School+of+Spetses)",
+                fr: "Sur Google Maps : [l'île](https://www.google.com/maps/search/?api=1&query=Spetses%2C+Greece) · [le lieu du mariage](https://www.google.com/maps/search/?api=1&query=Anargyrios+and+Korgialenios+School+of+Spetses)",
+                en: "On Google Maps: [the island](https://www.google.com/maps/search/?api=1&query=Spetses%2C+Greece) · [the wedding venue](https://www.google.com/maps/search/?api=1&query=Anargyrios+and+Korgialenios+School+of+Spetses)",
+                el: "Στους Χάρτες Google: [το νησί](https://www.google.com/maps/search/?api=1&query=Spetses%2C+Greece) · [ο χώρος του γάμου](https://www.google.com/maps/search/?api=1&query=Anargyrios+and+Korgialenios+School+of+Spetses)",
               },
             },
           ],
