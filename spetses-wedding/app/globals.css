@@ -182,7 +182,7 @@ main.page { padding: 34px 0 70px; }
 /* Formulaires */
 label.field { display: block; font-size: 14px; font-weight: 600; margin-bottom: 14px; }
 label.field span.lbl { display: block; margin-bottom: 5px; }
-input[type="text"], input[type="email"], input[type="date"], input[type="number"], select, textarea {
+input[type="text"], input[type="email"], input[type="tel"], input[type="date"], input[type="number"], select, textarea {
   width: 100%;
   background: #fffdf9;
   border: 1.5px solid var(--line);
