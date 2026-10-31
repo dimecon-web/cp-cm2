@@ -36,6 +36,15 @@ create table if not exists wedding_rsvps (
   email text,                       -- collecté si absent du carnet d'adresses
   arrival date,
   departure date,
+  -- Premier questionnaire, envoyé avec le save the date : une intention et des
+  -- ordres de grandeur, bien avant la réponse ferme. Volontairement séparé de
+  -- `attending`, pour qu'une intention ne soit jamais comptée comme un oui.
+  intent text check (intent is null or intent in ('yes', 'probably', 'unsure', 'no')),
+  respondent_first_name text,
+  respondent_last_name text,
+  adults int check (adults is null or adults >= 0),
+  children int check (children is null or children >= 0),
+  intent_at timestamptz,
   transport text check (transport in ('plane', 'ferry', 'car', 'other')),
   accommodation text check (accommodation in ('booked', 'searching', 'hosted', 'unknown')),
   notes text,

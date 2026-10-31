@@ -19,6 +19,13 @@ export const db = isConfigured
 export function rowToRsvp(rsvp, participants) {
   return {
     attending: rsvp?.attending ?? null,
+    // Premier questionnaire (save the date)
+    intent: rsvp?.intent ?? null,
+    respondentFirstName: rsvp?.respondent_first_name ?? "",
+    respondentLastName: rsvp?.respondent_last_name ?? "",
+    adults: rsvp?.adults == null ? "" : String(rsvp.adults),
+    children: rsvp?.children == null ? "" : String(rsvp.children),
+    intentAt: rsvp?.intent_at ?? null,
     email: rsvp?.email ?? "",
     phone: rsvp?.phone ?? "",
     arrival: rsvp?.arrival ?? "",

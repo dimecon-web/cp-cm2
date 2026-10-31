@@ -518,3 +518,17 @@ footer.site-footer .waves { color: var(--sea); letter-spacing: 0.4em; margin-bot
   color: var(--sea-deep);
   margin-bottom: 3px;
 }
+
+/* Bandeau affiché quand un organisateur consulte l'espace d'un foyer. */
+.organiser-bar {
+  background: var(--ink);
+  color: #fff;
+  font-size: 13px;
+  padding: 9px 20px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.organiser-bar a { color: var(--sun); font-weight: 600; }

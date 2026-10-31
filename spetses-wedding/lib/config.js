@@ -8,6 +8,11 @@ export const config = {
   weddingDate: "2027-07-10", // samedi
   weddingTime: "19:00",
   rsvpDeadline: "2027-01-31", // fin janvier 2027
+
+  // Phase en cours. "saveDate" : les invités répondent au questionnaire
+  // court. "invitation" : l'invitation complète est partie, c'est le RSVP
+  // nominatif qui est mis en avant. Un seul mot à changer le jour venu.
+  phase: "saveDate",
   location: { fr: "Spetses, Grèce", en: "Spetses, Greece", el: "Σπέτσες, Ελλάδα" },
 
   // Lieux de la journée du mariage.

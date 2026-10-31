@@ -47,6 +47,24 @@ export async function saveRsvp(token, rsvp) {
   if (!res.ok) throw new Error("rsvp_save_failed");
 }
 
+// ---------- Premier questionnaire (envoyé avec le save the date) ----------
+export function emptySaveDate() {
+  return {
+    firstName: "", lastName: "", intent: null,
+    adults: "", children: "", arrival: "", departure: "",
+    email: "", phone: "", notes: "", intentAt: null,
+  };
+}
+
+export async function saveSaveDate(token, answers) {
+  const res = await fetch(`/api/guest/${encodeURIComponent(token)}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ ...answers, stage: "saveDate" }),
+  });
+  if (!res.ok) throw new Error("savedate_save_failed");
+}
+
 export async function submitPhoto(token, { dataUrl, caption }) {
   const res = await fetch("/api/public", {
     method: "POST",

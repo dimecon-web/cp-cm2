@@ -328,6 +328,10 @@ export default function InvitesPage() {
           />
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button className="btn small" type="submit">Enregistrer</button>
+            <a className="btn secondary small" href={`${origin}/i/${editing.token}`}
+               target="_blank" rel="noreferrer">
+              Ouvrir son espace invité ↗
+            </a>
             <button className="btn ghost small" type="button" onClick={() => setEditing(null)}>Annuler</button>
             <button className="btn ghost small" type="button"
               style={{ marginLeft: "auto", color: "var(--danger)", borderColor: "var(--danger)" }}
@@ -440,7 +444,9 @@ export default function InvitesPage() {
                           onClick={() => copy(h.token, linkFor(h))}>
                           {copied === h.token ? "✓" : "🔗"}
                         </button>
-                        <button className="btn ghost small" onClick={() => showQr(h)}>⬛</button>
+                        <button className="btn ghost small" style={{ marginRight: 6 }} onClick={() => showQr(h)}>⬛</button>
+                        <a className="btn ghost small" href={linkFor(h)} target="_blank" rel="noreferrer"
+                           title={`Ouvrir l'espace invité de ${h.name}`}>👁</a>
                       </td>
                     </tr>
                   ))}
@@ -503,8 +509,41 @@ function HouseholdDetails({ household, link, sends }) {
   const adults = participants.filter((p) => p.type === "adult").length;
   const kids = participants.filter((p) => p.type === "child").length;
 
+  const INTENT = {
+    yes: ["olive", "Oui, on sera là"],
+    probably: ["sea", "Très probablement"],
+    unsure: ["sun", "Ne sait pas encore"],
+    no: ["bougain", "Ne pourra pas venir"],
+  };
+  const intent = r?.intent ? INTENT[r.intent] : null;
+  const estimate = [
+    r?.adults !== "" && r?.adults != null ? `${r.adults} adulte${Number(r.adults) > 1 ? "s" : ""}` : null,
+    r?.children !== "" && r?.children != null ? `${r.children} enfant${Number(r.children) > 1 ? "s" : ""}` : null,
+  ].filter(Boolean).join(" + ");
+
   return (
     <div className="details">
+      {intent && (
+        <>
+          <div className="details-head">
+            <h4>Questionnaire « save the date »</h4>
+            <span className={`badge ${intent[0]}`}>{intent[1]}</span>
+            {estimate && <span className="badge grey">{estimate} (estimation)</span>}
+            {r.intentAt && <span className="hint">répondu le {fmtDate(r.intentAt)}</span>}
+          </div>
+          <dl className="facts">
+            {(r.respondentFirstName || r.respondentLastName) && (
+              <>
+                <dt>Répondant</dt>
+                <dd>{[r.respondentFirstName, r.respondentLastName].filter(Boolean).join(" ")}</dd>
+              </>
+            )}
+            {r.arrival && (<><dt>Arrivée estimée</dt><dd>{r.arrival}</dd></>)}
+            {r.departure && (<><dt>Départ estimé</dt><dd>{r.departure}</dd></>)}
+          </dl>
+        </>
+      )}
+
       <div className="details-head">
         <h4>Réponse du foyer</h4>
         {!r?.attending && <span className="badge sun">Sans réponse</span>}

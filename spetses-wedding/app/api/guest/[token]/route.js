@@ -49,6 +49,41 @@ export async function POST(request, { params }) {
   if (!household) return Response.json({ error: "unknown_token" }, { status: 404 });
 
   const rsvp = await request.json();
+
+  // ---------- Premier questionnaire, envoyé avec le save the date ----------
+  // Il ne touche ni `attending` ni la liste nominative : une intention n'est
+  // pas une réponse ferme, et on ne veut pas effacer ce qui a déjà été dit.
+  if (rsvp.stage === "saveDate") {
+    if (!["yes", "probably", "unsure", "no"].includes(rsvp.intent)) {
+      return Response.json({ error: "invalid_intent" }, { status: 400 });
+    }
+    const count = (v) => {
+      if (v === "" || v == null) return null;
+      const n = Number(v);
+      return Number.isInteger(n) && n >= 0 && n <= 50 ? n : null;
+    };
+    const { error } = await db.from("wedding_rsvps").upsert(
+      {
+        household_id: household.id,
+        intent: rsvp.intent,
+        respondent_first_name: (rsvp.firstName || "").trim() || null,
+        respondent_last_name: (rsvp.lastName || "").trim() || null,
+        adults: count(rsvp.adults),
+        children: count(rsvp.children),
+        email: rsvp.email || null,
+        phone: rsvp.phone || null,
+        arrival: rsvp.arrival || null,
+        departure: rsvp.departure || null,
+        notes: rsvp.notes || null,
+        intent_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "household_id" }
+    );
+    if (error) return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ ok: true });
+  }
+
   if (!["yes", "no"].includes(rsvp.attending)) {
     return Response.json({ error: "invalid_attending" }, { status: 400 });
   }

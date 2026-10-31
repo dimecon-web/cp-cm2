@@ -18,6 +18,13 @@ export default function AdminDashboard() {
   const adults = participants.filter((p) => p.type === "adult").length;
   const kids = participants.filter((p) => p.type === "child").length;
 
+  // Premier questionnaire : des intentions, jamais comptées comme des « oui ».
+  const intents = households.filter((h) => h.rsvp?.intent);
+  const intentCount = (v) => intents.filter((h) => h.rsvp.intent === v).length;
+  const estimated = intents
+    .filter((h) => h.rsvp.intent !== "no")
+    .reduce((n, h) => n + (Number(h.rsvp.adults) || 0) + (Number(h.rsvp.children) || 0), 0);
+
   const arrivals = {};
   for (const h of yes) {
     if (h.rsvp.arrival) {
@@ -57,6 +64,23 @@ export default function AdminDashboard() {
         <div className="stat sun"><div className="num">{pending.length}</div><div className="lbl">sans réponse</div></div>
         <div className="stat sea"><div className="num">{adults} + {kids}</div><div className="lbl">adultes + enfants</div></div>
       </div>
+
+      {intents.length > 0 && (
+        <div className="card">
+          <h3>Questionnaire « save the date »</h3>
+          <p className="hint" style={{ marginTop: -4, marginBottom: 12 }}>
+            Des intentions, pas des réponses fermes : {intents.length} foyer(s) sur {households.length} ont
+            répondu au premier questionnaire. Le RSVP nominatif reste à venir.
+          </p>
+          <div className="stats-row" style={{ marginBottom: 0 }}>
+            <div className="stat olive"><div className="num">{intentCount("yes")}</div><div className="lbl">« on sera là »</div></div>
+            <div className="stat sea"><div className="num">{intentCount("probably")}</div><div className="lbl">« très probablement »</div></div>
+            <div className="stat sun"><div className="num">{intentCount("unsure")}</div><div className="lbl">« on ne sait pas »</div></div>
+            <div className="stat bougain"><div className="num">{intentCount("no")}</div><div className="lbl">« pas possible »</div></div>
+            <div className="stat"><div className="num">{estimated}</div><div className="lbl">personnes annoncées</div></div>
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <h3>Répartition</h3>

@@ -5,7 +5,7 @@ import { useParams, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { config } from "@/lib/config";
 import { useT, LangSwitcher } from "@/lib/i18n";
-import { loadGuest, getMode } from "@/lib/store";
+import { loadGuest, getMode, loadSession } from "@/lib/store";
 
 export default function GuestLayout({ children }) {
   const { token } = useParams();
@@ -13,6 +13,17 @@ export default function GuestLayout({ children }) {
   const t = useT();
   const [household, setHousehold] = useState(undefined);
   const [configured, setConfigured] = useState(true);
+  // Un organisateur connecté peut consulter l'espace de n'importe quel foyer :
+  // un bandeau le lui rappelle, pour qu'il ne confonde jamais les deux vues.
+  const [organiser, setOrganiser] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadSession()
+      .then((s) => { if (!cancelled) setOrganiser(s?.user || null); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,6 +66,9 @@ export default function GuestLayout({ children }) {
   const base = `/i/${token}`;
   const links = [
     [base, t("nav.home")],
+    // Tant que l'invitation complète n'est pas partie, c'est le questionnaire
+    // court qui est en avant ; ensuite, c'est le RSVP. Voir config.phase.
+    ...(config.phase === "saveDate" ? [[`${base}/save-the-date`, t("nav.saveDate")]] : []),
     [`${base}/rsvp`, t("nav.rsvp")],
     [`${base}/programme`, t("nav.programme")],
     [`${base}/spetses`, t("nav.spetses")],
@@ -65,6 +79,15 @@ export default function GuestLayout({ children }) {
 
   return (
     <>
+      {organiser && (
+        <div className="organiser-bar">
+          <span>
+            Aperçu organisateur ({organiser.name}) — vous consultez l'espace
+            {household?.name ? ` de ${household.name}` : " d'un foyer"}.
+          </span>
+          <Link href="/admin/invites">Retour à l'espace organisateurs →</Link>
+        </div>
+      )}
       <header className="site-header">
         <div className="wrap">
           <div className="header-top">
