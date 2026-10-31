@@ -573,3 +573,81 @@ footer.site-footer .waves { color: var(--sea); letter-spacing: 0.4em; margin-bot
   margin: 18px 0 8px;
 }
 .people-head:first-of-type { margin-top: 4px; }
+
+/* ---------- Infographie : les quatre temps de la cérémonie ---------- */
+.rite {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+}
+.rite-step {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  min-width: 0;
+}
+.rite-icon { position: relative; width: 52px; height: 52px; color: var(--sea-deep); }
+.rite-icon svg { width: 52px; height: 52px; display: block; }
+.rite-num {
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bougain);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rite-step h4 {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 19px;
+  margin: 14px 0 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.rite-badge {
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #9a6d0d;
+  background: var(--sun-soft);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.rite-step p { margin: 0; font-size: 14.5px; color: var(--muted); }
+
+/* ---------- Illustration des Scholes ---------- */
+.scholes { border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.scholes svg { display: block; width: 100%; height: auto; }
+.scholes-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 14px 0 18px;
+}
+.scholes-facts > div {
+  background: var(--sun-soft);
+  border-radius: 12px;
+  padding: 12px 14px;
+  min-width: 0;
+}
+.scholes-facts dt {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9a6d0d;
+  margin-bottom: 3px;
+}
+.scholes-facts dd { margin: 0; font-size: 15px; font-weight: 600; }

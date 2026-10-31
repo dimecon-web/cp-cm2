@@ -18,16 +18,11 @@ export const db = isConfigured
 // Conversions entre le format de la base (colonnes) et celui de l'application.
 export function rowToRsvp(rsvp, participants) {
   return {
+    // Quatre niveaux : oui, très probablement, on ne sait pas encore, non.
     attending: rsvp?.attending ?? null,
-    // Premier questionnaire (save the date)
-    intent: rsvp?.intent ?? null,
-    respondentFirstName: rsvp?.respondent_first_name ?? "",
-    respondentLastName: rsvp?.respondent_last_name ?? "",
+    // Effectifs annoncés — ils peuvent dépasser le nombre de personnes nommées.
     adults: rsvp?.adults == null ? "" : String(rsvp.adults),
     children: rsvp?.children == null ? "" : String(rsvp.children),
-    adultNames: Array.isArray(rsvp?.adult_names) ? rsvp.adult_names : [],
-    childNames: Array.isArray(rsvp?.child_names) ? rsvp.child_names : [],
-    intentAt: rsvp?.intent_at ?? null,
     email: rsvp?.email ?? "",
     phone: rsvp?.phone ?? "",
     arrival: rsvp?.arrival ?? "",
@@ -43,6 +38,8 @@ export function rowToRsvp(rsvp, participants) {
         lastName: p.last_name ?? "",
         name: p.name,
         type: p.type,
+        email: p.email ?? "",
+        phone: p.phone ?? "",
         age: p.age == null ? "" : String(p.age),
         events: p.events || {},
       })),

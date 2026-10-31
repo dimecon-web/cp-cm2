@@ -17,10 +17,30 @@ const PAGE = {
 export default function SpetsesPage() {
   const pick = usePick();
 
+  // La carte ouvre la page : c'est ce qu'on regarde en premier quand on
+  // découvre une île. Les autres sections suivent dans l'ordre du guide.
+  const map = PRACTICAL.sections.find((s) => s.id === "carte");
+  const sections = PRACTICAL.sections.filter((s) => s.id !== "carte");
+
   return (
     <div className="narrow" style={{ margin: "0 auto" }}>
       <h1>{pick(PAGE.title)}</h1>
       <p style={{ color: "var(--muted)" }}>{pick(PAGE.intro)}</p>
+
+      {map && (
+        <section className="card" id="carte">
+          <h3>
+            <span aria-hidden="true" style={{ marginRight: 8 }}>{map.emoji}</span>
+            {pick(map.title)}
+          </h3>
+          <IslandMap />
+          {map.groups[0].items.map((item, i) => (
+            <p key={i} className={i ? "hint" : undefined} style={{ marginBottom: i ? 0 : 8 }}>
+              <Rich text={pick(item.text)} />
+            </p>
+          ))}
+        </section>
+      )}
 
       <div className="card">
         <h3>{pick(ISLAND.title)}</h3>
@@ -36,14 +56,14 @@ export default function SpetsesPage() {
 
       {/* Raccourcis : la page est longue, autant pouvoir sauter au bon endroit. */}
       <nav className="toc" aria-label={pick(PRACTICAL.title)}>
-        {PRACTICAL.sections.map((s) => (
+        {sections.map((s) => (
           <a key={s.id} href={`#${s.id}`}>
             <span aria-hidden="true">{s.emoji}</span> {pick(s.title)}
           </a>
         ))}
       </nav>
 
-      {PRACTICAL.sections.map((s) => (
+      {sections.map((s) => (
         <section className="card" key={s.id} id={s.id}>
           <h3>
             <span aria-hidden="true" style={{ marginRight: 8 }}>{s.emoji}</span>
@@ -51,8 +71,6 @@ export default function SpetsesPage() {
           </h3>
 
           {s.lead && <p><Rich text={pick(s.lead)} /></p>}
-
-          {s.id === "carte" && <IslandMap />}
 
           {s.groups.map((g, gi) => (
             <div className="guide-group" key={gi}>

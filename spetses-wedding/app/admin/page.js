@@ -11,24 +11,27 @@ export default function AdminDashboard() {
   const households = data?.households || [];
   const messages = data?.messages || [];
 
-  const yes = households.filter((h) => h.rsvp?.attending === "yes");
-  const no = households.filter((h) => h.rsvp?.attending === "no");
+  const by = (v) => households.filter((h) => h.rsvp?.attending === v);
+  const yes = by("yes");
+  const probably = by("probably");
+  const unsure = by("unsure");
+  const no = by("no");
   const pending = households.filter((h) => !h.rsvp?.attending);
-  const participants = yes.flatMap((h) => h.rsvp.participants || []);
-  const adults = participants.filter((p) => p.type === "adult").length;
-  const kids = participants.filter((p) => p.type === "child").length;
+  // Effectifs annoncés par les foyers qui pensent venir, « oui » ou non :
+  // c'est ce qu'il faut pour dimensionner, bien avant les réponses fermes.
+  const coming = [...yes, ...probably, ...unsure];
+  const adults = coming.reduce((n, h) => n + (Number(h.rsvp.adults) || 0), 0);
+  const kids = coming.reduce((n, h) => n + (Number(h.rsvp.children) || 0), 0);
+  const firmAdults = yes.reduce((n, h) => n + (Number(h.rsvp.adults) || 0), 0);
+  const firmKids = yes.reduce((n, h) => n + (Number(h.rsvp.children) || 0), 0);
 
-  // Premier questionnaire : des intentions, jamais comptées comme des « oui ».
-  const intents = households.filter((h) => h.rsvp?.intent);
-  const intentCount = (v) => intents.filter((h) => h.rsvp.intent === v).length;
-  const estimated = intents
-    .filter((h) => h.rsvp.intent !== "no")
-    .reduce((n, h) => n + (Number(h.rsvp.adults) || 0) + (Number(h.rsvp.children) || 0), 0);
-
+  // Arrivées annoncées, y compris par les foyers encore hésitants : c'est ce
+  // qui permet d'anticiper les bateaux et les hébergements.
   const arrivals = {};
-  for (const h of yes) {
+  for (const h of coming) {
     if (h.rsvp.arrival) {
-      arrivals[h.rsvp.arrival] = (arrivals[h.rsvp.arrival] || 0) + (h.rsvp.participants?.length || 0);
+      const n = (Number(h.rsvp.adults) || 0) + (Number(h.rsvp.children) || 0);
+      arrivals[h.rsvp.arrival] = (arrivals[h.rsvp.arrival] || 0) + (n || 1);
     }
   }
 
@@ -39,7 +42,9 @@ export default function AdminDashboard() {
       const key = keyOf(h);
       const entry = map.get(key) || { foyers: 0, personnes: 0 };
       entry.foyers += 1;
-      if (h.rsvp?.attending === "yes") entry.personnes += h.rsvp.participants?.length || 0;
+      if (h.rsvp?.attending === "yes") {
+        entry.personnes += (Number(h.rsvp.adults) || 0) + (Number(h.rsvp.children) || 0);
+      }
       map.set(key, entry);
     }
     return [...map.entries()].sort((a, b) => b[1].foyers - a[1].foyers);
@@ -60,27 +65,27 @@ export default function AdminDashboard() {
 
       <div className="stats-row">
         <div className="stat olive"><div className="num">{yes.length}</div><div className="lbl">foyers « oui »</div></div>
+        <div className="stat sea"><div className="num">{probably.length}</div><div className="lbl">« très probablement »</div></div>
+        <div className="stat sun"><div className="num">{unsure.length + pending.length}</div><div className="lbl">incertains ou sans réponse</div></div>
         <div className="stat bougain"><div className="num">{no.length}</div><div className="lbl">foyers « non »</div></div>
-        <div className="stat sun"><div className="num">{pending.length}</div><div className="lbl">sans réponse</div></div>
-        <div className="stat sea"><div className="num">{adults} + {kids}</div><div className="lbl">adultes + enfants</div></div>
+        <div className="stat"><div className="num">{adults + kids}</div><div className="lbl">personnes annoncées</div></div>
       </div>
 
-      {intents.length > 0 && (
-        <div className="card">
-          <h3>Questionnaire « save the date »</h3>
-          <p className="hint" style={{ marginTop: -4, marginBottom: 12 }}>
-            Des intentions, pas des réponses fermes : {intents.length} foyer(s) sur {households.length} ont
-            répondu au premier questionnaire. Le RSVP nominatif reste à venir.
-          </p>
-          <div className="stats-row" style={{ marginBottom: 0 }}>
-            <div className="stat olive"><div className="num">{intentCount("yes")}</div><div className="lbl">« on sera là »</div></div>
-            <div className="stat sea"><div className="num">{intentCount("probably")}</div><div className="lbl">« très probablement »</div></div>
-            <div className="stat sun"><div className="num">{intentCount("unsure")}</div><div className="lbl">« on ne sait pas »</div></div>
-            <div className="stat bougain"><div className="num">{intentCount("no")}</div><div className="lbl">« pas possible »</div></div>
-            <div className="stat"><div className="num">{estimated}</div><div className="lbl">personnes annoncées</div></div>
-          </div>
-        </div>
-      )}
+      <div className="card">
+        <h3>Ce qui est acquis, ce qui ne l'est pas</h3>
+        <p className="hint" style={{ marginTop: -4, marginBottom: 12 }}>
+          Une réponse se complète au fil du temps. Seuls les « oui » sont fermes : les
+          « très probablement » et les « incertains » annoncent un effectif sans s'engager.
+        </p>
+        <dl className="facts">
+          <dt>Personnes sûres (foyers « oui »)</dt>
+          <dd>{firmAdults} adulte(s) + {firmKids} enfant(s)</dd>
+          <dt>Personnes annoncées en tout</dt>
+          <dd>{adults} adulte(s) + {kids} enfant(s)</dd>
+          <dt>Foyers encore muets</dt>
+          <dd>{pending.length} sur {households.length}</dd>
+        </dl>
+      </div>
 
       <div className="card">
         <h3>Répartition</h3>

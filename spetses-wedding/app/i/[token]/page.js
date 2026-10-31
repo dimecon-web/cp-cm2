@@ -14,7 +14,6 @@ export default function GuestHome() {
   const { lang } = useLang();
   const [household, setHousehold] = useState(null);
   const [hasRsvp, setHasRsvp] = useState(false);
-  const [hasIntent, setHasIntent] = useState(false);
   const [days, setDays] = useState(null);
 
   useEffect(() => {
@@ -24,7 +23,6 @@ export default function GuestHome() {
         if (cancelled) return;
         setHousehold(household);
         setHasRsvp(Boolean(rsvp?.attending));
-        setHasIntent(Boolean(rsvp?.intent));
       })
       .catch(() => {});
     const diff = new Date(config.weddingDate) - new Date();
@@ -56,20 +54,9 @@ export default function GuestHome() {
 
       <p style={{ maxWidth: "48ch", margin: "0 auto 26px" }}>{t("home.intro")}</p>
 
-      {config.phase === "saveDate" ? (
-        <>
-          <Link className="btn" href={`/i/${token}/save-the-date`}>
-            {hasIntent ? t("home.ctaSaveDateDone") : t("home.ctaSaveDate")}
-          </Link>
-          <p style={{ marginTop: 14, fontSize: 14 }}>
-            <Link href={`/i/${token}/rsvp`}>{t("home.rsvpLater")} →</Link>
-          </p>
-        </>
-      ) : (
-        <Link className="btn" href={`/i/${token}/rsvp`}>
-          {hasRsvp ? t("home.ctaDone") : t("home.cta")}
-        </Link>
-      )}
+      <Link className="btn" href={`/i/${token}/rsvp`}>
+        {hasRsvp ? t("home.ctaDone") : t("home.cta")}
+      </Link>
 
       <div style={{ marginTop: 40, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
         <Link className="btn ghost small" href={`/i/${token}/programme`}>{t("nav.programme")}</Link>

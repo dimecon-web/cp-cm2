@@ -66,9 +66,6 @@ export default function GuestLayout({ children }) {
   const base = `/i/${token}`;
   const links = [
     [base, t("nav.home")],
-    // Tant que l'invitation complète n'est pas partie, c'est le questionnaire
-    // court qui est en avant ; ensuite, c'est le RSVP. Voir config.phase.
-    ...(config.phase === "saveDate" ? [[`${base}/save-the-date`, t("nav.saveDate")]] : []),
     [`${base}/rsvp`, t("nav.rsvp")],
     [`${base}/programme`, t("nav.programme")],
     [`${base}/spetses`, t("nav.spetses")],

@@ -14,9 +14,16 @@ const LANGS = [["fr", "Français"], ["en", "English"], ["el", "Ελληνικά"
 const sideLabel = (side) => config.sides.find((s) => s.id === side)?.label || "";
 const SEND_LABEL = { saveDate: "Save the date", invite: "Invitation", reminder: "Relance", custom: "Information", news: "Actualité" };
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "—");
-const statusOf = (h) =>
-  !h.rsvp?.attending ? "Sans réponse" : h.rsvp.attending === "no" ? "Non" : "Oui";
-const peopleOf = (h) => (h.rsvp?.attending === "yes" ? h.rsvp.participants?.length || 0 : 0);
+const STATUS = { yes: "Oui", probably: "Probable", unsure: "Incertain", no: "Non" };
+const STATUS_TONE = { Oui: "olive", Probable: "sea", Incertain: "sun", Non: "bougain", "Sans réponse": "grey" };
+const statusOf = (h) => (h.rsvp?.attending ? STATUS[h.rsvp.attending] : "Sans réponse");
+// Effectif annoncé : il vaut même quand les personnes ne sont pas encore nommées.
+const peopleOf = (h) => {
+  const r = h.rsvp;
+  if (!r?.attending || r.attending === "no") return 0;
+  const declared = (Number(r.adults) || 0) + (Number(r.children) || 0);
+  return declared || r.participants?.length || 0;
+};
 
 // Colonnes du tableau : chacune sait trier, filtrer et regrouper.
 const COLUMNS = [
@@ -429,9 +436,7 @@ export default function InvitesPage() {
                       <td>{h.side ? <span className="badge sea">{sideLabel(h.side)}</span> : <span className="hint">—</span>}</td>
                       <td>{(h.lang || "fr").toUpperCase()}</td>
                       <td>
-                        {statusOf(h) === "Oui" && <span className="badge olive">Oui</span>}
-                        {statusOf(h) === "Non" && <span className="badge bougain">Non</span>}
-                        {statusOf(h) === "Sans réponse" && <span className="badge sun">Sans réponse</span>}
+                        <span className={`badge ${STATUS_TONE[statusOf(h)]}`}>{statusOf(h)}</span>
                       </td>
                       <td className="num">{peopleOf(h) || ""}</td>
                       <td style={{ fontSize: 13 }}>
@@ -509,96 +514,51 @@ function HouseholdDetails({ household, link, sends }) {
   const adults = participants.filter((p) => p.type === "adult").length;
   const kids = participants.filter((p) => p.type === "child").length;
 
-  const INTENT = {
+  const ANSWER = {
     yes: ["olive", "Oui, on sera là"],
     probably: ["sea", "Très probablement"],
     unsure: ["sun", "Ne sait pas encore"],
     no: ["bougain", "Ne pourra pas venir"],
   };
-  const intent = r?.intent ? INTENT[r.intent] : null;
-  const estimate = [
+  const answer = r?.attending ? ANSWER[r.attending] : null;
+  const declared = [
     r?.adults !== "" && r?.adults != null ? `${r.adults} adulte${Number(r.adults) > 1 ? "s" : ""}` : null,
     r?.children !== "" && r?.children != null ? `${r.children} enfant${Number(r.children) > 1 ? "s" : ""}` : null,
   ].filter(Boolean).join(" + ");
+  const named = participants.filter((p) => p.firstName || p.lastName).length;
+  const coming = r?.attending && r.attending !== "no";
 
   return (
     <div className="details">
-      {intent && (
-        <>
-          <div className="details-head">
-            <h4>Questionnaire « save the date »</h4>
-            <span className={`badge ${intent[0]}`}>{intent[1]}</span>
-            {estimate && <span className="badge grey">{estimate} (estimation)</span>}
-            {r.intentAt && <span className="hint">répondu le {fmtDate(r.intentAt)}</span>}
-          </div>
-          <dl className="facts">
-            {r.arrival && (<><dt>Arrivée estimée</dt><dd>{r.arrival}</dd></>)}
-            {r.departure && (<><dt>Départ estimé</dt><dd>{r.departure}</dd></>)}
-          </dl>
-
-          {(r.adultNames?.length > 0 || r.childNames?.length > 0) && (
-            <div className="table-scroll">
-              <table className="data">
-                <thead>
-                  <tr><th>Prénom</th><th>Nom</th><th>Type</th><th>Âge</th><th>Email</th><th>Téléphone</th></tr>
-                </thead>
-                <tbody>
-                  {(r.adultNames || []).map((a, i) => (
-                    <tr key={`a${i}`}>
-                      <td>{a.first || "—"}</td>
-                      <td>{a.last || "—"}</td>
-                      <td>Adulte{i === 0 ? " (répondant)" : ""}</td>
-                      <td>—</td>
-                      <td>{a.email || "—"}</td>
-                      <td>{a.phone || "—"}</td>
-                    </tr>
-                  ))}
-                  {(r.childNames || []).map((c, i) => (
-                    <tr key={`c${i}`}>
-                      <td>{c.first || "—"}</td>
-                      <td>{c.last || "—"}</td>
-                      <td>Enfant</td>
-                      <td>{c.age ?? "—"}</td>
-                      <td>—</td>
-                      <td>—</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
-      )}
-
       <div className="details-head">
         <h4>Réponse du foyer</h4>
-        {!r?.attending && <span className="badge sun">Sans réponse</span>}
-        {r?.attending === "no" && <span className="badge bougain">Ne vient pas</span>}
-        {r?.attending === "yes" && (
-          <span className="badge olive">
-            {participants.length} personne{participants.length > 1 ? "s" : ""} · {adults} adulte{adults > 1 ? "s" : ""}
-            {kids > 0 ? ` + ${kids} enfant${kids > 1 ? "s" : ""}` : ""}
-          </span>
+        {answer ? <span className={`badge ${answer[0]}`}>{answer[1]}</span>
+                : <span className="badge sun">Sans réponse</span>}
+        {coming && declared && <span className="badge grey">{declared} annoncé(s)</span>}
+        {coming && named < participants.length && (
+          <span className="badge sun">{participants.length - named} nom(s) à venir</span>
         )}
         {r?.updatedAt && <span className="hint">mise à jour le {fmtDate(r.updatedAt)}</span>}
       </div>
 
-      {r?.attending === "yes" && participants.length > 0 && (
+      {coming && participants.length > 0 && (
         <div className="table-scroll">
           <table className="data">
             <thead>
               <tr>
-                <th>Prénom</th><th>Nom</th><th>Type</th><th>Âge</th>
+                <th>Prénom</th><th>Nom</th><th>Type</th><th>Âge</th><th>Email</th><th>Téléphone</th>
                 {config.events.map((ev) => <th key={ev.id}>{ev.name.fr}</th>)}
               </tr>
             </thead>
             <tbody>
               {participants.map((p, i) => (
                 <tr key={i}>
-                  <td>{p.firstName || p.name}</td>
-                  <td>{p.lastName || ""}</td>
-                  <td>{p.type === "child" ? "Enfant" : "Adulte"}</td>
+                  <td>{p.firstName || p.name || "—"}</td>
+                  <td>{p.lastName || "—"}</td>
+                  <td>{p.type === "child" ? "Enfant" : `Adulte${i === 0 ? " (répondant)" : ""}`}</td>
                   <td>{p.age || "—"}</td>
+                  <td>{p.email || "—"}</td>
+                  <td>{p.phone || "—"}</td>
                   {config.events.map((ev) => (
                     <td key={ev.id}>{p.events?.[ev.id] ? "✓" : "—"}</td>
                   ))}

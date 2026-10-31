@@ -4,6 +4,8 @@ import { config } from "@/lib/config";
 import { useT, usePick, useLang } from "@/lib/i18n";
 import { Rich } from "@/lib/rich";
 import { VENUE, CEREMONY } from "@/lib/content";
+import { CeremonySteps } from "@/components/CeremonySteps";
+import { ScholesView } from "@/components/ScholesView";
 
 export default function ProgrammePage() {
   const t = useT();
@@ -44,6 +46,7 @@ export default function ProgrammePage() {
       })}
 
       <h2 style={{ marginTop: 34 }}>{pick(VENUE.title)}</h2>
+      <ScholesView />
       <div className="card">
         {VENUE.paragraphs.map((p, i) => (
           <p key={i} style={{ marginBottom: i === VENUE.paragraphs.length - 1 ? 0 : 12 }}>
@@ -53,6 +56,7 @@ export default function ProgrammePage() {
       </div>
 
       <h2 style={{ marginTop: 34 }}>{pick(CEREMONY.title)}</h2>
+      <CeremonySteps />
       <div className="card">
         {CEREMONY.paragraphs.map((p, i) => (
           <p key={i} style={{ marginBottom: i === CEREMONY.paragraphs.length - 1 ? 0 : 12 }}>

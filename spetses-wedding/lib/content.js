@@ -39,6 +39,25 @@ export const ISLAND = {
 // ---------- 3. Les « Scholes » et Anargyros (le lieu de la réception) ----------
 export const VENUE = {
   title: { fr: "Les « Scholes » et Anargyros", en: "The “Scholes” and Anargyros", el: "Οι «Σχολές» και ο Ανάργυρος" },
+  // Repères affichés sous l'illustration du bâtiment.
+  facts: [
+    {
+      k: { fr: "Construite", en: "Built", el: "Χτίστηκε" },
+      v: { fr: "dans les années 1920", en: "in the 1920s", el: "τη δεκαετία του 1920" },
+    },
+    {
+      k: { fr: "Fondateur", en: "Founder", el: "Ιδρυτής" },
+      v: { fr: "Sotirios Anargyros (1849–1918)", en: "Sotirios Anargyros (1849–1918)", el: "Σωτήριος Ανάργυρος (1849–1918)" },
+    },
+    {
+      k: { fr: "Pensionnat", en: "Boarding school", el: "Οικοτροφείο" },
+      v: { fr: "jusqu'en 1983", en: "until 1983", el: "μέχρι το 1983" },
+    },
+    {
+      k: { fr: "Dans la littérature", en: "In literature", el: "Στη λογοτεχνία" },
+      v: { fr: "« Le Mage », de John Fowles", en: "“The Magus”, by John Fowles", el: "«Ο Μάγος», του Τζον Φάουλς" },
+    },
+  ],
   paragraphs: [
     {
       fr: "L'école Anargyrios & Korgialenios de Spetses — que les habitants appellent simplement « les Scholes » — est un impressionnant ensemble néoclassique construit dans les années 1920, inspiré des pensionnats britanniques tels qu'Eton. Elle a été fondée par **Sotirios Anargyros** (1849–1918), grand bienfaiteur national né à Spetses, qui fit fortune aux États-Unis avant de revenir transformer l'île en profondeur : il en reboisa la majeure partie avec des pins, construisit l'hôtel Poseidonion et fonda l'école, avec une contribution importante de Marinos Korgialenios.",
@@ -60,6 +79,45 @@ export const CEREMONY = {
     en: "The Greek Orthodox wedding and the ceremony",
     el: "Ο ελληνικός ορθόδοξος γάμος και η τελετή",
   },
+  // Les quatre temps de la cérémonie, pour l'infographie de la page Programme.
+  steps: [
+    {
+      id: "rings", icon: "rings",
+      name: { fr: "Les fiançailles", en: "The betrothal", el: "Ο αρραβώνας" },
+      line: {
+        fr: "Bénédiction et échange des alliances.",
+        en: "Blessing and exchange of the rings.",
+        el: "Ευλογία και ανταλλαγή των βεράκων.",
+      },
+    },
+    {
+      id: "crowns", icon: "crowns", badge: "×3",
+      name: { fr: "Le couronnement", en: "The crowning", el: "Το στεφάνωμα" },
+      line: {
+        fr: "Deux couronnes reliées par un ruban, échangées trois fois par le koumbaros.",
+        en: "Two crowns joined by a ribbon, exchanged three times by the koumbaros.",
+        el: "Δύο στέφανα ενωμένα με κορδέλα, που εναλλάσσονται τρεις φορές από τον κουμπάρο.",
+      },
+    },
+    {
+      id: "cup", icon: "cup",
+      name: { fr: "La coupe commune", en: "The common cup", el: "Το κοινό ποτήριο" },
+      line: {
+        fr: "Les mariés boivent le vin dans la même coupe : la vie partagée.",
+        en: "The couple drink wine from the same cup: the shared life.",
+        el: "Το ζευγάρι πίνει κρασί από το ίδιο ποτήρι: η κοινή ζωή.",
+      },
+    },
+    {
+      id: "dance", icon: "dance", badge: "×3",
+      name: { fr: "La danse d'Isaïe", en: "The dance of Isaiah", el: "Ο χορός του Ησαΐα" },
+      line: {
+        fr: "Trois tours autour de l'autel, en chantant. Riz et pétales à la sortie.",
+        en: "Three circles around the altar, singing. Rice and petals on the way out.",
+        el: "Τρεις κύκλοι γύρω από το αναλόγιο, με τραγούδι. Ρύζι και πέταλα στην έξοδο.",
+      },
+    },
+  ],
   paragraphs: [
     {
       fr: "Le mariage orthodoxe grec est un sacrement riche en symboles, dont beaucoup se répètent trois fois en l'honneur de la Sainte Trinité. La cérémonie s'ouvre par les **fiançailles**, la bénédiction et l'échange des alliances. Vient ensuite le **couronnement (Stefana)** : le prêtre bénit deux couronnes blanches reliées par un ruban symbolisant l'union du couple, et les échange trois fois au-dessus de leurs têtes — geste généralement accompli par le **koumbaros / koumbara**, le parrain ou la marraine du mariage.",
@@ -87,6 +145,31 @@ export const PRACTICAL = {
     el: "Όλα όσα χρειάζεστε για να οργανώσετε το ταξίδι σας. Οι τιμές και τα δρομολόγια είναι ενδεικτικά: ελέγξτε τα πριν ταξιδέψετε, ειδικά για τα πλοία.",
   },
   sections: [
+    {
+      id: "carte",
+      emoji: "🗺️",
+      title: { fr: "Carte de l'île", en: "Map of the island", el: "Χάρτης του νησιού" },
+      groups: [
+        {
+          items: [
+            {
+              text: {
+                fr: "Plan volontairement simplifié : le contour suit la forme réelle de l'île, mais les emplacements sont approximatifs. De quoi se repérer entre le port, les plages et le lieu du mariage — pas de quoi naviguer.",
+                en: "A deliberately simplified plan: the outline follows the real shape of the island, but the locations are approximate. Enough to find your bearings between the port, the beaches and the wedding venue — not enough to navigate by.",
+                el: "Σκόπιμα απλοποιημένος χάρτης: το περίγραμμα ακολουθεί το πραγματικό σχήμα του νησιού, αλλά οι θέσεις είναι κατά προσέγγιση. Αρκεί για να προσανατολιστείτε ανάμεσα στο λιμάνι, τις παραλίες και τον χώρο του γάμου — όχι για πλοήγηση.",
+              },
+            },
+            {
+              text: {
+                fr: "Pour naviguer pour de vrai : [l'île sur Google Maps](https://www.google.com/maps/search/?api=1&query=Spetses%2C+Greece) · [le lieu du mariage, les Scholes](https://www.google.com/maps/search/?api=1&query=Anargyrios+and+Korgialenios+School+of+Spetses)",
+                en: "For real navigation: [the island on Google Maps](https://www.google.com/maps/search/?api=1&query=Spetses%2C+Greece) · [the wedding venue, the Scholes](https://www.google.com/maps/search/?api=1&query=Anargyrios+and+Korgialenios+School+of+Spetses)",
+                el: "Για πραγματική πλοήγηση: [το νησί στους Χάρτες Google](https://www.google.com/maps/search/?api=1&query=Spetses%2C+Greece) · [ο χώρος του γάμου, οι Σχολές](https://www.google.com/maps/search/?api=1&query=Anargyrios+and+Korgialenios+School+of+Spetses)",
+              },
+            },
+          ],
+        },
+      ],
+    },
     {
       id: "venir",
       emoji: "✈️",
@@ -352,6 +435,13 @@ export const PRACTICAL = {
           items: [
             {
               text: {
+                fr: "**Le MARIAGE !!!** 🎉 (mais ça, vous le saviez déjà).",
+                en: "**The WEDDING !!!** 🎉 (but you knew that one).",
+                el: "**Ο ΓΑΜΟΣ !!!** 🎉 (αλλά αυτό το ξέρατε ήδη).",
+              },
+            },
+            {
+              text: {
                 fr: "Le **musée Bouboulina** (histoire de la célèbre héroïne de la Révolution).",
                 en: "The **Bouboulina Museum** (the story of the famous heroine of the Revolution).",
                 el: "Το **Μουσείο Μπουμπουλίνας** (η ιστορία της περίφημης ηρωίδας της Επανάστασης).",
@@ -422,24 +512,6 @@ export const PRACTICAL = {
                 fr: "**Hydra** : l'île voisine, célèbre pour son port pittoresque, ses maisons de pierre et l'absence de voitures. Elle est à environ 30 minutes de Spetses en bateau rapide ; on peut y aller en excursion à la journée (horaires à vérifier plus près de la date).",
                 en: "**Hydra**: the neighbouring island, famous for its picturesque harbour, stone houses and the absence of cars. It is about 30 minutes from Spetses by fast boat; it can be visited as a day trip (check timetables closer to the date).",
                 el: "**Ύδρα**: το γειτονικό νησί, γνωστό για το γραφικό λιμάνι της, τα πέτρινα σπίτια και την απουσία αυτοκινήτων. Απέχει περίπου 30 λεπτά από τις Σπέτσες με ταχύπλοο· μπορείτε να την επισκεφθείτε ως ημερήσια εκδρομή (ελέγξτε τα δρομολόγια πιο κοντά στην ημερομηνία).",
-              },
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: "carte",
-      emoji: "🗺️",
-      title: { fr: "Carte de l'île", en: "Map of the island", el: "Χάρτης του νησιού" },
-      groups: [
-        {
-          items: [
-            {
-              text: {
-                fr: "Plan volontairement simplifié : le contour suit la forme réelle de l'île, mais les emplacements sont approximatifs. De quoi se repérer entre le port, les plages et le lieu du mariage — pas de quoi naviguer.",
-                en: "A deliberately simplified plan: the outline follows the real shape of the island, but the locations are approximate. Enough to find your bearings between the port, the beaches and the wedding venue — not enough to navigate by.",
-                el: "Σκόπιμα απλοποιημένος χάρτης: το περίγραμμα ακολουθεί το πραγματικό σχήμα του νησιού, αλλά οι θέσεις είναι κατά προσέγγιση. Αρκεί για να προσανατολιστείτε ανάμεσα στο λιμάνι, τις παραλίες και τον χώρο του γάμου — όχι για πλοήγηση.",
               },
             },
           ],

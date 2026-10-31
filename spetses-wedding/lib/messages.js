@@ -224,9 +224,9 @@ export function messageFor(kind, household, link, custom) {
   }
 
   const tpl = TEMPLATES[kind];
-  // Le save the date mène droit au questionnaire court ; l'invitation et la
-  // relance mènent à l'accueil, d'où part la réponse complète.
-  const target = kind === "saveDate" ? `${link}/save-the-date` : link;
+  // Le save the date mène droit au formulaire : on peut déjà répondre avec
+  // ce qu'on sait. L'invitation et la relance mènent à l'accueil.
+  const target = kind === "saveDate" ? `${link}/rsvp` : link;
   return {
     subject: tpl.subject[lang],
     email: `${(tpl.long || tpl.short)[lang](name, target)}\n\n${signature(lang)}`,

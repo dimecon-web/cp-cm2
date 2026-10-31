@@ -20,13 +20,26 @@ export function getMode() {
   return modePromise;
 }
 
-// ---------- Formulaire RSVP vierge ----------
+// ---------- Réponse vierge ----------
+// Un seul formulaire, qui se remplit en plusieurs fois : on répond avec ce
+// qu'on sait, on revient compléter plus tard.
+export const emptyEvents = () =>
+  Object.fromEntries(EVENT_IDS.map((id) => [id, id === "wedding"]));
+
+export const emptyAdult = () => ({
+  type: "adult", firstName: "", lastName: "", email: "", phone: "", age: "", events: emptyEvents(),
+});
+export const emptyChild = () => ({
+  type: "child", firstName: "", lastName: "", email: "", phone: "", age: "", events: emptyEvents(),
+});
+
 export function emptyRsvp() {
-  const events = Object.fromEntries(EVENT_IDS.map((id) => [id, id === "wedding"]));
   return {
     attending: null,
-    participants: [{ firstName: "", lastName: "", type: "adult", age: "", events: { ...events } }],
-    email: "", phone: "", arrival: "", departure: "", notes: "", updatedAt: null,
+    adults: "1",
+    children: "0",
+    participants: [emptyAdult()],
+    arrival: "", departure: "", notes: "", updatedAt: null,
   };
 }
 
@@ -45,25 +58,6 @@ export async function saveRsvp(token, rsvp) {
     body: JSON.stringify(rsvp),
   });
   if (!res.ok) throw new Error("rsvp_save_failed");
-}
-
-// ---------- Premier questionnaire (envoyé avec le save the date) ----------
-export function emptySaveDate() {
-  return {
-    firstName: "", lastName: "", intent: null,
-    adults: "", children: "", adultNames: [], childNames: [],
-    arrival: "", departure: "",
-    email: "", phone: "", notes: "", intentAt: null,
-  };
-}
-
-export async function saveSaveDate(token, answers) {
-  const res = await fetch(`/api/guest/${encodeURIComponent(token)}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ ...answers, stage: "saveDate" }),
-  });
-  if (!res.ok) throw new Error("savedate_save_failed");
 }
 
 export async function submitPhoto(token, { dataUrl, caption }) {
@@ -191,25 +185,32 @@ function sideLabel(side) {
   return { themis: "Themis", thierry: "Thierry", both: "Les deux" }[side] || "";
 }
 
+export const ATTENDING_LABEL = {
+  yes: "oui", probably: "très probablement", unsure: "ne sait pas encore", no: "non",
+};
+
 export function rsvpsToCsv(households) {
   const rows = [[
-    "Foyer", "Catégorie", "Côté", "Lien", "Statut", "Prénom", "Nom", "Type", "Âge",
-    ...EVENT_IDS, "Arrivée", "Départ", "Email", "Téléphone", "Notes",
+    "Foyer", "Catégorie", "Côté", "Lien", "Réponse", "Adultes annoncés", "Enfants annoncés",
+    "Prénom", "Nom", "Type", "Âge", ...EVENT_IDS,
+    "Arrivée", "Départ", "Email", "Téléphone", "Notes",
   ]];
   const blanks = EVENT_IDS.map(() => "");
   for (const h of households) {
     const r = h.rsvp;
-    if (!r?.attending) {
-      rows.push([h.name, h.category || "", sideLabel(h.side), h.token, "sans réponse", "", "", "", "", ...blanks, "", "", h.email, h.phone, ""]);
-    } else if (r.attending === "no") {
-      rows.push([h.name, h.category || "", sideLabel(h.side), h.token, "non", "", "", "", "", ...blanks, "", "", r.email || h.email, r.phone || h.phone, r.notes]);
+    const status = r?.attending ? ATTENDING_LABEL[r.attending] : "sans réponse";
+    const head = [h.name, h.category || "", sideLabel(h.side), h.token, status, r?.adults ?? "", r?.children ?? ""];
+    const people = r?.attending && r.attending !== "no" ? r.participants || [] : [];
+    if (people.length === 0) {
+      rows.push([...head, "", "", "", "", ...blanks, r?.arrival || "", r?.departure || "",
+        r?.email || h.email, r?.phone || h.phone, r?.notes || ""]);
     } else {
-      for (const p of r.participants) {
+      for (const p of people) {
         rows.push([
-          h.name, h.category || "", sideLabel(h.side), h.token, "oui",
+          ...head,
           p.firstName ?? p.name, p.lastName ?? "", p.type === "child" ? "enfant" : "adulte", p.age,
           ...EVENT_IDS.map((id) => (p.events?.[id] ? "oui" : "non")),
-          r.arrival, r.departure, r.email || h.email, r.phone || h.phone, r.notes,
+          r.arrival, r.departure, p.email || r.email || h.email, p.phone || r.phone || h.phone, r.notes,
         ]);
       }
     }

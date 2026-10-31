@@ -29,24 +29,21 @@ create table if not exists wedding_households (
 create index if not exists wedding_households_category_idx on wedding_households(category);
 create index if not exists wedding_households_side_idx on wedding_households(side);
 
--- ---------- Réponse RSVP : une par foyer, modifiable jusqu'à la date limite ----------
+-- ---------- Réponse du foyer : une seule, qui se complète au fil du temps ----------
+-- Un foyer répond dès le save the date avec ce qu'il sait, puis revient
+-- préciser. D'où quatre niveaux de réponse plutôt que oui/non, et des
+-- effectifs annoncés qui peuvent dépasser le nombre de personnes nommées.
 create table if not exists wedding_rsvps (
   household_id uuid primary key references wedding_households(id) on delete cascade,
-  attending text check (attending in ('yes', 'no')),
+  attending text check (attending is null or attending in ('yes', 'probably', 'unsure', 'no')),
   email text,                       -- collecté si absent du carnet d'adresses
   arrival date,
   departure date,
   -- Premier questionnaire, envoyé avec le save the date : une intention et des
   -- ordres de grandeur, bien avant la réponse ferme. Volontairement séparé de
   -- `attending`, pour qu'une intention ne soit jamais comptée comme un oui.
-  intent text check (intent is null or intent in ('yes', 'probably', 'unsure', 'no')),
-  respondent_first_name text,
-  respondent_last_name text,
-  adults int check (adults is null or adults >= 0),
+  adults int check (adults is null or adults >= 0),     -- effectif annoncé
   children int check (children is null or children >= 0),
-  adult_names jsonb,                -- [{ first, last, email, phone }] ; l'indice 0 est la personne qui répond
-  child_names jsonb,                -- [{ first, last, age }]
-  intent_at timestamptz,
   transport text check (transport in ('plane', 'ferry', 'car', 'other')),
   accommodation text check (accommodation in ('booked', 'searching', 'hosted', 'unknown')),
   notes text,
@@ -60,6 +57,8 @@ create table if not exists wedding_participants (
   position int not null default 0,  -- ordre d'affichage dans le formulaire
   name text not null,
   type text not null default 'adult' check (type in ('adult', 'child')),
+  email text,                       -- coordonnées propres à chaque adulte
+  phone text,
   age int check (age is null or (age >= 0 and age < 18)),
   diet text not null default 'none' check (diet in ('none', 'veg', 'allergy')),
   diet_note text,                   -- détail obligatoire côté application si diet = 'allergy'
