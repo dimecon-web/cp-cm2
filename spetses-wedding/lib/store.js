@@ -44,6 +44,18 @@ export function emptyRsvp() {
   };
 }
 
+// ---------- Portail des invités ----------
+// Email + mot de passe de l'invitation. Le serveur répond par l'adresse de
+// l'espace de la personne, qu'elle soit déjà connue ou non.
+export async function enterPortal({ email, code, lang }) {
+  const res = await fetch("/api/portal", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email, code, lang }),
+  });
+  return res.json();
+}
+
 // ---------- Espace invité ----------
 export async function loadGuest(token) {
   const res = await fetch(`/api/guest/${encodeURIComponent(token)}`);

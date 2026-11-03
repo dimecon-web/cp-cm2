@@ -209,6 +209,21 @@ export default function InvitesPage() {
         </p>
       </div>
 
+      {/* ---------- Le portail et son mot de passe ---------- */}
+      <div className="card" style={{ borderColor: "var(--sea)" }}>
+        <h3>Le portail des invités</h3>
+        <p className="hint" style={{ marginTop: -4, marginBottom: 10 }}>
+          Vos invités peuvent entrer par l'adresse du site, avec leur email et le mot de passe
+          ci-dessous — à écrire sur l'invitation. Une adresse déjà connue retrouve sa réponse ;
+          une adresse inconnue crée son foyer dans la liste. Le lien personnel de chaque foyer
+          reste valable et évite toute saisie.
+        </p>
+        <dl className="facts">
+          <div><dt>Adresse du portail</dt><dd>{origin || "…"}</dd></div>
+          <div><dt>Mot de passe</dt><dd><strong>{data?.guestCode || "agapi"}</strong></dd></div>
+        </dl>
+      </div>
+
       {/* ---------- Envoi groupé ---------- */}
       <div className="card" style={selected.size ? { borderColor: "var(--bougain)" } : undefined}>
         <h3>Envoi groupé</h3>

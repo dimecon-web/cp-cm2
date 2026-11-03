@@ -219,7 +219,7 @@ export default function RsvpPage() {
 
               <label className="field">
                 <span className="lbl">{t("rsvp.familyName")}</span>
-                <input type="text" value={rsvp.householdName} disabled={closed}
+                <input type="text" required value={rsvp.householdName} disabled={closed}
                   onChange={(e) => set({ householdName: e.target.value })} />
                 <div className="hint">{t("rsvp.familyNameHint")}</div>
               </label>
