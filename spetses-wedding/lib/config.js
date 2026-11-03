@@ -50,14 +50,14 @@ export const config = {
       date: "2027-07-09",
       name: { fr: "Le jour avant le mariage", en: "The day before the wedding", el: "Η ημέρα πριν από τον γάμο" },
       desc: {
-        fr: "Une soirée informelle ou une croisière est envisagée, pour se retrouver avant la fête.",
-        en: "A casual get-together or a boat cruise is being considered, to catch up before the party.",
-        el: "Εξετάζεται η διοργάνωση μιας ανεπίσημης βραδιάς ή κρουαζιέρας, για να βρεθούμε πριν τη γιορτή.",
+        fr: "Évènement surprise.",
+        en: "Surprise event.",
+        el: "Εκδήλωση-έκπληξη.",
       },
       status: {
-        fr: "Plus de détails suivront prochainement",
-        en: "More details to follow soon",
-        el: "Περισσότερες πληροφορίες θα ακολουθήσουν σύντομα",
+        fr: "À confirmer",
+        en: "To be confirmed",
+        el: "Να επιβεβαιωθεί",
       },
     },
     {
