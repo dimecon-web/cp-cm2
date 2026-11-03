@@ -52,6 +52,10 @@ export default function GuestHome() {
         </div>
       )}
 
+      {config.homePhoto && (
+        <img className="home-photo" src={config.homePhoto} alt={pick(config.homePhotoAlt)} />
+      )}
+
       <p style={{ maxWidth: "48ch", margin: "0 auto 26px" }}>{t("home.intro")}</p>
 
       <Link className="btn" href={`/i/${token}/rsvp`}>

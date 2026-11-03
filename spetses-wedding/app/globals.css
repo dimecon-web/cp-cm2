@@ -651,3 +651,13 @@ footer.site-footer .waves { color: var(--sea); letter-spacing: 0.4em; margin-bot
   margin-bottom: 3px;
 }
 .scholes-facts dd { margin: 0; font-size: 15px; font-weight: 600; }
+
+/* Faire-part illustré sur la page d'accueil des invités. */
+.home-photo {
+  display: block;
+  width: min(360px, 100%);
+  height: auto;
+  margin: 26px auto;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}

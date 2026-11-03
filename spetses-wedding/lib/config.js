@@ -33,6 +33,16 @@ export const config = {
   ],
   whatsappGroupUrl: "", // lien du groupe WhatsApp — affiché sur le site quand renseigné
 
+  // Faire-part illustré, affiché sur la page d'accueil des invités.
+  // Déposez le fichier dans public/ et mettez son chemin ici — « /faire-part.png ».
+  // Vide : rien ne s'affiche, et la page reste intacte.
+  homePhoto: "",
+  homePhotoAlt: {
+    fr: "Faire-part illustré de Thémis et Thierry : la famille sur un canapé, « It's official… we're annoying each other forever », 10 juillet 2027, Spetses.",
+    en: "Illustrated announcement for Thémis and Thierry: the family on a sofa, “It's official… we're annoying each other forever”, 10 July 2027, Spetses.",
+    el: "Εικονογραφημένη ανακοίνωση της Θέμις και του Thierry: η οικογένεια στον καναπέ, «It's official… we're annoying each other forever», 10 Ιουλίου 2027, Σπέτσες.",
+  },
+
   // « Côté » de chaque foyer, pour l'espace organisateurs.
   sides: [
     { id: "themis", label: "Themis" },
