@@ -22,8 +22,6 @@ export default function AdminDashboard() {
   const coming = [...yes, ...probably, ...unsure];
   const adults = coming.reduce((n, h) => n + (Number(h.rsvp.adults) || 0), 0);
   const kids = coming.reduce((n, h) => n + (Number(h.rsvp.children) || 0), 0);
-  const firmAdults = yes.reduce((n, h) => n + (Number(h.rsvp.adults) || 0), 0);
-  const firmKids = yes.reduce((n, h) => n + (Number(h.rsvp.children) || 0), 0);
 
   // Arrivées annoncées, y compris par les foyers encore hésitants : c'est ce
   // qui permet d'anticiper les bateaux et les hébergements.
@@ -69,22 +67,6 @@ export default function AdminDashboard() {
         <div className="stat sun"><div className="num">{unsure.length + pending.length}</div><div className="lbl">incertains ou sans réponse</div></div>
         <div className="stat bougain"><div className="num">{no.length}</div><div className="lbl">foyers « non »</div></div>
         <div className="stat"><div className="num">{adults + kids}</div><div className="lbl">personnes annoncées</div></div>
-      </div>
-
-      <div className="card">
-        <h3>Ce qui est acquis, ce qui ne l'est pas</h3>
-        <p className="hint" style={{ marginTop: -4, marginBottom: 12 }}>
-          Une réponse se complète au fil du temps. Seuls les « oui » sont fermes : les
-          « très probablement » et les « incertains » annoncent un effectif sans s'engager.
-        </p>
-        <dl className="facts">
-          <dt>Personnes sûres (foyers « oui »)</dt>
-          <dd>{firmAdults} adulte(s) + {firmKids} enfant(s)</dd>
-          <dt>Personnes annoncées en tout</dt>
-          <dd>{adults} adulte(s) + {kids} enfant(s)</dd>
-          <dt>Foyers encore muets</dt>
-          <dd>{pending.length} sur {households.length}</dd>
-        </dl>
       </div>
 
       <div className="card">

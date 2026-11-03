@@ -1,7 +1,6 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import QRCode from "qrcode";
 import { config } from "@/lib/config";
 import { useAdmin } from "@/lib/admin";
 import { downloadCsv } from "@/lib/store";
@@ -44,7 +43,6 @@ export default function InvitesPage() {
   const [draft, setDraft] = useState(EMPTY_FORM);
   const [editing, setEditing] = useState(null);
   const [csv, setCsv] = useState("");
-  const [qr, setQr] = useState(null);
   const [note, setNote] = useState("");
   const [copied, setCopied] = useState("");
 
@@ -161,9 +159,6 @@ export default function InvitesPage() {
     const { created } = await act({ action: "importHouseholds", csv });
     setCsv("");
     setNote(`${created?.length || 0} foyer(s) importé(s).`);
-  };
-  const showQr = async (h) => {
-    setQr({ household: h, dataUrl: await QRCode.toDataURL(linkFor(h), { width: 420, margin: 2 }) });
   };
 
   const isPersonal = MESSAGE_KINDS.find((k) => k.id === kind)?.personal;
@@ -446,12 +441,12 @@ export default function InvitesPage() {
                       </td>
                       <td style={{ whiteSpace: "nowrap" }}>
                         <button className="btn ghost small" style={{ marginRight: 6 }}
-                          onClick={() => copy(h.token, linkFor(h))}>
-                          {copied === h.token ? "✓" : "🔗"}
+                          onClick={() => copy(h.token, linkFor(h))}
+                          title={`Copier le lien personnel de ${h.name}, à coller dans votre message`}>
+                          {copied === h.token ? "Lien copié ✓" : "Copier le lien"}
                         </button>
-                        <button className="btn ghost small" style={{ marginRight: 6 }} onClick={() => showQr(h)}>⬛</button>
                         <a className="btn ghost small" href={linkFor(h)} target="_blank" rel="noreferrer"
-                           title={`Ouvrir l'espace invité de ${h.name}`}>👁</a>
+                           title={`Ouvrir l'espace invité de ${h.name}`}>Voir ↗</a>
                       </td>
                     </tr>
                   ))}
@@ -462,21 +457,11 @@ export default function InvitesPage() {
         </div>
         <p className="hint" style={{ marginTop: 10, marginBottom: 0 }}>
           Cliquez sur un intitulé de colonne pour trier, sur le ⊞ à côté pour regrouper,
-          et sur le nom d'un foyer pour modifier sa fiche.
+          et sur le nom d'un foyer pour modifier sa fiche. « Copier le lien » met le lien
+          personnel du foyer dans le presse-papier, prêt à coller dans votre email, SMS
+          ou WhatsApp.
         </p>
       </div>
-
-      {qr && (
-        <div className="card" style={{ textAlign: "center" }}>
-          <h3>QR code — {qr.household.name}</h3>
-          <img src={qr.dataUrl} alt={`QR code vers ${linkFor(qr.household)}`} style={{ width: 220, height: 220 }} />
-          <p className="hint">{linkFor(qr.household)}</p>
-          <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-            <a className="btn small" href={qr.dataUrl} download={`qr-${qr.household.token}.png`}>⬇ Télécharger</a>
-            <button className="btn ghost small" onClick={() => setQr(null)}>Fermer</button>
-          </div>
-        </div>
-      )}
 
       <div className="card">
         <h3>Ajouter un foyer</h3>
