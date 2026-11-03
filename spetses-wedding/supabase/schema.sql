@@ -22,10 +22,6 @@ create table if not exists wedding_households (
   lang text not null default 'fr' check (lang in ('fr', 'en', 'el')),
   category text,                    -- libre : Famille, Amis Bruxelles, Amis Athènes…
   side text check (side is null or side in ('themis', 'thierry', 'both')),
-  -- Le lien partagé : une seule ligne, envoyée à tout le monde. Répondre
-  -- depuis ce lien ne modifie pas cette ligne, cela crée un vrai foyer.
-  is_shared boolean not null default false,
-  source text,                      -- 'shared' : foyer créé par l'invité lui-même
   invited_at timestamptz,           -- date d'envoi de l'invitation
   created_at timestamptz not null default now()
 );

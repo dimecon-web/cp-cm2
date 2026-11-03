@@ -6,6 +6,32 @@ export const dynamic = "force-dynamic";
 
 const TOKEN_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"; // sans caractères ambigus
 
+// Pré-remplit la première personne du foyer à partir de la fiche saisie
+// par l'organisateur. Uniquement tant que l'invité n'a pas répondu : une
+// fois sa réponse donnée, c'est elle qui fait foi.
+async function seedContact(householdId, { firstName, lastName, email, phone }) {
+  const first = (firstName || "").trim();
+  const last = (lastName || "").trim();
+  if (!first && !last) return;
+
+  const { data: answered } = await db
+    .from("wedding_rsvps").select("household_id").eq("household_id", householdId).maybeSingle();
+  if (answered) return;
+
+  await db.from("wedding_participants").delete().eq("household_id", householdId);
+  await db.from("wedding_participants").insert({
+    household_id: householdId,
+    position: 0,
+    first_name: first,
+    last_name: last,
+    name: [first, last].filter(Boolean).join(" "),
+    type: "adult",
+    email: (email || "").trim().toLowerCase() || null,
+    phone: (phone || "").trim() || null,
+    events: {},
+  });
+}
+
 async function makeToken() {
   for (let attempt = 0; attempt < 20; attempt++) {
     const token = Array.from({ length: 6 }, () =>
@@ -24,10 +50,7 @@ export async function GET() {
   if (!user) return Response.json({ user: null }, { status: 401 });
 
   const [households, news, photos, messages, todos, suppliers, sends] = await Promise.all([
-    db.from("wedding_households")
-      .select("*, wedding_rsvps(*), wedding_participants(*)")
-      .eq("is_shared", false)       // le lien partagé n'est pas un foyer
-      .order("created_at"),
+    db.from("wedding_households").select("*, wedding_rsvps(*), wedding_participants(*)").order("created_at"),
     db.from("wedding_news").select("*").order("published_at", { ascending: false }),
     db.from("wedding_photos").select("*, wedding_households(name)").order("created_at", { ascending: false }),
     db.from("wedding_messages").select("*, wedding_households(name)").order("created_at", { ascending: false }),
@@ -91,7 +114,7 @@ export async function POST(request) {
       const { name, email, phone, lang, category, side } = body;
       if (!name?.trim()) return Response.json({ error: "missing_name" }, { status: 400 });
       const token = await makeToken();
-      const { error } = await db.from("wedding_households").insert({
+      const { data: created, error } = await db.from("wedding_households").insert({
         token,
         name: name.trim(),
         email: email?.trim() || null,
@@ -99,8 +122,12 @@ export async function POST(request) {
         lang: ["fr", "en", "el"].includes(lang) ? lang : "fr",
         category: category?.trim() || null,
         side: ["themis", "thierry", "both"].includes(side) ? side : null,
-      });
+      }).select("id").single();
       if (error) return Response.json({ error: error.message }, { status: 500 });
+
+      // La fiche minimale amorce la première personne du foyer : l'invité
+      // retrouvera son prénom et ses coordonnées déjà en place.
+      await seedContact(created.id, body);
       return Response.json({ ok: true, token });
     }
 
@@ -109,7 +136,7 @@ export async function POST(request) {
       const { token, name, email, phone, lang, category, side } = body;
       if (!token) return Response.json({ error: "missing_token" }, { status: 400 });
       if (!name?.trim()) return Response.json({ error: "missing_name" }, { status: 400 });
-      const { error } = await db
+      const { data: updated, error } = await db
         .from("wedding_households")
         .update({
           name: name.trim(),
@@ -119,7 +146,10 @@ export async function POST(request) {
           category: category?.trim() || null,
           side: ["themis", "thierry", "both"].includes(side) ? side : null,
         })
-        .eq("token", token);
+        .eq("token", token)
+        .select("id")
+        .single();
+      if (updated?.id) await seedContact(updated.id, body);
       if (error) return Response.json({ error: error.message }, { status: 500 });
       return Response.json({ ok: true });
     }

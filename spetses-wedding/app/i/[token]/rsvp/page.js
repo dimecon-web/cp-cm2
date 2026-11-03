@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { config } from "@/lib/config";
 import { useT, usePick, useLang } from "@/lib/i18n";
-import { loadGuest, saveRsvp, emptyRsvp, emptyAdult, emptyChild, rememberToken } from "@/lib/store";
+import { loadGuest, saveRsvp, emptyRsvp, emptyAdult, emptyChild } from "@/lib/store";
 
 // Une seule réponse, qui se complète au fil du temps.
 //
@@ -31,8 +31,6 @@ export default function RsvpPage() {
   const pick = usePick();
   const { lang } = useLang();
   const [rsvp, setRsvp] = useState(null);
-  const [shared, setShared] = useState(false);
-  const [myLink, setMyLink] = useState("");
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -44,15 +42,24 @@ export default function RsvpPage() {
         if (cancelled) return;
         const base = emptyRsvp();
         base.householdName = household?.name || "";
-        setShared(Boolean(household?.shared));
+
+        // Même sans réponse, le foyer peut déjà avoir une personne : celle
+        // que les organisateurs ont saisie en créant la fiche. On la garde,
+        // pour que l'invité n'ait qu'à compléter.
+        const seeded = (saved?.participants || []).map((p) => ({ ...emptyAdult(), ...p }));
+
         if (!saved?.attending) {
-          // Le carnet d'adresses connaît déjà l'un des deux contacts.
-          base.participants[0].email = household?.email || "";
-          base.participants[0].phone = household?.phone || "";
+          if (seeded.length) base.participants = seeded;
+          const lead = base.participants[0];
+          // Le carnet d'adresses connaît souvent déjà l'un des deux contacts.
+          lead.email = lead.email || household?.email || "";
+          lead.phone = lead.phone || household?.phone || "";
+          base.adults = String(Math.max(1, seeded.filter((p) => p.type !== "child").length || 1));
+          base.children = String(seeded.filter((p) => p.type === "child").length);
           setRsvp(base);
           return;
         }
-        const people = (saved.participants || []).map((p) => ({ ...emptyAdult(), ...p }));
+        const people = seeded;
         const { adults, children } = split(people);
         const nA = Math.max(1, Number(saved.adults) || adults.length || 1);
         const nC = Math.max(0, Number(saved.children) || children.length || 0);
@@ -116,20 +123,10 @@ export default function RsvpPage() {
       setError(t("rsvp.contactRequired"));
       return;
     }
-    if (shared && !rsvp.householdName.trim()) {
-      setError(t("rsvp.familyNameRequired"));
-      return;
-    }
     setBusy(true);
     setError("");
     try {
-      const res = await saveRsvp(token, { ...rsvp, lang });
-      // Depuis le lien partagé, la réponse vient de créer un foyer : on
-      // garde son adresse pour que la personne puisse revenir la modifier.
-      if (res?.token) {
-        rememberToken(res.token);
-        setMyLink(`${window.location.origin}/i/${res.token}`);
-      }
+      await saveRsvp(token, rsvp);
       setSaved(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
@@ -172,15 +169,6 @@ export default function RsvpPage() {
       {saved && (
         <div className="notice ok" role="status">
           {rsvp.attending === "no" ? t("rsvp.noMsg") : firm ? t("rsvp.saved") : t("rsvp.savedSoft")}
-          {myLink && (
-            <>
-              <br />
-              <strong>{t("rsvp.yourLink")}</strong>{" "}
-              <a href={myLink}>{myLink}</a>
-              <br />
-              <span className="hint">{t("rsvp.yourLinkHint")}</span>
-            </>
-          )}
         </div>
       )}
       {error && <div className="notice" role="alert">{error}</div>}

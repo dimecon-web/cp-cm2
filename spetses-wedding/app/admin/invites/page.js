@@ -6,7 +6,14 @@ import { useAdmin } from "@/lib/admin";
 import { downloadCsv } from "@/lib/store";
 import { messageFor, bulkMessageFor, MESSAGE_KINDS } from "@/lib/messages";
 
-const EMPTY_FORM = { name: "", email: "", phone: "", lang: "fr", category: "", side: "" };
+const EMPTY_FORM = {
+  name: "", firstName: "", lastName: "", email: "", phone: "",
+  lang: "fr", category: "", side: "",
+};
+
+// Le contact du foyer, tel que l'organisateur l'a saisi : c'est la première
+// personne de la liste, tant que l'invité n'a pas répondu lui-même.
+const contactOf = (h) => (h.rsvp?.attending ? {} : (h.rsvp?.participants || [])[0] || {});
 const EMPTY_CUSTOM = { title: { fr: "", en: "", el: "" }, body: { fr: "", en: "", el: "" } };
 const LANGS = [["fr", "Français"], ["en", "English"], ["el", "Ελληνικά"]];
 
@@ -58,7 +65,6 @@ export default function InvitesPage() {
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const linkFor = (h) => `${origin}/i/${h.token}`;
-  const sharedLink = `${origin}/i/${config.sharedToken}`;
   const messageOf = (h) => messageFor(kind, h, linkFor(h), custom);
 
   const categories = useMemo(
@@ -201,23 +207,6 @@ export default function InvitesPage() {
             <> · <button className="link-name" onClick={() => { setFilters({}); setGroupBy(""); }}>tout afficher</button></>
           )}
         </p>
-      </div>
-
-      {/* ---------- Le lien unique, celui qu'on envoie à tout le monde ---------- */}
-      <div className="card" style={{ borderColor: "var(--sea)" }}>
-        <h3>Le lien à envoyer</h3>
-        <p className="hint" style={{ marginTop: -4, marginBottom: 10 }}>
-          Une seule adresse, la même pour tous, à coller dans vos emails, SMS et WhatsApp.
-          Chaque personne qui y répond crée son foyer dans la liste ci-dessous, avec sa propre
-          adresse pour revenir modifier sa réponse.
-        </p>
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <code style={{ fontSize: 15 }}>{sharedLink}</code>
-          <button className="btn small" type="button" onClick={() => copy("shared", sharedLink)}>
-            {copied === "shared" ? "Lien copié ✓" : "Copier le lien"}
-          </button>
-          <a className="btn ghost small" href={sharedLink} target="_blank" rel="noreferrer">Voir ↗</a>
-        </div>
       </div>
 
       {/* ---------- Envoi groupé ---------- */}
@@ -441,6 +430,7 @@ export default function InvitesPage() {
                       <td>
                         <button className="link-name" onClick={() => setEditing({
                           token: h.token, name: h.name, email: h.email || "", phone: h.phone || "",
+                          firstName: contactOf(h).firstName || "", lastName: contactOf(h).lastName || "",
                           lang: h.lang || "fr", category: h.category || "", side: h.side || "",
                         })}>{h.name}</button>
                         <div className="hint">/i/{h.token}</div>
@@ -605,7 +595,13 @@ function HouseholdFields({ values, onChange, categories }) {
   return (
     <div className="grid-2">
       <label className="field"><span className="lbl">Nom du foyer</span>
-        <input type="text" required value={values.name} onChange={(e) => onChange({ name: e.target.value })} /></label>
+        <input type="text" required value={values.name} onChange={(e) => onChange({ name: e.target.value })} />
+        <div className="hint">« Famille Papadopoulos », « Maria et Nikos »…</div></label>
+      <div />
+      <label className="field"><span className="lbl">Prénom du contact</span>
+        <input type="text" value={values.firstName} onChange={(e) => onChange({ firstName: e.target.value })} /></label>
+      <label className="field"><span className="lbl">Nom du contact</span>
+        <input type="text" value={values.lastName} onChange={(e) => onChange({ lastName: e.target.value })} /></label>
       <label className="field"><span className="lbl">Email</span>
         <input type="email" value={values.email} onChange={(e) => onChange({ email: e.target.value })} /></label>
       <label className="field"><span className="lbl">Téléphone WhatsApp</span>

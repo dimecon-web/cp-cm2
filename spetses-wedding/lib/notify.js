@@ -14,7 +14,7 @@ const VALID = /^[^@\s]+@[^@\s.]+\.[^@\s]+$/;
 
 export async function notifyRecipients() {
   const [{ data: households }, { data: rsvps }, { data: people }] = await Promise.all([
-    db.from("wedding_households").select("id, email, lang").eq("is_shared", false),
+    db.from("wedding_households").select("id, email, lang"),
     db.from("wedding_rsvps").select("household_id, attending, email"),
     db.from("wedding_participants").select("household_id, email"),
   ]);
