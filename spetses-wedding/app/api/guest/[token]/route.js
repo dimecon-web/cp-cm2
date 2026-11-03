@@ -61,6 +61,13 @@ export async function POST(request, { params }) {
     return Number.isInteger(n) && n >= 0 && n <= 50 ? n : null;
   };
 
+  // Le foyer peut corriger le nom sous lequel il apparaît. Vide, on garde
+  // celui du carnet d'adresses : on ne laisse pas effacer un nom par mégarde.
+  const familyName = clean(body.householdName).slice(0, 120);
+  if (familyName && familyName !== household.name) {
+    await db.from("wedding_households").update({ name: familyName }).eq("id", household.id);
+  }
+
   const coming = body.attending !== "no";
   const people = coming && Array.isArray(body.participants) ? body.participants.slice(0, 60) : [];
 

@@ -35,6 +35,7 @@ export const emptyChild = () => ({
 
 export function emptyRsvp() {
   return {
+    householdName: "",
     attending: null,
     adults: "1",
     children: "0",

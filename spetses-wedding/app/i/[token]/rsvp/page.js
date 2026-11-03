@@ -41,6 +41,7 @@ export default function RsvpPage() {
       .then(({ household, rsvp: saved }) => {
         if (cancelled) return;
         const base = emptyRsvp();
+        base.householdName = household?.name || "";
         if (!saved?.attending) {
           // Le carnet d'adresses connaît déjà l'un des deux contacts.
           base.participants[0].email = household?.email || "";
@@ -57,7 +58,11 @@ export default function RsvpPage() {
           list[0].email = saved.email || household?.email || "";
           list[0].phone = saved.phone || household?.phone || "";
         }
-        setRsvp({ ...base, ...saved, adults: String(nA), children: String(nC), participants: list });
+        setRsvp({
+          ...base, ...saved,
+          householdName: base.householdName,
+          adults: String(nA), children: String(nC), participants: list,
+        });
       })
       .catch(() => { if (!cancelled) setRsvp(emptyRsvp()); });
     return () => { cancelled = true; };
@@ -201,6 +206,13 @@ export default function RsvpPage() {
             <div className="card">
               <h3>{t("rsvp.peopleTitle")}</h3>
               <p className="hint" style={{ marginTop: -4, marginBottom: 14 }}>{t("rsvp.peopleHint")}</p>
+
+              <label className="field">
+                <span className="lbl">{t("rsvp.familyName")}</span>
+                <input type="text" value={rsvp.householdName} disabled={closed}
+                  onChange={(e) => set({ householdName: e.target.value })} />
+                <div className="hint">{t("rsvp.familyNameHint")}</div>
+              </label>
 
               <h4 className="people-head">{t("rsvp.adultsList")}</h4>
               {adults.map((a, i) => (
