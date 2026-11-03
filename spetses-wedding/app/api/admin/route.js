@@ -1,5 +1,6 @@
 import { db, isConfigured, rowToRsvp, rowToNews, rowToPhoto } from "@/lib/db";
 import { currentUser } from "@/lib/auth";
+import { notifyNews, notifyRecipients } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -173,7 +174,20 @@ export async function POST(request) {
         photo_url: body.photo || null,
       });
       if (error) return Response.json({ error: error.message }, { status: 500 });
+
+      // La notification part seulement si l'organisateur l'a demandée. Elle
+      // va à tout le monde sauf aux foyers qui ont répondu « non ».
+      if (body.notify) {
+        const result = await notifyNews({ title: body.title, text: body.body });
+        return Response.json({ ok: true, notify: result });
+      }
       return Response.json({ ok: true });
+    }
+
+    // Compte des destinataires, pour l'annoncer avant d'envoyer.
+    case "countRecipients": {
+      const { total } = await notifyRecipients();
+      return Response.json({ total });
     }
 
     case "removeNews": {

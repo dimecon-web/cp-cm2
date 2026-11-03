@@ -10,16 +10,20 @@ import "server-only";
 
 export const mailConfigured = Boolean(process.env.RESEND_API_KEY && process.env.MAIL_FROM);
 
-export async function sendMail({ to, subject, text }) {
+export async function sendMail({ to, bcc, subject, text }) {
   if (!mailConfigured) return { sent: false, reason: "not_configured" };
   try {
+    const payload = { from: process.env.MAIL_FROM, to: [to], subject, text };
+    // Une notification part en copie cachée : les invités ne voient pas les
+    // adresses des autres, et un seul envoi suffit par langue.
+    if (bcc?.length) payload.bcc = bcc;
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         authorization: `Bearer ${process.env.RESEND_API_KEY}`,
         "content-type": "application/json",
       },
-      body: JSON.stringify({ from: process.env.MAIL_FROM, to: [to], subject, text }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) return { sent: false, reason: await res.text().catch(() => "envoi refusé") };
     return { sent: true };

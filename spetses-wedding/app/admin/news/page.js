@@ -16,7 +16,7 @@ const EMPTY = {
 // Diffusion des actualités : publication sur le site, envoi email au segment
 // choisi, message WhatsApp prêt à coller, et modération des photos d'invités.
 export default function AdminNewsPage() {
-  const { data, act } = useAdmin();
+  const { data, act, session } = useAdmin();
   const posts = data?.news || [];
   const pending = (data?.photos || []).filter((p) => !p.approved);
   const households = data?.households || [];
@@ -24,13 +24,39 @@ export default function AdminNewsPage() {
   const [draft, setDraft] = useState(EMPTY);
   const [tab, setTab] = useState("fr");
   const [copied, setCopied] = useState(false);
+  const [notify, setNotify] = useState(false);
+  const [sendResult, setSendResult] = useState(null);
+
+  // Qui serait prévenu : tout le monde sauf les foyers qui ont répondu
+  // « non ». On ramasse l'adresse du carnet, celle de la réponse, et celle
+  // de chaque adulte nommé — chacune une seule fois.
+  const notifyList = [...new Set(
+    households
+      .filter((h) => h.rsvp?.attending !== "no")
+      .flatMap((h) => [h.email, h.rsvp?.email, ...(h.rsvp?.participants || []).map((p) => p.email)])
+      .map((e) => (e || "").trim().toLowerCase())
+      .filter((e) => /^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(e))
+  )];
 
   const publish = async (e) => {
     e.preventDefault();
     if (!draft.title.fr.trim()) return;
-    await act({ action: "publishNews", ...draft });
+
+    // Un email parti ne se rattrape pas : on demande confirmation, chiffre à
+    // l'appui, avant de prévenir qui que ce soit.
+    if (notify) {
+      const ok = window.confirm(
+        `Publier cette actualité et prévenir ${notifyList.length} adresse(s) par email ?\n\n` +
+        `Les foyers qui ont répondu « non » ne reçoivent rien.`
+      );
+      if (!ok) return;
+    }
+
+    const res = await act({ action: "publishNews", ...draft, notify });
+    setSendResult(notify ? res?.notify || { sent: 0, configured: false } : { published: true });
     setDraft(EMPTY);
     setTab("fr");
+    setNotify(false);
   };
 
   const onPhoto = async (e) => {
@@ -40,11 +66,9 @@ export default function AdminNewsPage() {
     setDraft((d) => ({ ...d, photo }));
   };
 
-  // Destinataires : tous les foyers, ou seulement ceux qui ont accepté.
-  const recipients = households
-    .filter((h) => (draft.audience === "yes" ? h.rsvp?.attending === "yes" : true))
-    .map((h) => h.rsvp?.email || h.email)
-    .filter(Boolean);
+  // Repli manuel : votre messagerie, avec les mêmes destinataires que la
+  // notification automatique, en copie cachée.
+  const recipients = notifyList;
 
   const plainText = `${draft.title.fr}\n\n${draft.body.fr}\n\n— ${config.coupleNames}`;
   const mailtoHref =
@@ -63,8 +87,21 @@ export default function AdminNewsPage() {
       <h1>Actualités</h1>
       <p className="hint" style={{ marginBottom: 18 }}>
         Une actualité publiée apparaît immédiatement sur le site des invités. Vous pouvez
-        ensuite l'envoyer par email au segment choisi, ou la copier pour le groupe WhatsApp.
+        au choix prévenir les invités par email au moment de publier, ouvrir votre propre
+        messagerie, ou copier le texte pour le groupe WhatsApp.
       </p>
+
+      {sendResult && (
+        <div className={`notice ${sendResult.sent || sendResult.published ? "ok" : ""}`} role="status">
+          {sendResult.published && "Actualité publiée sur le site."}
+          {sendResult.sent > 0 && `Actualité publiée et notification envoyée à ${sendResult.sent} adresse(s).`}
+          {sendResult.configured === false &&
+            `Actualité publiée. La notification n'est pas partie : l'envoi automatique n'est pas encore
+             configuré sur le serveur. Utilisez « Ouvrir mon email » ci-dessous pour prévenir les
+             ${sendResult.total ?? notifyList.length} invités concernés.`}
+          {sendResult.failures?.length > 0 && ` Échecs : ${sendResult.failures.join(", ")}.`}
+        </div>
+      )}
 
       <form className="card" onSubmit={publish}>
         <h3>Nouvelle actualité</h3>
@@ -115,9 +152,33 @@ export default function AdminNewsPage() {
           </div>
         </div>
 
+        <div className="field">
+          <span className="lbl">Envoyer une notification ?</span>
+          <label className="check-row">
+            <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} />
+            Prévenir les invités par email ({notifyList.length} adresse{notifyList.length > 1 ? "s" : ""})
+          </label>
+          <div className="hint" style={{ marginTop: 6 }}>
+            Tout le monde sauf les foyers qui ont répondu « non » — y compris ceux qui n'ont pas
+            encore répondu. Chacun la reçoit dans sa langue, en copie cachée.
+          </div>
+          {notify && session?.mailReady === false && (
+            <div className="notice" style={{ marginTop: 10, marginBottom: 0 }}>
+              L'envoi automatique n'est pas configuré : il manque les variables
+              <code> RESEND_API_KEY</code> et <code>MAIL_FROM</code> dans Vercel. L'actualité sera
+              publiée, mais la notification ne partira pas — utilisez « Ouvrir mon email » à côté.
+            </div>
+          )}
+        </div>
+
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button className="btn small" type="submit">Publier sur le site</button>
-          <a className="btn secondary small" href={mailtoHref}>✉️ Envoyer par email</a>
+          <button className="btn small" type="submit">
+            {notify ? "Publier et prévenir" : "Publier sur le site"}
+          </button>
+          <a className="btn secondary small" href={mailtoHref}
+             title="Ouvre votre messagerie avec les destinataires en copie cachée">
+            ✉️ Ouvrir mon email
+          </a>
           <button className="btn ghost small" type="button" onClick={copyWhatsapp}>
             {copied ? "✓ Copié" : "💬 Copier pour WhatsApp"}
           </button>
