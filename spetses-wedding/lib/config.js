@@ -48,7 +48,7 @@ export const config = {
     {
       id: "party",
       date: "2027-07-09",
-      name: { fr: "La veille du mariage", en: "The evening before", el: "Η παραμονή του γάμου" },
+      name: { fr: "Le jour avant le mariage", en: "The day before the wedding", el: "Η ημέρα πριν από τον γάμο" },
       desc: {
         fr: "Une soirée informelle ou une croisière est envisagée, pour se retrouver avant la fête.",
         en: "A casual get-together or a boat cruise is being considered, to catch up before the party.",
@@ -58,22 +58,6 @@ export const config = {
         fr: "Plus de détails suivront prochainement",
         en: "More details to follow soon",
         el: "Περισσότερες πληροφορίες θα ακολουθήσουν σύντομα",
-      },
-    },
-    {
-      id: "tour",
-      date: "2027-07-09",
-      dateAlt: "2027-07-10",
-      name: { fr: "Visite guidée de l'île", en: "Guided island tour", el: "Ξενάγηση στο νησί" },
-      desc: {
-        fr: "Balade guidée : le vieux port, la maison de Bouboulina et l'école Anargyrios.",
-        en: "Guided walk: the old harbour, Bouboulina's house and the Anargyrios school.",
-        el: "Ξενάγηση: το παλιό λιμάνι, το σπίτι της Μπουμπουλίνας και η Αναργύρειος Σχολή.",
-      },
-      status: {
-        fr: "À confirmer : le 9, ou le 10 au matin",
-        en: "To be confirmed: the 9th, or the morning of the 10th",
-        el: "Να επιβεβαιωθεί: στις 9, ή το πρωί της 10ης",
       },
     },
     {
