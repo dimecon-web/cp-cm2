@@ -24,7 +24,10 @@ export async function GET() {
   if (!user) return Response.json({ user: null }, { status: 401 });
 
   const [households, news, photos, messages, todos, suppliers, sends] = await Promise.all([
-    db.from("wedding_households").select("*, wedding_rsvps(*), wedding_participants(*)").order("created_at"),
+    db.from("wedding_households")
+      .select("*, wedding_rsvps(*), wedding_participants(*)")
+      .eq("is_shared", false)       // le lien partagé n'est pas un foyer
+      .order("created_at"),
     db.from("wedding_news").select("*").order("published_at", { ascending: false }),
     db.from("wedding_photos").select("*, wedding_households(name)").order("created_at", { ascending: false }),
     db.from("wedding_messages").select("*, wedding_households(name)").order("created_at", { ascending: false }),

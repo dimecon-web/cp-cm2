@@ -58,6 +58,7 @@ export default function InvitesPage() {
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const linkFor = (h) => `${origin}/i/${h.token}`;
+  const sharedLink = `${origin}/i/${config.sharedToken}`;
   const messageOf = (h) => messageFor(kind, h, linkFor(h), custom);
 
   const categories = useMemo(
@@ -200,6 +201,23 @@ export default function InvitesPage() {
             <> · <button className="link-name" onClick={() => { setFilters({}); setGroupBy(""); }}>tout afficher</button></>
           )}
         </p>
+      </div>
+
+      {/* ---------- Le lien unique, celui qu'on envoie à tout le monde ---------- */}
+      <div className="card" style={{ borderColor: "var(--sea)" }}>
+        <h3>Le lien à envoyer</h3>
+        <p className="hint" style={{ marginTop: -4, marginBottom: 10 }}>
+          Une seule adresse, la même pour tous, à coller dans vos emails, SMS et WhatsApp.
+          Chaque personne qui y répond crée son foyer dans la liste ci-dessous, avec sa propre
+          adresse pour revenir modifier sa réponse.
+        </p>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <code style={{ fontSize: 15 }}>{sharedLink}</code>
+          <button className="btn small" type="button" onClick={() => copy("shared", sharedLink)}>
+            {copied === "shared" ? "Lien copié ✓" : "Copier le lien"}
+          </button>
+          <a className="btn ghost small" href={sharedLink} target="_blank" rel="noreferrer">Voir ↗</a>
+        </div>
       </div>
 
       {/* ---------- Envoi groupé ---------- */}

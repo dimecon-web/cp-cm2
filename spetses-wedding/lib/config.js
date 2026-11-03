@@ -33,6 +33,10 @@ export const config = {
   ],
   whatsappGroupUrl: "", // lien du groupe WhatsApp — affiché sur le site quand renseigné
 
+  // Lien unique envoyé à tous les invités, par email, SMS ou WhatsApp.
+  // Y répondre ne modifie rien : cela crée le foyer de la personne.
+  sharedToken: "spetses2027",
+
   // Faire-part illustré, affiché sur la page d'accueil des invités.
   // Déposez le fichier dans public/ et mettez son chemin ici — « /faire-part.png ».
   // Vide : rien ne s'affiche, et la page reste intacte.

@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { config } from "@/lib/config";
 import { useT, usePick, useLang } from "@/lib/i18n";
-import { loadGuest } from "@/lib/store";
+import { loadGuest, myToken } from "@/lib/store";
 
 export default function GuestHome() {
   const { token } = useParams();
@@ -14,6 +14,8 @@ export default function GuestHome() {
   const { lang } = useLang();
   const [household, setHousehold] = useState(null);
   const [hasRsvp, setHasRsvp] = useState(false);
+  const [shared, setShared] = useState(false);
+  const [mine, setMine] = useState("");
   const [days, setDays] = useState(null);
 
   useEffect(() => {
@@ -23,6 +25,8 @@ export default function GuestHome() {
         if (cancelled) return;
         setHousehold(household);
         setHasRsvp(Boolean(rsvp?.attending));
+        setShared(Boolean(household?.shared));
+        if (household?.shared) setMine(myToken());
       })
       .catch(() => {});
     const diff = new Date(config.weddingDate) - new Date();
@@ -38,7 +42,7 @@ export default function GuestHome() {
   return (
     <div className="narrow" style={{ margin: "0 auto", textAlign: "center" }}>
       <p style={{ color: "var(--bougain)", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", fontSize: 13 }}>
-        {t("home.welcome")}{household ? `, ${household.name}` : ""} !
+        {t("home.welcome")}{household?.name ? `, ${household.name}` : ""} !
       </p>
       <h1>{config.coupleNames}</h1>
       <p style={{ fontSize: 18, fontFamily: "var(--font-display), Georgia, serif", fontStyle: "italic" }}>
@@ -58,8 +62,10 @@ export default function GuestHome() {
 
       <p style={{ maxWidth: "48ch", margin: "0 auto 26px" }}>{t("home.intro")}</p>
 
-      <Link className="btn" href={`/i/${token}/rsvp`}>
-        {hasRsvp ? t("home.ctaDone") : t("home.cta")}
+      {/* Sur le lien partagé, qui a déjà répondu depuis ce navigateur
+          repart vers sa propre réponse plutôt que vers un formulaire vide. */}
+      <Link className="btn" href={shared && mine ? `/i/${mine}/rsvp` : `/i/${token}/rsvp`}>
+        {hasRsvp || (shared && mine) ? t("home.ctaDone") : t("home.cta")}
       </Link>
 
       <div style={{ marginTop: 40, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>

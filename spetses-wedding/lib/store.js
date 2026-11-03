@@ -59,6 +59,23 @@ export async function saveRsvp(token, rsvp) {
     body: JSON.stringify(rsvp),
   });
   if (!res.ok) throw new Error("rsvp_save_failed");
+  return res.json();
+}
+
+// ---------- Retrouver sa réponse ----------
+// Une réponse donnée depuis le lien partagé crée un foyer, avec sa propre
+// adresse. On la garde dans ce navigateur pour que la personne retombe sur
+// sa réponse sans avoir à chercher le lien dans ses messages.
+const MINE = "sw:mytoken";
+
+export function myToken() {
+  if (typeof window === "undefined") return "";
+  try { return localStorage.getItem(MINE) || ""; } catch { return ""; }
+}
+
+export function rememberToken(token) {
+  if (typeof window === "undefined" || !token) return;
+  try { localStorage.setItem(MINE, token); } catch { /* navigation privée */ }
 }
 
 export async function submitPhoto(token, { dataUrl, caption }) {
