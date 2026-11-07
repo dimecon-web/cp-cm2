@@ -64,7 +64,7 @@ export async function GET() {
   return Response.json({
     user,
     // Le mot de passe du portail, à écrire sur les invitations.
-    guestCode: process.env.GUEST_CODE || "agapi",
+    guestCode: process.env.GUEST_CODE || "party",
     households: (households.data || []).map((h) => {
       const rsvpRow = Array.isArray(h.wedding_rsvps) ? h.wedding_rsvps[0] : h.wedding_rsvps;
       const parts = h.wedding_participants || [];

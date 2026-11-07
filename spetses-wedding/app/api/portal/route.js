@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 // Le mot de passe est vérifié ici, côté serveur : il ne part jamais dans le
 // code de la page.
 
-const CODE = (process.env.GUEST_CODE || "agapi").trim().toLowerCase();
+const CODE = (process.env.GUEST_CODE || "party").trim().toLowerCase();
 const VALID_EMAIL = /^[^@\s]+@[^@\s.]+\.[^@\s]+$/;
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";   // sans caractères ambigus
 

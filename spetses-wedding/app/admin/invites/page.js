@@ -220,7 +220,7 @@ export default function InvitesPage() {
         </p>
         <dl className="facts">
           <div><dt>Adresse du portail</dt><dd>{origin || "…"}</dd></div>
-          <div><dt>Mot de passe</dt><dd><strong>{data?.guestCode || "agapi"}</strong></dd></div>
+          <div><dt>Mot de passe</dt><dd><strong>{data?.guestCode || "party"}</strong></dd></div>
         </dl>
       </div>
 
